@@ -38,6 +38,9 @@ minversion = "8.0"
 testpaths = ["tests"]
 pythonpath = ["."]
 xfail_strict = true
+markers = [
+  "db: needs PostgreSQL via TEST_DATABASE_URL; runs only against disposable volterra_test_* databases",
+]
 addopts = [
   "-ra",
   "--strict-markers",

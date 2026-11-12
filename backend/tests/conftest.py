@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from typing import Any
 
 import pytest
+from alembic import command
 
 from tests.support import golden as golden_support
+from tests.support.database import DbTestSettings, assert_disposable, disposable_database
+from tests.support.migrations import alembic_config
 
 
 @pytest.fixture(scope="session")
@@ -42,3 +45,37 @@ def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
 def anyio_backend() -> str:
     """Run async tests on asyncio only (the API and database stack is asyncio-based)."""
     return "asyncio"
+
+
+# --- PostgreSQL (tests marked `db`) -------------------------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def admin_database_url() -> str:
+    """Maintenance-database URL used only to create/drop disposable test databases.
+
+    Skips when ``TEST_DATABASE_URL`` is unset, unless ``VOLTERRA_REQUIRE_DB=1`` (CI), in which
+    case the session fails instead of silently skipping database tests.
+    """
+    settings = DbTestSettings()
+    if settings.test_database_url is None:
+        if settings.require_db:
+            pytest.fail("VOLTERRA_REQUIRE_DB=1 but TEST_DATABASE_URL is not set")
+        pytest.skip("PostgreSQL tests need TEST_DATABASE_URL (see backend/.env.example)")
+    return settings.test_database_url.get_secret_value()
+
+
+@pytest.fixture(scope="session")
+def migrated_database_url(admin_database_url: str) -> Iterator[str]:
+    """A disposable database migrated to head, shared by the session."""
+    with disposable_database(admin_database_url) as url:
+        assert_disposable(url)
+        command.upgrade(alembic_config(url), "head")
+        yield url
+
+
+@pytest.fixture
+def empty_database_url(admin_database_url: str) -> Iterator[str]:
+    """A fresh, empty disposable database for one test (e.g. migration round trips)."""
+    with disposable_database(admin_database_url) as url:
+        yield url

@@ -15,7 +15,8 @@ for architecture, phases and conventions; **`PROJECT_STATUS.md`** records progre
   layer that overrides the renderers in `core.js`, `style.css`). **Frozen reference.** Do not
   edit or reformat these four files; they are the source for golden parity fixtures. Helper
   tooling may be added under `legacy/tools/`.
-- `backend/`: FastAPI service (`app/`), tests in `backend/tests/`.
+- `backend/`: FastAPI service (`app/`: analytics, db, schemas, services, api), Alembic
+  migrations (`alembic/`), API contract (`openapi.json`), tests in `backend/tests/`.
 - `ml/`: `volterra_ml` package, tests in `ml/tests/`.
 - `frontend/`: React + TypeScript app.
 - `data/`, `artifacts/`: git-ignored. Never commit datasets, model binaries or `.env`.
@@ -35,6 +36,14 @@ for architecture, phases and conventions; **`PROJECT_STATUS.md`** records progre
   tests in `backend/tests/parity/test_known_defects.py` must keep failing for v1.
 - Analytics code is standard-library only and mirrors JavaScript operation order. Never use
   `sum()`, `round()` or `math.fsum` there; use `app.analytics.jsmath`.
+- The API never re-implements analytics: it calls `legacy_v1.analyze()` (cached, keyed by a data
+  checksum) and the v1 simulator functions. Mappers, dependencies and routers only copy values
+  (`tests/unit/test_api_purity.py`).
+- Database tests run only against disposable `volterra_test_<hex>` databases (guarded by
+  `tests/support/database.py`). Never run destructive operations against the development
+  database or print credentials from `backend/.env`.
+- Schema changes go through new Alembic migrations (never edit merged ones). After API changes,
+  regenerate `backend/openapi.json` (`uv run python -m app.openapi`); Phase 4 consumes it.
 
 ## Commands
 
@@ -46,6 +55,8 @@ python -m http.server 8080 --directory legacy   # run the prototype
 node legacy/tools/export_golden.js --check # golden fixtures: deterministic + up to date
 node --test legacy/tools/export_golden.test.js  # golden exporter tests
 cd backend && uv sync --locked && uv run mypy && uv run pytest   # backend (coverage gate 85%)
+cd backend && uv run alembic upgrade head && uv run python -m app.db.seed   # dev database
+cd backend && uv run uvicorn --factory app.main:create_app --reload      # API on :8000
 ```
 
 Golden fixtures in `backend/tests/golden/` are generated, never hand-edited; see the README

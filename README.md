@@ -4,19 +4,20 @@ Intelligent battery health and predictive analytics: state-of-health (SOH) estim
 degradation analysis, remaining-useful-life (RUL) prediction, anomaly detection and
 scenario simulation.
 
-> **Status:** Phase 0 (foundations) of the migration from a browser prototype to a full-stack
-> application. See [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
+> **Status:** Phase 3 complete: the v1 analytics (Phase 2) are served by a FastAPI + PostgreSQL
+> backend. The React frontend follows in Phase 4. See [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
 > [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for progress.
 
 ## Repository layout
 
-| Path        | Contents                                                                 |
-| ----------- | ------------------------------------------------------------------------ |
-| `legacy/`   | The original static browser prototype (reference implementation).        |
-| `frontend/` | React + TypeScript single-page app _(scaffold only — Phase 4)_.          |
-| `backend/`  | FastAPI service, PostgreSQL models and migrations _(scaffold only)_.     |
-| `ml/`       | `volterra_ml` package: data loaders, features, models _(scaffold only)_. |
-| `.github/`  | CI workflows.                                                            |
+| Path        | Contents                                                                  |
+| ----------- | ------------------------------------------------------------------------- |
+| `legacy/`   | The original static browser prototype (reference implementation).         |
+| `frontend/` | React + TypeScript single-page app _(scaffold only — Phase 4)_.           |
+| `backend/`  | FastAPI API, PostgreSQL models/migrations, v1 analytics (see its README). |
+| `ml/`       | `volterra_ml` package: data loaders, features, models _(scaffold only)_.  |
+| `infra/`    | `docker-compose.yml` for an optional local PostgreSQL 16.                 |
+| `.github/`  | CI workflows.                                                             |
 
 ## Running the legacy prototype
 

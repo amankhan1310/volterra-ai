@@ -7,8 +7,8 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 0. Foundations                  | ✅ Complete |
 | 1. Golden fixtures              | ✅ Complete |
 | 2. Analytics parity in Python   | ✅ Complete |
-| 3. DB + API (parity)            | ⏳ Next     |
-| 4. React parity                 | Not started |
+| 3. DB + API (parity)            | ✅ Complete |
+| 4. React parity                 | ⏳ Next     |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
@@ -130,7 +130,56 @@ Decisions applied:
 - The synthetic generator stays in the backend until Phase 6.
 - CSS colours and advisor bar geometry are left for the frontend.
 
+## Milestone: Phase 3 — PostgreSQL, migrations and parity API (2026-11-12)
+
+Branch: `feat/backend-db-api` (PR into `main`). Phase 2 was merged as PR #3 (`f6bd10c`).
+
+Delivered:
+
+- **Database:** PostgreSQL 16 schema with four tables (`datasets`, `batteries`, `cycles`,
+  `scenarios`). Numeric values are `DOUBLE PRECISION`, and SOH is stored as generated.
+  - Async SQLAlchemy 2 with asyncpg.
+  - Alembic migration `0001`, which can be rolled back. `alembic check` reports no differences
+    between models and database.
+  - Seed for `synthetic-v1` (`python -m app.db.seed`). Running it twice changes nothing, and it
+    refuses to overwrite different data. Synthetic ground truth is stored only in internal
+    metadata.
+- **API (`/api/v1`, 17 paths):**
+  - `health`, datasets, batteries, cycles
+  - `summary`, `forecast`, `backtest`, `insights`, `anomalies`, `twin`
+  - `simulator`, `simulate`, `advisor`
+  - saved-scenario create, read, update, delete
+  - Every analytical response carries `context` and per-value provenance. NaN and Infinity
+    are written as strings. A missing database gives 503; unknown ids, 404; invalid input, 422.
+    All errors use one envelope.
+- **Behaviour preserved:** the API calls the unchanged `legacy_v1.analyze()` in a worker thread,
+  through a bounded LRU cache. The cache key includes a checksum of the loaded data, so any data
+  change invalidates it. Mappers only copy values, and a static scan enforces that.
+  `display.temperature_band()` was added as a separate module (`analytics/twin.py`).
+- **Contract:** `backend/openapi.json` is committed, with a drift test and `--check`.
+- **CI:** PostgreSQL 16 service; database tests are required and cannot be skipped. CI also
+  checks OpenAPI drift, runs the migration round trip and `alembic check`, and seeds twice to
+  prove repeat runs are harmless. Python 3.10 and 3.12.
+
+Verification (local; Windows; PostgreSQL 16.16):
+
+- **Tests:** 405 passed and 8 xfailed (F1–F8, strict). Results are identical on Python 3.10.11
+  and 3.12.15. Branch coverage is 99.95% (gate 85%).
+- **Lint and types:** mypy (strict) reports no issues in 107 files. ruff and prettier are clean,
+  and the Phase 1 golden checks pass.
+- **Golden parity through the API:** run against both the in-memory repository and PostgreSQL,
+  with identical results.
+  - Overall: 17,326 numeric comparisons, 17,318 bit-exact. 8 needed the 1e-12 tolerance (of
+    6,216 where it was allowed), at most 2 ULP, all from the 5 °C `exp()` rates.
+  - The database round trip is lossless: all 1,280 stored doubles match bit for bit.
+- **Protected files:** all 29 are byte-identical (11 golden fixtures, 4 legacy files, 14 Phase 2
+  analytics files).
+- **Database tests:** they use disposable `volterra_test_*` databases only and leave none
+  behind.
+- **Live run:** `uvicorn` against the development database (migrated and seeded) served the
+  golden SOH (86.0894…) and RUL (112.73, 111.46–114.03) values.
+
 ## Next
 
-Phase 3: PostgreSQL schema, migrations and the parity API endpoints. This waits for review and
-approval.
+Phase 4: React + TypeScript frontend rebuilt against this API (types generated from
+`backend/openapi.json`). This waits for review and approval.

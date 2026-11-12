@@ -1,0 +1,22 @@
+# Shared Ruff configuration for all Python code (backend/, ml/, scripts/).
+target-version = "py310"
+line-length = 100
+extend-exclude = ["legacy", "frontend", "data", "artifacts"]
+
+[lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade
+  "N",   # pep8-naming
+  "SIM", # flake8-simplify
+]
+
+[lint.isort]
+known-first-party = ["app", "volterra_ml"]
+
+[format]
+quote-style = "double"

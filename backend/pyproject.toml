@@ -1,0 +1,7 @@
+[project]
+name = "volterra-backend"
+version = "0.0.0"
+description = "VOLTERRA AI FastAPI service (scaffold — implementation starts in Phase 2/3)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []

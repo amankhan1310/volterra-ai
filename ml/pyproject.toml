@@ -1,0 +1,7 @@
+[project]
+name = "volterra-ml"
+version = "0.0.0"
+description = "VOLTERRA AI ML package: loaders, features, models, evaluation (scaffold)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []

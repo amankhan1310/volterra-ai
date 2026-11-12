@@ -1,0 +1,44 @@
+# Phase 0 lint gate for all three projects (backend/, ml/, frontend/) plus the legacy prototype.
+# Split into path-filtered per-project workflows once each project has real code.
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (ruff) — backend, ml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.6.9
+      - run: ruff check .
+      - run: ruff format --check .
+
+  format:
+    name: Formatting (prettier) — frontend, config, docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npx --yes prettier@3.3.3 --check .
+
+  legacy:
+    name: Legacy prototype syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node --check legacy/core.js && node --check legacy/ui.js

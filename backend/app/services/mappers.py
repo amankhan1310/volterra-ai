@@ -35,7 +35,7 @@ from app.analytics.simulator import (
 from app.analytics.stats import LinearFit
 from app.analytics.synthetic import CycleRecord
 from app.analytics.twin import TWIN_MODULE_COUNT, temperature_band
-from app.db.repositories import BatteryInfo, DatasetInfo
+from app.db.repositories import BatteryInfo, DatasetInfo, ScenarioInfo
 from app.schemas.analysis import (
     AccelerationOut,
     AnomalyCounts,
@@ -63,6 +63,7 @@ from app.schemas.monitoring import (
     TwinPack,
     TwinResponse,
 )
+from app.schemas.scenarios import ScenarioOut
 from app.schemas.simulator import (
     AdvisorResponse,
     AdvisorRowOut,
@@ -459,4 +460,19 @@ def advisor_response(battery: BatteryInfo, table: AdvisorTable) -> AdvisorRespon
         ],
         note=ADVISOR_NOTE,
         known_issues=["F8"],
+    )
+
+
+# --- Saved scenarios ----------------------------------------------------------------------------
+
+
+def scenario_out(s: ScenarioInfo) -> ScenarioOut:
+    return ScenarioOut(
+        id=s.id,
+        battery_id=s.battery_id,
+        name=s.name,
+        params=ScenarioParamsModel.model_validate(s.params),
+        simulator_version=s.simulator_version,
+        created_at=s.created_at,
+        updated_at=s.updated_at,
     )

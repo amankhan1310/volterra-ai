@@ -36,10 +36,15 @@ for architecture, phases and conventions; **`PROJECT_STATUS.md`** records progre
 
 ```sh
 ruff check . && ruff format --check .      # Python lint (config: ruff.toml)
-npx prettier@3.3.3 --check .               # formatting (legacy/ excluded)
+npx prettier@3.3.3 --check .               # formatting (frozen legacy files excluded)
 node --check legacy/core.js legacy/ui.js   # legacy syntax check
 python -m http.server 8080 --directory legacy   # run the prototype
+node legacy/tools/export_golden.js --check # golden fixtures: deterministic + up to date
+node --test legacy/tools/                  # golden exporter tests
 ```
+
+Golden fixtures in `backend/tests/golden/` are generated, never hand-edited; see the README
+there. In Phase 2 they are the specification: fix the Python port, not the fixtures.
 
 ## Environment notes (Windows dev machine)
 

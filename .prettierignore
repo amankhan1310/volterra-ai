@@ -1,0 +1,12 @@
+# Frozen reference prototype — moved without content changes; do not reformat.
+legacy/
+
+# Reviewed and approved as written; table alignment differs from prettier output.
+ARCHITECTURE_PLAN.md
+
+# Generated / third-party
+node_modules/
+dist/
+coverage/
+data/
+artifacts/

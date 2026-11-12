@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import API_PREFIX, API_VERSION, Settings, get_settings
 from app.core.errors import register_error_handlers
+from app.db.session import Database
 
 DESCRIPTION = (
     "VOLTERRA AI battery analytics API. Analytical values carry provenance "
@@ -29,10 +30,21 @@ DESCRIPTION = (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    yield
+    """Open the database configured in settings (unless one was injected); close it on exit."""
+    owned: Database | None = None
+    dsn = app.state.settings.database_dsn()
+    if app.state.database is None and dsn:
+        owned = app.state.database = Database(dsn)
+    try:
+        yield
+    finally:
+        if owned is not None:
+            await owned.dispose()
+            app.state.database = None
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, *, database: Database | None = None) -> FastAPI:
+    """Build the application. ``database`` lets tests inject an already-open database."""
     settings = settings or get_settings()
     app = FastAPI(
         title="VOLTERRA AI API",
@@ -44,7 +56,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.settings = settings
-    app.state.database = None
+    app.state.database = database
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,

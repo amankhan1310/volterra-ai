@@ -31,7 +31,7 @@ node legacy/tools/export_golden.js
 node legacy/tools/export_golden.js --check
 
 # Exporter test suite (Node's built-in runner; no npm install needed)
-node --test legacy/tools/
+node --test legacy/tools/export_golden.test.js
 
 # Export somewhere else, e.g. to diff
 node legacy/tools/export_golden.js --out /tmp/golden

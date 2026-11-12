@@ -48,7 +48,7 @@ Python port. See [`backend/tests/golden/README.md`](backend/tests/golden/README.
 
 ```sh
 node legacy/tools/export_golden.js --check   # deterministic + matches committed fixtures
-node --test legacy/tools/                    # exporter test suite
+node --test legacy/tools/export_golden.test.js  # exporter test suite
 ```
 
 ## Planned stack

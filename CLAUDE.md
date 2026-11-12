@@ -40,7 +40,7 @@ npx prettier@3.3.3 --check .               # formatting (frozen legacy files exc
 node --check legacy/core.js legacy/ui.js   # legacy syntax check
 python -m http.server 8080 --directory legacy   # run the prototype
 node legacy/tools/export_golden.js --check # golden fixtures: deterministic + up to date
-node --test legacy/tools/                  # golden exporter tests
+node --test legacy/tools/export_golden.test.js  # golden exporter tests
 ```
 
 Golden fixtures in `backend/tests/golden/` are generated, never hand-edited; see the README

@@ -1,6 +1,6 @@
 /*
  * Tests for the golden fixture exporter (Phase 1). Uses only Node's built-in test runner.
- *   node --test legacy/tools/
+ *   node --test legacy/tools/export_golden.test.js
  */
 "use strict";
 

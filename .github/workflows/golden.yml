@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Exporter tests
-        run: node --test legacy/tools/
+        run: node --test legacy/tools/export_golden.test.js
       - name: Fixtures match a fresh export
         run: node legacy/tools/export_golden.js --check
       - name: Legacy prototype unchanged

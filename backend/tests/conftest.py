@@ -36,3 +36,9 @@ def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
         f"{total.tolerance_needed} needed the 1e-12 tolerance "
         f"(of {total.tolerance_allowed} on tolerance-allowed fields), max {total.max_ulp} ULP"
     )
+
+
+@pytest.fixture(scope="session")
+def anyio_backend() -> str:
+    """Run async tests on asyncio only (the API and database stack is asyncio-based)."""
+    return "asyncio"

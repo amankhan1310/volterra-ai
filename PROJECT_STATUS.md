@@ -6,8 +6,8 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | ------------------------------- | ----------- |
 | 0. Foundations                  | ✅ Complete |
 | 1. Golden fixtures              | ✅ Complete |
-| 2. Analytics parity in Python   | ⏳ Next     |
-| 3. DB + API (parity)            | Not started |
+| 2. Analytics parity in Python   | ✅ Complete |
+| 3. DB + API (parity)            | ⏳ Next     |
 | 4. React parity                 | Not started |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
@@ -77,7 +77,60 @@ Verification (local):
 Known defects F1–F8 are captured as-is (see `backend/tests/golden/README.md`). F5 is dormant in
 this dataset: fade really did accelerate, so the unconditional text happens to be true.
 
+## Milestone: Phase 2 — Python analytics parity (2026-11-12)
+
+Branch: `feat/backend-analytics-parity` (PR into `main`). Phase 1 was merged as PR #2
+(`cf2ce00`).
+
+Delivered, in `backend/app/analytics/` (standard library only, strict typing):
+
+- `jsmath`: JavaScript number semantics:
+  - left-to-right summation
+  - `Math.round` and `toFixed`
+  - division by zero
+  - NaN propagation in `max`/`min`
+  - JavaScript truthiness
+  - 32-bit integer operations
+- The **v1** algorithms, each reproducing the prototype exactly, including defects F1–F8:
+  - `prng` (mulberry32), `synthetic` (synthetic-v1), `stats` (`lin`, `median`)
+  - `health` (SOH, fade, RUL, interval, forecast, gauge), `backtest`, `anomalies` (robust z v1)
+  - `simulator`, `advisor` (`ui.js` semantics), `insights` (structured), `display`
+  - `legacy_v1.analyze()`: one end-to-end, immutable analysis result
+- Tooling:
+  - `uv` lockfile, restricted by `exclude-newer` to releases at least two weeks old
+  - pytest, pytest-cov, hypothesis, strict mypy, ruff
+  - CI workflow `.github/workflows/backend.yml` on Python 3.10 and 3.12
+
+Tests (`backend/tests/`):
+
+- **Harness:** `support/golden.py` compares exactly by default. The 1e-12 tolerance applies only
+  on declared paths (fields derived from `sin`, `exp` or `pow`), integers are always exact, and
+  NaN/±Infinity markers are handled. A tolerance-usage report prints after every run.
+- **Parity:** one test per fixture, plus an end-to-end `analyze()` test.
+- **Safety nets:**
+  - fixture and legacy checksum verification
+  - margin guards (no discrete result can flip from a last-bit difference)
+  - a source-hygiene scan (no `sum()`, `round()` or `fsum`; standard-library imports only)
+  - F1–F8 correct-behaviour tests marked strict xfail
+
+Results (Windows Python 3.10.11 and 3.12.15):
+
+- 233 passed, 8 xfailed (F1–F8, strict). Branch coverage is 100%; the gate is 85%.
+- mypy (strict) reports no issues in 46 files. ruff and prettier are clean.
+- Parity: 6,196 numeric comparisons, 6,192 bit-exact. 4 needed the 1e-12 tolerance (of 2,110
+  where it was allowed), at most 2 ULP. All four come from the simulator's `exp(-1.2)` at 5 °C.
+  Every integer and discrete output is exact. The dataset is fully bit-exact, temperature
+  included.
+- The Phase 1 golden checks still pass. The 11 fixtures and 4 legacy files are unchanged.
+
+Decisions applied:
+
+- v1 is permanent. Phase 5 fixes will be separate v2 implementations with their own expected
+  values, and the golden fixtures are never modified.
+- The synthetic generator stays in the backend until Phase 6.
+- CSS colours and advisor bar geometry are left for the frontend.
+
 ## Next
 
-Phase 2: port the analytics to Python (`backend/app/analytics`) and test them against these
-fixtures. This waits for review and approval.
+Phase 3: PostgreSQL schema, migrations and the parity API endpoints. This waits for review and
+approval.

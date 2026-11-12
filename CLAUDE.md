@@ -29,8 +29,12 @@ for architecture, phases and conventions; **`PROJECT_STATUS.md`** records progre
 - Every analytic value exposed to the UI carries provenance
   (`measured | simulated | fitted | predicted | assumed`) and, for predictions, an interval.
 - ML evaluation splits by battery, never by row; features may only use past cycles.
-- Known prototype defects F1–F8 (plan §3.6) are reproduced deliberately during the parity port,
-  then fixed as separate, tested changes.
+- Known prototype defects F1–F8 (plan §3.6) are reproduced deliberately in the **v1** algorithms
+  (`backend/app/analytics`). v1 is permanent. Fixes are separate **v2** implementations with
+  their own expected-value tests, and the golden fixtures are never modified. The strict-xfail
+  tests in `backend/tests/parity/test_known_defects.py` must keep failing for v1.
+- Analytics code is standard-library only and mirrors JavaScript operation order. Never use
+  `sum()`, `round()` or `math.fsum` there; use `app.analytics.jsmath`.
 
 ## Commands
 
@@ -41,6 +45,7 @@ node --check legacy/core.js legacy/ui.js   # legacy syntax check
 python -m http.server 8080 --directory legacy   # run the prototype
 node legacy/tools/export_golden.js --check # golden fixtures: deterministic + up to date
 node --test legacy/tools/export_golden.test.js  # golden exporter tests
+cd backend && uv sync --locked && uv run mypy && uv run pytest   # backend (coverage gate 85%)
 ```
 
 Golden fixtures in `backend/tests/golden/` are generated, never hand-edited; see the README

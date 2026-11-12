@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Iterator
 from typing import Any
 
@@ -9,7 +10,13 @@ import pytest
 from alembic import command
 
 from tests.support import golden as golden_support
-from tests.support.database import DbTestSettings, assert_disposable, disposable_database
+from tests.support.database import (
+    DbTestSettings,
+    assert_disposable,
+    disposable_database,
+    run_isolated,
+    seed_database,
+)
 from tests.support.migrations import alembic_config
 
 
@@ -70,7 +77,17 @@ def migrated_database_url(admin_database_url: str) -> Iterator[str]:
     """A disposable database migrated to head, shared by the session."""
     with disposable_database(admin_database_url) as url:
         assert_disposable(url)
-        command.upgrade(alembic_config(url), "head")
+        run_isolated(lambda: command.upgrade(alembic_config(url), "head"))
+        yield url
+
+
+@pytest.fixture(scope="session")
+def seeded_database_url(admin_database_url: str) -> Iterator[str]:
+    """A disposable database migrated to head and seeded with synthetic-v1 (session-wide)."""
+    with disposable_database(admin_database_url) as url:
+        assert_disposable(url)
+        run_isolated(lambda: command.upgrade(alembic_config(url), "head"))
+        run_isolated(lambda: asyncio.run(seed_database(url)))
         yield url
 
 

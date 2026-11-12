@@ -14,8 +14,10 @@ from __future__ import annotations
 import asyncio
 import re
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from typing import TypeVar
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +27,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import ENV_FILE
 
+T = TypeVar("T")
 DISPOSABLE_PREFIX = "volterra_test_"
 _DISPOSABLE_NAME = re.compile(r"volterra_test_[0-9a-f]{12}")
 
@@ -94,12 +97,36 @@ async def drop_database(admin_url: str, name: str) -> None:
         await engine.dispose()
 
 
+def run_isolated(func: Callable[[], T]) -> T:
+    """Run ``func`` on a fresh thread (and thus outside any running event loop).
+
+    Session fixtures may be first requested from inside an async test, where ``asyncio.run``
+    (used here and by Alembic's env.py) would fail; a separate thread has no running loop.
+    """
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(func).result()
+
+
 @contextmanager
 def disposable_database(admin_url: str) -> Iterator[str]:
     """Create a fresh ``volterra_test_*`` database, yield its URL, then drop it."""
     name = new_disposable_name()
-    asyncio.run(create_database(admin_url, name))
+    run_isolated(lambda: asyncio.run(create_database(admin_url, name)))
     try:
         yield disposable_url(admin_url, name)
     finally:
-        asyncio.run(drop_database(admin_url, name))
+        run_isolated(lambda: asyncio.run(drop_database(admin_url, name)))
+
+
+async def seed_database(url: str) -> None:
+    """Seed synthetic-v1 into a disposable database."""
+    from app.db.seed import seed_synthetic_v1
+    from app.db.session import Database
+
+    assert_disposable(url)
+    database = Database(url)
+    try:
+        async with database.session() as session:
+            await seed_synthetic_v1(session)
+    finally:
+        await database.dispose()

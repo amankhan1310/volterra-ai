@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "fixture": "manifest",
+    "schema_version": 1,
+    "description": "Index of golden fixtures and the legacy sources they were generated from.",
+    "generator": "legacy/tools/export_golden.js",
+    "exporter_version": "1.0.0",
+    "regenerate": "node legacy/tools/export_golden.js",
+    "verify": "node legacy/tools/export_golden.js --check",
+    "non_finite_encoding": "NaN, Infinity and -Infinity are stored as the strings \"NaN\", \"Infinity\", \"-Infinity\""
+  },
+  "dataset_id": "synthetic-v1",
+  "legacy_sources_sha256": {
+    "legacy/index.html": "bfb4c006095540c6346f6a59cdd0dc6c23c0109fc049ba3b797f146917c9bde5",
+    "legacy/core.js": "14014f34aad770af967ffb47a9afeafcf927bde78c94a80a36a194d250e4adc3",
+    "legacy/ui.js": "b37bbb9e7cc3a74c783ea16750540bc5d50eb866fed1cb3a8c312d523b0d9c7e",
+    "legacy/style.css": "e5350cdf7840a8ab9d8a512c5a4497a2d1f4ddeefce1017fa543459adaaaf4de"
+  },
+  "fixtures_sha256": {
+    "dataset.json": "e50ad158c0f92bd2be424815db9e49ebec719e29dd6d0cd64bbd7fa7260ddf6f",
+    "prng.json": "db3abbfb1aaf5e5492af0650d45de07a1cdabca2e351f892c0056cd7bcca0979",
+    "regression.json": "7cb1a11aa24fdd0862febf33f3c4f5aaf1a9734a3f62b7d81a14f52181fa2787",
+    "soh_rul.json": "a9fe497b72eb7daeee4205350966da7ae26496d05ad0cb6e9efa595d61d19851",
+    "backtest.json": "f4f85fb8f45a0fb10ce28436e325cd8f42fde064cbe000cb382587b9ed85b29b",
+    "anomalies.json": "87316fb4c4e56a2efa7bc320d9ff8b20a596c88953ac2c9662f7ab18e01f1a1f",
+    "simulator.json": "35513da849ea6ffc459e04cea4d6d6648f4ac05fc89c42b6583e64a1baf861d2",
+    "advisor.json": "486a715dcd8a7b6f589a0fc00d43db00aa588952caefdaf18d4c33ad8cece132",
+    "insights.json": "6bd9ed7402a976b2548d335e584d30bfe62e55b201672d70ed24e77c060811f6",
+    "display_rules.json": "68c56706376ac2b06fa53e80130d8b2e73d57ec8e39ac44072158f98f23b62d8"
+  },
+  "known_issues": {
+    "F1": "Temperature detector misses injected spikes: global median/MAD is inflated by the sinusoidal baseline.",
+    "F2": "Capacity-step detector raises false positives (no capacity steps are injected); edge cycles affected by truncated centred window.",
+    "F3": "RUL '95% fit interval' uses slope standard error only, so it is far narrower than real forecast error.",
+    "F4": "Simulator baseline cycles-to-EOL differs from the Overview linear RUL for identical conditions.",
+    "F5": "Insight #2 always says 'Fade is accelerating' regardless of the computed slopes.",
+    "F6": "Linear model is structurally biased on quadratic-fade data.",
+    "F7": "Capacity-step detector uses a centred window, i.e. future cycles (not causal).",
+    "F8": "Advisor delta for a null/zero cycles-to-EOL is 0 in ui.js but null in core.js."
+  }
+}

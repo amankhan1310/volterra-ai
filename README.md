@@ -30,15 +30,25 @@ python -m http.server 8080 --directory legacy
 
 All data in the prototype is a seeded synthetic dataset; it is not connected to any vehicle.
 
-## Linting (Phase 0)
+## Linting
 
 ```sh
 # Python (backend/, ml/)
 ruff check .
 ruff format --check .
 
-# Formatting for JSON / YAML / Markdown (legacy/ is excluded and left untouched)
+# Formatting (the four frozen prototype files and generated fixtures are excluded)
 npx prettier@3.3.3 --check .
+```
+
+## Golden reference fixtures (Phase 1)
+
+The prototype's exact outputs are exported to `backend/tests/golden/` as the reference for the
+Python port. See [`backend/tests/golden/README.md`](backend/tests/golden/README.md).
+
+```sh
+node legacy/tools/export_golden.js --check   # deterministic + matches committed fixtures
+node --test legacy/tools/export_golden.test.js  # exporter test suite
 ```
 
 ## Planned stack

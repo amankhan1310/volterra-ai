@@ -1,0 +1,188 @@
+{
+  "meta": {
+    "fixture": "advisor",
+    "schema_version": 1,
+    "description": "Charging Advisor one-factor sensitivity on the simulator (assumed coefficients).",
+    "provenance": "simulated",
+    "source": ["legacy/ui.js:624-666", "legacy/core.js:249-266"],
+    "units": {
+      "cycles_to_eol": "cycles",
+      "delta_pct": "% vs baseline cycles_to_eol",
+      "bar": "% of bar width"
+    },
+    "known_issues": {
+      "F8": "Advisor delta for a null/zero cycles-to-EOL is 0 in ui.js but null in core.js."
+    },
+    "notes": ["Row formulas are transcribed from the page renderers, which compute them inline.", "Baseline is 25 °C, 1C, 80% DoD starting from the default initial SOH."]
+  },
+  "default": {
+    "start_soh_pct": 86.1,
+    "eol_pct": 80,
+    "baseline_cycles_to_eol": 106,
+    "rows": [
+      {
+        "change": "Cooler: 15 °C",
+        "params_override": {
+          "T": 15
+        },
+        "cycles_to_eol": 184,
+        "delta_pct_ui": 73.58490566037736,
+        "delta_pct_core": 73.58490566037736,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 36.79245283018868
+        }
+      },
+      {
+        "change": "Warmer: 35 °C",
+        "params_override": {
+          "T": 35
+        },
+        "cycles_to_eol": 60,
+        "delta_pct_ui": -43.39622641509434,
+        "delta_pct_core": -43.39622641509434,
+        "bar": {
+          "left_pct": 28.30188679245283,
+          "width_pct": 21.69811320754717
+        }
+      },
+      {
+        "change": "Gentler charge: 0.5C",
+        "params_override": {
+          "C": 0.5
+        },
+        "cycles_to_eol": 130,
+        "delta_pct_ui": 22.641509433962266,
+        "delta_pct_core": 22.641509433962266,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 11.320754716981133
+        }
+      },
+      {
+        "change": "Fast charge: 2C",
+        "params_override": {
+          "C": 2
+        },
+        "cycles_to_eol": 77,
+        "delta_pct_ui": -27.358490566037734,
+        "delta_pct_core": -27.358490566037734,
+        "bar": {
+          "left_pct": 36.320754716981135,
+          "width_pct": 13.679245283018867
+        }
+      },
+      {
+        "change": "Shallower cycles: 60% DoD",
+        "params_override": {
+          "D": 60
+        },
+        "cycles_to_eol": 135,
+        "delta_pct_ui": 27.358490566037734,
+        "delta_pct_core": 27.358490566037734,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 13.679245283018867
+        }
+      },
+      {
+        "change": "Full-depth cycles: 100% DoD",
+        "params_override": {
+          "D": 100
+        },
+        "cycles_to_eol": 88,
+        "delta_pct_ui": -16.9811320754717,
+        "delta_pct_core": -16.9811320754717,
+        "bar": {
+          "left_pct": 41.509433962264154,
+          "width_pct": 8.49056603773585
+        }
+      }
+    ]
+  },
+  "edge_start_below_eol": {
+    "start_soh_pct": 70,
+    "eol_pct": 80,
+    "baseline_cycles_to_eol": 0,
+    "rows": [
+      {
+        "change": "Cooler: 15 °C",
+        "params_override": {
+          "T": 15
+        },
+        "cycles_to_eol": 0,
+        "delta_pct_ui": 0,
+        "delta_pct_core": null,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 0
+        }
+      },
+      {
+        "change": "Warmer: 35 °C",
+        "params_override": {
+          "T": 35
+        },
+        "cycles_to_eol": 0,
+        "delta_pct_ui": 0,
+        "delta_pct_core": null,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 0
+        }
+      },
+      {
+        "change": "Gentler charge: 0.5C",
+        "params_override": {
+          "C": 0.5
+        },
+        "cycles_to_eol": 0,
+        "delta_pct_ui": 0,
+        "delta_pct_core": null,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 0
+        }
+      },
+      {
+        "change": "Fast charge: 2C",
+        "params_override": {
+          "C": 2
+        },
+        "cycles_to_eol": 0,
+        "delta_pct_ui": 0,
+        "delta_pct_core": null,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 0
+        }
+      },
+      {
+        "change": "Shallower cycles: 60% DoD",
+        "params_override": {
+          "D": 60
+        },
+        "cycles_to_eol": 0,
+        "delta_pct_ui": 0,
+        "delta_pct_core": null,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 0
+        }
+      },
+      {
+        "change": "Full-depth cycles: 100% DoD",
+        "params_override": {
+          "D": 100
+        },
+        "cycles_to_eol": 0,
+        "delta_pct_ui": 0,
+        "delta_pct_core": null,
+        "bar": {
+          "left_pct": 50,
+          "width_pct": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,6 +1,8 @@
-# Phase 2: backend analytics (v1 parity port). Lint, strict typing, and the parity + unit test
-# suite with the 85% coverage gate, on the oldest supported Python and on 3.12 (where sum()
-# switched to compensated summation, a regression the source-hygiene tests guard against).
+# Backend: v1 analytics parity (Phase 2) plus database and API (Phase 3).
+# Lint, strict typing, OpenAPI drift, migration round trip, seed idempotency, and the full test
+# suite (including PostgreSQL tests, which may not be skipped here) with the 85% coverage gate,
+# on the oldest supported Python and on 3.12 (where sum() became compensated; the source-hygiene
+# tests guard against it).
 name: backend
 
 on:
@@ -13,17 +15,35 @@ permissions:
 
 jobs:
   test:
-    name: Backend (Python ${{ matrix.python }})
+    name: Backend (Python ${{ matrix.python }}, PostgreSQL 16)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python: ["3.10", "3.12"]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          # Throwaway credentials for an ephemeral CI container; not a secret.
+          POSTGRES_USER: volterra
+          POSTGRES_PASSWORD: volterra-ci
+          POSTGRES_DB: volterra_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U volterra -d volterra_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: backend
     env:
       UV_PYTHON_DOWNLOADS: never
+      DATABASE_URL: postgresql+asyncpg://volterra:volterra-ci@localhost:5432/volterra_ci
+      TEST_DATABASE_URL: postgresql+asyncpg://volterra:volterra-ci@localhost:5432/postgres
+      VOLTERRA_REQUIRE_DB: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,5 +57,17 @@ jobs:
         run: uv run --no-sync ruff check . && uv run --no-sync ruff format --check .
       - name: Mypy (strict)
         run: uv run --no-sync mypy
-      - name: Pytest (parity + unit, coverage >= 85%)
+      - name: OpenAPI document is current
+        run: uv run --no-sync python -m app.openapi --check
+      - name: Migrations round trip and drift check
+        run: |
+          uv run --no-sync alembic upgrade head
+          uv run --no-sync alembic downgrade base
+          uv run --no-sync alembic upgrade head
+          uv run --no-sync alembic check
+      - name: Seed is idempotent
+        run: |
+          uv run --no-sync python -m app.db.seed
+          uv run --no-sync python -m app.db.seed
+      - name: Pytest (parity, unit, API, PostgreSQL; coverage >= 85%)
         run: uv run --no-sync pytest

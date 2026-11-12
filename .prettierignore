@@ -5,8 +5,10 @@ legacy/core.js
 legacy/ui.js
 legacy/style.css
 
-# Generated golden fixtures — byte-exact output of legacy/tools/export_golden.js.
+# Generated files: golden fixtures (legacy/tools/export_golden.js) and the OpenAPI
+# document (python -m app.openapi). Byte-exact output; do not reformat.
 backend/tests/golden/*.json
+backend/openapi.json
 
 # Reviewed and approved as written; table alignment differs from prettier output.
 ARCHITECTURE_PLAN.md

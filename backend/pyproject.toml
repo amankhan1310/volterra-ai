@@ -4,9 +4,18 @@ version = "0.0.0"
 description = "VOLTERRA AI backend: analytics parity port (Phase 2); FastAPI service from Phase 3."
 readme = "README.md"
 requires-python = ">=3.10"
-# Phase 2 analytics are standard-library only: bit-exact parity with the JavaScript prototype
-# requires full control over floating-point operation order (no numpy vectorisation/summation).
-dependencies = []
+# app/analytics stays standard-library only (bit-exact parity needs full control over
+# floating-point operation order; enforced by tests/unit/test_source_hygiene.py). The
+# dependencies below serve the API and database layers only.
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "pydantic>=2.10",
+  "pydantic-settings>=2.5",
+  "sqlalchemy[asyncio]>=2.0.30",
+  "asyncpg>=0.29",
+  "alembic>=1.13",
+]
 
 [dependency-groups]
 dev = [
@@ -15,6 +24,7 @@ dev = [
   "hypothesis>=6.100",
   "mypy>=1.11",
   "ruff==0.6.9",
+  "httpx>=0.27",
 ]
 
 [tool.uv]
@@ -28,6 +38,9 @@ minversion = "8.0"
 testpaths = ["tests"]
 pythonpath = ["."]
 xfail_strict = true
+markers = [
+  "db: needs PostgreSQL via TEST_DATABASE_URL; runs only against disposable volterra_test_* databases",
+]
 addopts = [
   "-ra",
   "--strict-markers",

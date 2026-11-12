@@ -1,0 +1,3187 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VOLTERRA AI API",
+    "description": "VOLTERRA AI battery analytics API. Analytical values carry provenance (measured, simulated, fitted, predicted, assumed); algorithm version v1 reproduces the legacy prototype exactly, including its documented defects F1–F8.",
+    "version": "0.3.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Application and database health",
+        "description": "Always ``200`` while the application runs; ``database.status`` reports connectivity.",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "List datasets",
+        "operationId": "list_datasets_api_v1_datasets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{slug}": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get a dataset",
+        "operationId": "get_dataset_api_v1_datasets__slug__get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/batteries": {
+      "get": {
+        "tags": [
+          "datasets",
+          "batteries"
+        ],
+        "summary": "List batteries",
+        "operationId": "list_batteries_api_v1_batteries_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatteryList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}": {
+      "get": {
+        "tags": [
+          "datasets",
+          "batteries"
+        ],
+        "summary": "Get a battery",
+        "operationId": "get_battery_api_v1_batteries__battery_id__get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatteryOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/cycles": {
+      "get": {
+        "tags": [
+          "datasets",
+          "batteries"
+        ],
+        "summary": "Per-cycle measurements",
+        "operationId": "get_cycles_api_v1_batteries__battery_id__cycles_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          },
+          {
+            "name": "from_cycle",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First cycle (inclusive).",
+              "title": "From Cycle"
+            },
+            "description": "First cycle (inclusive)."
+          },
+          {
+            "name": "to_cycle",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last cycle (inclusive).",
+              "title": "To Cycle"
+            },
+            "description": "Last cycle (inclusive)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CyclesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/summary": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Overview: SOH, fade, RUL with interval, health and KPIs",
+        "operationId": "get_summary_api_v1_batteries__battery_id__summary_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          },
+          {
+            "name": "eol_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 90.0,
+              "minimum": 60.0,
+              "description": "End-of-life SOH threshold in percent (60-90, as in the prototype).",
+              "default": 80.0,
+              "title": "Eol Pct"
+            },
+            "description": "End-of-life SOH threshold in percent (60-90, as in the prototype)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/forecast": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Observed SOH and the v1 linear forecast",
+        "operationId": "get_forecast_api_v1_batteries__battery_id__forecast_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          },
+          {
+            "name": "eol_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 90.0,
+              "minimum": 60.0,
+              "description": "End-of-life SOH threshold in percent (60-90, as in the prototype).",
+              "default": 80.0,
+              "title": "Eol Pct"
+            },
+            "description": "End-of-life SOH threshold in percent (60-90, as in the prototype)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/backtest": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Time-ordered hold-out backtest of the linear forecast",
+        "operationId": "get_backtest_api_v1_batteries__battery_id__backtest_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BacktestResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/insights": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Rule-based insights (v1, includes known defect F5)",
+        "operationId": "get_insights_api_v1_batteries__battery_id__insights_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/anomalies": {
+      "get": {
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Robust z-score anomaly events (v1; see known_issues)",
+        "operationId": "get_anomalies_api_v1_batteries__battery_id__anomalies_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          },
+          {
+            "name": "include_scores",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include per-cycle detector inputs and z-scores.",
+              "default": false,
+              "title": "Include Scores"
+            },
+            "description": "Include per-cycle detector inputs and z-scores."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomaliesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/twin": {
+      "get": {
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Pack state at a cycle (module values are illustrative)",
+        "operationId": "get_twin_api_v1_batteries__battery_id__twin_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          },
+          {
+            "name": "cycle",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cycle to show; default latest.",
+              "title": "Cycle"
+            },
+            "description": "Cycle to show; default latest."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwinResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/simulator": {
+      "get": {
+        "tags": [
+          "simulator"
+        ],
+        "summary": "Simulator defaults, slider ranges and coefficient provenance",
+        "operationId": "get_simulator_api_v1_batteries__battery_id__simulator_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorConfigResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/simulate": {
+      "post": {
+        "tags": [
+          "simulator"
+        ],
+        "summary": "Simulate a scenario against the 25 °C / 1C / 80% DoD baseline",
+        "operationId": "post_simulate_api_v1_batteries__battery_id__simulate_post",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/advisor": {
+      "get": {
+        "tags": [
+          "simulator"
+        ],
+        "summary": "Charging Advisor: one-factor sensitivity (v1, includes known defect F8)",
+        "operationId": "get_advisor_api_v1_batteries__battery_id__advisor_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          },
+          {
+            "name": "eol_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 90.0,
+              "minimum": 60.0,
+              "default": 80.0,
+              "title": "Eol Pct"
+            }
+          },
+          {
+            "name": "start_soh_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100,
+                  "minimum": 70
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Initial SOH; default is the simulator default (current SOH, rounded).",
+              "title": "Start Soh Pct"
+            },
+            "description": "Initial SOH; default is the simulator default (current SOH, rounded)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvisorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/scenarios": {
+      "get": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "List saved scenarios for a battery",
+        "operationId": "list_scenarios_api_v1_batteries__battery_id__scenarios_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioList"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Save a scenario",
+        "operationId": "create_scenario_api_v1_batteries__battery_id__scenarios_post",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/{scenario_id}": {
+      "get": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Get a saved scenario",
+        "operationId": "get_scenario_api_v1_scenarios__scenario_id__get",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Rename and/or change a scenario's parameters",
+        "operationId": "update_scenario_api_v1_scenarios__scenario_id__patch",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Delete a scenario",
+        "operationId": "delete_scenario_api_v1_scenarios__scenario_id__delete",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccelerationOut": {
+        "properties": {
+          "accelerated": {
+            "type": "boolean",
+            "title": "Accelerated",
+            "description": "Recent fade exceeds 1.2x the first-half fade."
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "Sentence appended to the Overview text ('' if none)."
+          },
+          "provenance": {
+            "type": "string",
+            "const": "fitted",
+            "title": "Provenance",
+            "default": "fitted"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "accelerated",
+          "note"
+        ],
+        "title": "AccelerationOut"
+      },
+      "AdvisorResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "start_soh_pct": {
+            "type": "number",
+            "title": "Start Soh Pct"
+          },
+          "eol_pct": {
+            "type": "number",
+            "title": "Eol Pct"
+          },
+          "baseline_conditions": {
+            "$ref": "#/components/schemas/BaselineConditions"
+          },
+          "baseline_cycles_to_eol": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Cycles To Eol"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/AdvisorRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "known_issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Known Issues"
+          },
+          "provenance": {
+            "type": "string",
+            "const": "simulated",
+            "title": "Provenance",
+            "default": "simulated"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "start_soh_pct",
+          "eol_pct",
+          "baseline_conditions",
+          "baseline_cycles_to_eol",
+          "rows",
+          "note",
+          "known_issues"
+        ],
+        "title": "AdvisorResponse"
+      },
+      "AdvisorRowOut": {
+        "properties": {
+          "change": {
+            "type": "string",
+            "title": "Change"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          },
+          "override": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Override"
+          },
+          "cycles_to_eol": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycles To Eol"
+          },
+          "delta_pct": {
+            "type": "number",
+            "title": "Delta Pct",
+            "description": "v1: 0 when either cycle count is missing or 0 (F8)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "change",
+          "why",
+          "override",
+          "cycles_to_eol",
+          "delta_pct"
+        ],
+        "title": "AdvisorRowOut"
+      },
+      "AnalysisContext": {
+        "properties": {
+          "battery_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Battery Id"
+          },
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "is_synthetic": {
+            "type": "boolean",
+            "title": "Is Synthetic"
+          },
+          "data_provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated"
+            ],
+            "title": "Data Provenance",
+            "description": "'simulated' for synthetic datasets, 'measured' for real ones."
+          },
+          "algorithm_version": {
+            "type": "string",
+            "const": "v1",
+            "title": "Algorithm Version",
+            "default": "v1"
+          },
+          "eol_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eol Pct",
+            "description": "End-of-life SOH threshold used."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "battery_id",
+          "dataset",
+          "is_synthetic",
+          "data_provenance"
+        ],
+        "title": "AnalysisContext",
+        "description": "Identifies what an analytical response was computed from."
+      },
+      "AnomaliesResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "detector": {
+            "$ref": "#/components/schemas/DetectorOut"
+          },
+          "method": {
+            "$ref": "#/components/schemas/AnomalyMethodOut"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AnomalyCounts"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyEventOut"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "channels": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ChannelStatsOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channels",
+            "description": "Per-cycle statistics; only with include_scores=true."
+          },
+          "known_issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Known Issues",
+            "description": "Documented v1 defects affecting these results (ARCHITECTURE_PLAN §3.6)."
+          },
+          "provenance": {
+            "type": "string",
+            "const": "fitted",
+            "title": "Provenance",
+            "default": "fitted"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "detector",
+          "method",
+          "summary",
+          "events",
+          "known_issues"
+        ],
+        "title": "AnomaliesResponse"
+      },
+      "AnomalyCounts": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "high": {
+            "type": "integer",
+            "title": "High"
+          },
+          "medium": {
+            "type": "integer",
+            "title": "Medium"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "total",
+          "high",
+          "medium"
+        ],
+        "title": "AnomalyCounts"
+      },
+      "AnomalyEventOut": {
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "temp",
+              "volt",
+              "soh"
+            ],
+            "title": "Channel"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "expected_low": {
+            "type": "number",
+            "title": "Expected Low"
+          },
+          "expected_high": {
+            "type": "number",
+            "title": "Expected High"
+          },
+          "z": {
+            "type": "number",
+            "title": "Z"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium"
+            ],
+            "title": "Severity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycle",
+          "channel",
+          "type",
+          "value",
+          "unit",
+          "expected_low",
+          "expected_high",
+          "z",
+          "severity"
+        ],
+        "title": "AnomalyEventOut"
+      },
+      "AnomalyMethodOut": {
+        "properties": {
+          "z_scale": {
+            "type": "number",
+            "title": "Z Scale"
+          },
+          "flag_threshold_abs_z": {
+            "type": "number",
+            "title": "Flag Threshold Abs Z"
+          },
+          "high_severity_abs_z": {
+            "type": "number",
+            "title": "High Severity Abs Z"
+          },
+          "mad_floor": {
+            "type": "number",
+            "title": "Mad Floor"
+          },
+          "residual_half_window": {
+            "type": "integer",
+            "title": "Residual Half Window"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "z_scale",
+          "flag_threshold_abs_z",
+          "high_severity_abs_z",
+          "mad_floor",
+          "residual_half_window"
+        ],
+        "title": "AnomalyMethodOut"
+      },
+      "BacktestPointOut": {
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "observed_soh_pct": {
+            "type": "number",
+            "title": "Observed Soh Pct"
+          },
+          "predicted_soh_pct": {
+            "type": "number",
+            "title": "Predicted Soh Pct"
+          },
+          "abs_error": {
+            "type": "number",
+            "title": "Abs Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycle",
+          "observed_soh_pct",
+          "predicted_soh_pct",
+          "abs_error"
+        ],
+        "title": "BacktestPointOut"
+      },
+      "BacktestResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "train": {
+            "$ref": "#/components/schemas/CycleWindow"
+          },
+          "test": {
+            "$ref": "#/components/schemas/CycleWindow"
+          },
+          "fit": {
+            "$ref": "#/components/schemas/LinearFitOut"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/BacktestPointOut"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "mae": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "provenance": {
+            "type": "string",
+            "const": "fitted",
+            "title": "Provenance",
+            "default": "fitted"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "train",
+          "test",
+          "fit",
+          "points",
+          "mae"
+        ],
+        "title": "BacktestResponse"
+      },
+      "BaselineConditions": {
+        "properties": {
+          "temp_c": {
+            "type": "number",
+            "title": "Temp C"
+          },
+          "c_rate": {
+            "type": "number",
+            "title": "C Rate"
+          },
+          "dod_pct": {
+            "type": "number",
+            "title": "Dod Pct"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "temp_c",
+          "c_rate",
+          "dod_pct"
+        ],
+        "title": "BaselineConditions"
+      },
+      "BatteryList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BatteryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BatteryList"
+      },
+      "BatteryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "external_id": {
+            "type": "string",
+            "title": "External Id"
+          },
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "dataset_name": {
+            "type": "string",
+            "title": "Dataset Name"
+          },
+          "chemistry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chemistry"
+          },
+          "form_factor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Form Factor"
+          },
+          "nominal_capacity_ah": {
+            "type": "number",
+            "title": "Nominal Capacity Ah"
+          },
+          "nominal_voltage_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nominal Voltage V"
+          },
+          "eol_threshold_pct": {
+            "type": "number",
+            "title": "Eol Threshold Pct"
+          },
+          "is_synthetic": {
+            "type": "boolean",
+            "title": "Is Synthetic"
+          },
+          "data_provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated"
+            ],
+            "title": "Data Provenance"
+          },
+          "cycle_count": {
+            "type": "integer",
+            "title": "Cycle Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "external_id",
+          "dataset",
+          "dataset_name",
+          "chemistry",
+          "form_factor",
+          "nominal_capacity_ah",
+          "nominal_voltage_v",
+          "eol_threshold_pct",
+          "is_synthetic",
+          "data_provenance",
+          "cycle_count"
+        ],
+        "title": "BatteryOut"
+      },
+      "ChannelStatsOut": {
+        "properties": {
+          "channel": {
+            "type": "string",
+            "enum": [
+              "temp",
+              "volt",
+              "soh"
+            ],
+            "title": "Channel"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "median": {
+            "type": "number",
+            "title": "Median"
+          },
+          "mad": {
+            "type": "number",
+            "title": "Mad"
+          },
+          "expected_low": {
+            "type": "number",
+            "title": "Expected Low"
+          },
+          "expected_high": {
+            "type": "number",
+            "title": "Expected High"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Detector input (soh: residual vs rolling median)."
+          },
+          "z": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Z"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "channel",
+          "label",
+          "unit",
+          "median",
+          "mad",
+          "expected_low",
+          "expected_high",
+          "values",
+          "z"
+        ],
+        "title": "ChannelStatsOut"
+      },
+      "CoefficientOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated",
+              "fitted",
+              "predicted",
+              "assumed"
+            ],
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "provenance"
+        ],
+        "title": "CoefficientOut"
+      },
+      "CycleOut": {
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "capacity_ah": {
+            "type": "number",
+            "title": "Capacity Ah"
+          },
+          "soh_pct": {
+            "type": "number",
+            "title": "Soh Pct"
+          },
+          "temp_c": {
+            "type": "number",
+            "title": "Temp C",
+            "description": "Mean cycle temperature."
+          },
+          "voltage_v": {
+            "type": "number",
+            "title": "Voltage V",
+            "description": "Mean cycle voltage."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycle",
+          "capacity_ah",
+          "soh_pct",
+          "temp_c",
+          "voltage_v"
+        ],
+        "title": "CycleOut"
+      },
+      "CycleWindow": {
+        "properties": {
+          "from_cycle": {
+            "type": "integer",
+            "title": "From Cycle"
+          },
+          "to_cycle": {
+            "type": "integer",
+            "title": "To Cycle"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "from_cycle",
+          "to_cycle"
+        ],
+        "title": "CycleWindow"
+      },
+      "CyclesResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated"
+            ],
+            "title": "Provenance"
+          },
+          "units": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Units"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CycleOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "provenance",
+          "units",
+          "items"
+        ],
+        "title": "CyclesResponse"
+      },
+      "DatabaseHealth": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unavailable",
+              "not_configured"
+            ],
+            "title": "Status"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Exception type only; never a message."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "DatabaseHealth"
+      },
+      "DatasetList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "DatasetList"
+      },
+      "DatasetOut": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "licence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence"
+          },
+          "citation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citation"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "synthetic": {
+            "type": "boolean",
+            "title": "Synthetic"
+          },
+          "battery_count": {
+            "type": "integer",
+            "title": "Battery Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "source",
+          "version",
+          "licence",
+          "citation",
+          "description",
+          "status",
+          "checksum",
+          "synthetic",
+          "battery_count"
+        ],
+        "title": "DatasetOut",
+        "description": "Public dataset description. Internal metadata (e.g. synthetic ground truth) is omitted."
+      },
+      "DetectorOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "description": "'retrospective': uses past and future cycles (see F7)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "mode"
+        ],
+        "title": "DetectorOut"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "ForecastResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "observed": {
+            "$ref": "#/components/schemas/SeriesOut"
+          },
+          "forecast": {
+            "$ref": "#/components/schemas/SeriesOut"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "v1: straight line through the most recent 120 cycles."
+          },
+          "extent_cycles": {
+            "type": "integer",
+            "title": "Extent Cycles",
+            "description": "Number of cycle positions on the timeline."
+          },
+          "prediction_boundary_cycle": {
+            "type": "integer",
+            "title": "Prediction Boundary Cycle",
+            "description": "Last observed cycle; forecast starts here."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "observed",
+          "forecast",
+          "method",
+          "extent_cycles",
+          "prediction_boundary_cycle"
+        ],
+        "title": "ForecastResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "description": "Application health; independent of the database."
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "default": "volterra-api"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "api_version": {
+            "type": "string",
+            "title": "Api Version",
+            "default": "v1"
+          },
+          "algorithm_version": {
+            "type": "string",
+            "title": "Algorithm Version",
+            "default": "v1"
+          },
+          "database": {
+            "$ref": "#/components/schemas/DatabaseHealth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "database"
+        ],
+        "title": "HealthResponse"
+      },
+      "InsightOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observation",
+              "watch",
+              "note",
+              "model"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Values"
+          },
+          "provenance": {
+            "type": "string",
+            "const": "fitted",
+            "title": "Provenance",
+            "default": "fitted"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "text",
+          "values"
+        ],
+        "title": "InsightOut"
+      },
+      "InsightsResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "insights": {
+            "items": {
+              "$ref": "#/components/schemas/InsightOut"
+            },
+            "type": "array",
+            "title": "Insights"
+          },
+          "acceleration": {
+            "$ref": "#/components/schemas/AccelerationOut"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "insights",
+          "acceleration"
+        ],
+        "title": "InsightsResponse"
+      },
+      "Interval": {
+        "properties": {
+          "point": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Point"
+          },
+          "lower": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lower"
+          },
+          "upper": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upper"
+          },
+          "level": {
+            "type": "number",
+            "title": "Level",
+            "description": "Nominal coverage, e.g. 0.95."
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "How the interval was computed (v1: 'slope_se', see F3)."
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated",
+              "fitted",
+              "predicted",
+              "assumed"
+            ],
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "point",
+          "lower",
+          "upper",
+          "level",
+          "method",
+          "unit",
+          "provenance"
+        ],
+        "title": "Interval"
+      },
+      "LatestCycle": {
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "capacity": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "temperature": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "voltage": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycle",
+          "capacity",
+          "temperature",
+          "voltage"
+        ],
+        "title": "LatestCycle"
+      },
+      "LinearFitOut": {
+        "properties": {
+          "slope": {
+            "type": "number",
+            "title": "Slope"
+          },
+          "intercept": {
+            "type": "number",
+            "title": "Intercept"
+          },
+          "residual_sd": {
+            "type": "number",
+            "title": "Residual Sd"
+          },
+          "slope_se": {
+            "type": "number",
+            "title": "Slope Se"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "slope",
+          "intercept",
+          "residual_sd",
+          "slope_se"
+        ],
+        "title": "LinearFitOut"
+      },
+      "Quantity": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated",
+              "fitted",
+              "predicted",
+              "assumed"
+            ],
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value",
+          "unit",
+          "provenance"
+        ],
+        "title": "Quantity"
+      },
+      "ScenarioCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "params": {
+            "$ref": "#/components/schemas/ScenarioParamsModel"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "params"
+        ],
+        "title": "ScenarioCreate"
+      },
+      "ScenarioList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ScenarioList"
+      },
+      "ScenarioOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "battery_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Battery Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "params": {
+            "$ref": "#/components/schemas/ScenarioParamsModel"
+          },
+          "simulator_version": {
+            "type": "string",
+            "title": "Simulator Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "battery_id",
+          "name",
+          "params",
+          "simulator_version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ScenarioOut"
+      },
+      "ScenarioParamsModel": {
+        "properties": {
+          "temp_c": {
+            "type": "number",
+            "maximum": 45.0,
+            "minimum": 5.0,
+            "title": "Temp C",
+            "description": "Temperature in °C (T)."
+          },
+          "c_rate": {
+            "type": "number",
+            "maximum": 3.0,
+            "minimum": 0.5,
+            "title": "C Rate",
+            "description": "Charge rate in C (C)."
+          },
+          "dod_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 20.0,
+            "title": "Dod Pct",
+            "description": "Depth of discharge in % (D)."
+          },
+          "horizon_cycles": {
+            "type": "integer",
+            "maximum": 1500.0,
+            "minimum": 100.0,
+            "title": "Horizon Cycles",
+            "description": "Cycles to simulate (N)."
+          },
+          "start_soh_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 70.0,
+            "title": "Start Soh Pct",
+            "description": "Initial SOH in % (S)."
+          },
+          "eol_pct": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": 60.0,
+            "title": "Eol Pct",
+            "description": "End-of-life SOH in % (E)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "temp_c",
+          "c_rate",
+          "dod_pct",
+          "horizon_cycles",
+          "start_soh_pct",
+          "eol_pct"
+        ],
+        "title": "ScenarioParamsModel",
+        "description": "Scenario controls. Descriptive names; prototype keys in parentheses."
+      },
+      "ScenarioUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "params": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScenarioParamsModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ScenarioUpdate"
+      },
+      "SeriesOut": {
+        "properties": {
+          "cycles": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Cycles"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "measured",
+                  "simulated"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "fitted",
+                  "predicted"
+                ]
+              }
+            ],
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycles",
+          "values",
+          "unit",
+          "provenance"
+        ],
+        "title": "SeriesOut"
+      },
+      "SimulateRequest": {
+        "properties": {
+          "params": {
+            "$ref": "#/components/schemas/ScenarioParamsModel"
+          },
+          "include_trajectories": {
+            "type": "boolean",
+            "title": "Include Trajectories",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "params"
+        ],
+        "title": "SimulateRequest"
+      },
+      "SimulateResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "params": {
+            "$ref": "#/components/schemas/ScenarioParamsModel"
+          },
+          "baseline_params": {
+            "$ref": "#/components/schemas/ScenarioParamsModel"
+          },
+          "rate": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "cycles_to_eol": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycles To Eol",
+            "description": "null when EOL is not reached within 5000."
+          },
+          "baseline_cycles_to_eol": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Cycles To Eol"
+          },
+          "delta_cycles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Cycles"
+          },
+          "delta_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Pct",
+            "description": "'NaN' when both cycle counts are 0."
+          },
+          "soh_after_horizon": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "baseline_soh_after_horizon": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "trajectories": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrajectoriesOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "known_issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Known Issues"
+          },
+          "provenance": {
+            "type": "string",
+            "const": "simulated",
+            "title": "Provenance",
+            "default": "simulated"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "params",
+          "baseline_params",
+          "rate",
+          "cycles_to_eol",
+          "baseline_cycles_to_eol",
+          "delta_cycles",
+          "delta_pct",
+          "soh_after_horizon",
+          "baseline_soh_after_horizon",
+          "trajectories",
+          "known_issues"
+        ],
+        "title": "SimulateResponse"
+      },
+      "SimulatorConfigResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/ScenarioParamsModel"
+          },
+          "baseline_conditions": {
+            "$ref": "#/components/schemas/BaselineConditions"
+          },
+          "base_fade": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "coefficients": {
+            "items": {
+              "$ref": "#/components/schemas/CoefficientOut"
+            },
+            "type": "array",
+            "title": "Coefficients"
+          },
+          "sliders": {
+            "items": {
+              "$ref": "#/components/schemas/SliderOut"
+            },
+            "type": "array",
+            "title": "Sliders"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "version",
+          "defaults",
+          "baseline_conditions",
+          "base_fade",
+          "coefficients",
+          "sliders",
+          "model"
+        ],
+        "title": "SimulatorConfigResponse"
+      },
+      "SliderOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "legacy_key": {
+            "type": "string",
+            "title": "Legacy Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          },
+          "step": {
+            "type": "number",
+            "title": "Step"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "legacy_key",
+          "label",
+          "min",
+          "max",
+          "step",
+          "unit"
+        ],
+        "title": "SliderOut"
+      },
+      "SummaryResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "soh_now": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "observed_last_soh": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "fade_rate": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "rul": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "health_level": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "caution",
+              "critical"
+            ],
+            "title": "Health Level"
+          },
+          "condition": {
+            "type": "string",
+            "title": "Condition"
+          },
+          "life_used_fraction": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "cycle_count": {
+            "type": "integer",
+            "title": "Cycle Count"
+          },
+          "latest": {
+            "$ref": "#/components/schemas/LatestCycle"
+          },
+          "anomalies": {
+            "$ref": "#/components/schemas/AnomalyCounts"
+          },
+          "acceleration": {
+            "$ref": "#/components/schemas/AccelerationOut"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/TrendOut"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "soh_now",
+          "observed_last_soh",
+          "fade_rate",
+          "rul",
+          "health_level",
+          "condition",
+          "life_used_fraction",
+          "cycle_count",
+          "latest",
+          "anomalies",
+          "acceleration",
+          "trend"
+        ],
+        "title": "SummaryResponse"
+      },
+      "TrajectoriesOut": {
+        "properties": {
+          "cycles": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Cycles"
+          },
+          "scenario": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Scenario"
+          },
+          "baseline": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Baseline"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": "SOH values are unclamped; charts clamp at 0."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycles",
+          "scenario",
+          "baseline"
+        ],
+        "title": "TrajectoriesOut"
+      },
+      "TrendOut": {
+        "properties": {
+          "slope": {
+            "type": "number",
+            "title": "Slope"
+          },
+          "intercept": {
+            "type": "number",
+            "title": "Intercept"
+          },
+          "residual_sd": {
+            "type": "number",
+            "title": "Residual Sd"
+          },
+          "slope_se": {
+            "type": "number",
+            "title": "Slope Se"
+          },
+          "fit_from_cycle": {
+            "type": "integer",
+            "title": "Fit From Cycle"
+          },
+          "fit_to_cycle": {
+            "type": "integer",
+            "title": "Fit To Cycle"
+          },
+          "provenance": {
+            "type": "string",
+            "const": "fitted",
+            "title": "Provenance",
+            "default": "fitted"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "slope",
+          "intercept",
+          "residual_sd",
+          "slope_se",
+          "fit_from_cycle",
+          "fit_to_cycle"
+        ],
+        "title": "TrendOut"
+      },
+      "TwinModules": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "illustrative": {
+            "type": "boolean",
+            "const": true,
+            "title": "Illustrative",
+            "default": true
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "count",
+          "note"
+        ],
+        "title": "TwinModules"
+      },
+      "TwinPack": {
+        "properties": {
+          "soh": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "capacity": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "temperature": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "voltage": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "soh",
+          "capacity",
+          "temperature",
+          "voltage"
+        ],
+        "title": "TwinPack"
+      },
+      "TwinResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "last_cycle": {
+            "type": "integer",
+            "title": "Last Cycle"
+          },
+          "pack": {
+            "$ref": "#/components/schemas/TwinPack"
+          },
+          "health_level": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "caution",
+              "critical"
+            ],
+            "title": "Health Level"
+          },
+          "temperature_band": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "warm",
+              "hot"
+            ],
+            "title": "Temperature Band"
+          },
+          "modules": {
+            "$ref": "#/components/schemas/TwinModules"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "cycle",
+          "last_cycle",
+          "pack",
+          "health_level",
+          "temperature_band",
+          "modules"
+        ],
+        "title": "TwinResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

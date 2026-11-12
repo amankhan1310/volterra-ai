@@ -1,0 +1,25 @@
+# Local PostgreSQL 16 for development, as an alternative to a native installation.
+# Usage (from the repo root):  docker compose -f infra/docker-compose.yml up -d
+# A native PostgreSQL on port 5432 must be stopped first, or change the host port below.
+# Credentials are local development placeholders; set POSTGRES_PASSWORD in your shell or .env.
+name: volterra
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: volterra
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: volterra
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - volterra-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volterra -d volterra"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  volterra-pgdata:

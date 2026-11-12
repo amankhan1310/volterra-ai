@@ -9,9 +9,18 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from app.analytics.anomalies import (
+    FLAG_ABS_Z,
+    HIGH_ABS_Z,
+    MAD_FLOOR,
+    RESIDUAL_HALF_WINDOW,
+    Z_SCALE,
+)
+from app.analytics.display import health_level
 from app.analytics.legacy_v1 import LegacyV1Analysis
 from app.analytics.stats import LinearFit
 from app.analytics.synthetic import CycleRecord
+from app.analytics.twin import TWIN_MODULE_COUNT, temperature_band
 from app.db.repositories import BatteryInfo, DatasetInfo
 from app.schemas.analysis import (
     AccelerationOut,
@@ -30,6 +39,16 @@ from app.schemas.analysis import (
 )
 from app.schemas.common import AnalysisContext, Interval, Quantity, data_provenance
 from app.schemas.datasets import BatteryOut, CycleOut, CyclesResponse, DatasetOut
+from app.schemas.monitoring import (
+    AnomaliesResponse,
+    AnomalyEventOut,
+    AnomalyMethodOut,
+    ChannelStatsOut,
+    DetectorOut,
+    TwinModules,
+    TwinPack,
+    TwinResponse,
+)
 from app.services.analysis import BatteryAnalysis
 
 
@@ -211,4 +230,83 @@ def insights_response(ba: BatteryAnalysis) -> InsightsResponse:
         context=context(ba.battery),
         insights=[InsightOut(kind=i.kind, text=i.text, values=dict(i.values)) for i in a.insights],
         acceleration=acceleration_out(a),
+    )
+
+
+# --- Anomalies and digital twin (v1) ------------------------------------------------------------
+
+ANOMALY_KNOWN_ISSUES = ["F1", "F2", "F7"]
+TWIN_NOTE = (
+    "The dataset has pack-level measurements only; every module shows the pack value "
+    "(illustrative, not a per-cell measurement)."
+)
+
+
+def anomalies_response(ba: BatteryAnalysis, include_scores: bool) -> AnomaliesResponse:
+    report = ba.analysis.anomalies
+    channels = (
+        [
+            ChannelStatsOut(
+                channel=c.spec.key,
+                label=c.spec.label,
+                unit=c.spec.unit,
+                median=c.median,
+                mad=c.mad,
+                expected_low=c.expected_low,
+                expected_high=c.expected_high,
+                values=list(c.values),
+                z=list(c.z),
+            )
+            for c in report.channels
+        ]
+        if include_scores
+        else None
+    )
+    return AnomaliesResponse(
+        context=context(ba.battery),
+        detector=DetectorOut(name=report.detector, version=report.version, mode=report.mode),
+        method=AnomalyMethodOut(
+            z_scale=Z_SCALE,
+            flag_threshold_abs_z=FLAG_ABS_Z,
+            high_severity_abs_z=HIGH_ABS_Z,
+            mad_floor=MAD_FLOOR,
+            residual_half_window=RESIDUAL_HALF_WINDOW,
+        ),
+        summary=AnomalyCounts(
+            total=report.count(), high=report.count("high"), medium=report.count("medium")
+        ),
+        events=[
+            AnomalyEventOut(
+                cycle=e.cycle,
+                channel=e.channel,
+                type=e.type,
+                value=e.value,
+                unit=e.unit,
+                expected_low=e.expected_low,
+                expected_high=e.expected_high,
+                z=e.z,
+                severity=e.severity,
+            )
+            for e in report.events
+        ],
+        channels=channels,
+        known_issues=ANOMALY_KNOWN_ISSUES,
+    )
+
+
+def twin_response(battery: BatteryInfo, record: CycleRecord, last_cycle: int) -> TwinResponse:
+    data = data_provenance(battery.is_synthetic)
+    return TwinResponse(
+        context=context(battery),
+        cycle=record.cycle,
+        last_cycle=last_cycle,
+        pack=TwinPack(
+            soh=Quantity(value=record.soh_pct, unit="%", provenance=data),
+            capacity=Quantity(value=record.capacity_ah, unit="Ah", provenance=data),
+            temperature=Quantity(value=record.temp_c, unit="°C", provenance=data),
+            voltage=Quantity(value=record.voltage_v, unit="V", provenance=data),
+        ),
+        health_level=health_level(record.soh_pct),
+        temperature_band=temperature_band(record.temp_c),
+        modules=TwinModules(count=TWIN_MODULE_COUNT, note=TWIN_NOTE),
     )

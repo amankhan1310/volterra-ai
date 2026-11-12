@@ -9,7 +9,10 @@ from typing import Any
 import httpx
 from fastapi import FastAPI
 
+from app.api.deps import get_repository
 from app.core.config import Settings
+from app.main import create_app
+from tests.support.memory_repository import InMemoryRepository
 
 
 def make_settings(**overrides: Any) -> Settings:
@@ -29,3 +32,13 @@ async def client_for(
     transport = httpx.ASGITransport(app=app, raise_app_exceptions=raise_app_exceptions)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
+
+def memory_app(
+    repository: InMemoryRepository | None = None, **settings: Any
+) -> tuple[FastAPI, InMemoryRepository]:
+    """An app whose repository is an in-memory synthetic-v1 store (no database needed)."""
+    repo = repository or InMemoryRepository()
+    app = create_app(make_settings(**settings))
+    app.dependency_overrides[get_repository] = lambda: repo
+    return app, repo

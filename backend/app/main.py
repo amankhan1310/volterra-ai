@@ -20,6 +20,7 @@ from app.api.v1.router import api_router
 from app.core.config import API_PREFIX, API_VERSION, Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.db.session import Database
+from app.services.analysis import AnalysisCache, AnalysisService
 
 DESCRIPTION = (
     "VOLTERRA AI battery analytics API. Analytical values carry provenance "
@@ -57,6 +58,7 @@ def create_app(settings: Settings | None = None, *, database: Database | None = 
     )
     app.state.settings = settings
     app.state.database = database
+    app.state.analysis_service = AnalysisService(AnalysisCache(settings.analysis_cache_size))
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,

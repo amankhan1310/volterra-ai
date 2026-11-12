@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from app.analytics.advisor import AdvisorTable
 from app.analytics.anomalies import (
     FLAG_ABS_Z,
     HIGH_ABS_Z,
@@ -18,6 +19,19 @@ from app.analytics.anomalies import (
 )
 from app.analytics.display import health_level
 from app.analytics.legacy_v1 import LegacyV1Analysis
+from app.analytics.simulator import (
+    ACCELERATION_CYCLES,
+    BASELINE_C_RATE,
+    BASELINE_DOD_PCT,
+    BASELINE_TEMP_C,
+    C_RATE_LINEAR,
+    DOD_EXPONENT,
+    LEGACY_KEYS,
+    SIMULATOR_VERSION,
+    SLIDERS,
+    TEMP_EXP_PER_C,
+    ScenarioParams,
+)
 from app.analytics.stats import LinearFit
 from app.analytics.synthetic import CycleRecord
 from app.analytics.twin import TWIN_MODULE_COUNT, temperature_band
@@ -49,7 +63,19 @@ from app.schemas.monitoring import (
     TwinPack,
     TwinResponse,
 )
+from app.schemas.simulator import (
+    AdvisorResponse,
+    AdvisorRowOut,
+    BaselineConditions,
+    CoefficientOut,
+    ScenarioParamsModel,
+    SimulateResponse,
+    SimulatorConfigResponse,
+    SliderOut,
+    TrajectoriesOut,
+)
 from app.services.analysis import BatteryAnalysis
+from app.services.simulation import SimulationResult
 
 
 def context(battery: BatteryInfo, eol_pct: float | None = None) -> AnalysisContext:
@@ -309,4 +335,128 @@ def twin_response(battery: BatteryInfo, record: CycleRecord, last_cycle: int) ->
         health_level=health_level(record.soh_pct),
         temperature_band=temperature_band(record.temp_c),
         modules=TwinModules(count=TWIN_MODULE_COUNT, note=TWIN_NOTE),
+    )
+
+
+# --- Simulator and Charging Advisor (v1) --------------------------------------------------------
+
+SIMULATOR_MODEL = (
+    "soh(n) = S - r*n*(1 + n/1500), r = base_fade * exp(0.06*(T-25)) * (1 + 0.4*(C-1)) "
+    "* (D/80)^0.9; stress coefficients are assumed, not fitted"
+)
+ADVISOR_NOTE = (
+    "Modelled direction and relative size under the simulator's assumed coefficients; "
+    "not guaranteed battery-life gains."
+)
+
+
+def params_model(p: ScenarioParams) -> ScenarioParamsModel:
+    return ScenarioParamsModel(
+        temp_c=p.temp_c,
+        c_rate=p.c_rate,
+        dod_pct=p.dod_pct,
+        horizon_cycles=p.horizon_cycles,
+        start_soh_pct=p.start_soh_pct,
+        eol_pct=p.eol_pct,
+    )
+
+
+def scenario_params(m: ScenarioParamsModel) -> ScenarioParams:
+    return ScenarioParams(
+        temp_c=m.temp_c,
+        c_rate=m.c_rate,
+        dod_pct=m.dod_pct,
+        horizon_cycles=m.horizon_cycles,
+        start_soh_pct=m.start_soh_pct,
+        eol_pct=m.eol_pct,
+    )
+
+
+BASELINE = BaselineConditions(
+    temp_c=BASELINE_TEMP_C, c_rate=BASELINE_C_RATE, dod_pct=BASELINE_DOD_PCT
+)
+
+
+def simulator_config_response(ba: BatteryAnalysis) -> SimulatorConfigResponse:
+    a = ba.analysis
+    fade = a.trend.fade_pct_per_cycle
+    return SimulatorConfigResponse(
+        context=context(ba.battery, a.eol_pct),
+        version=SIMULATOR_VERSION,
+        defaults=params_model(a.simulator_defaults),
+        baseline_conditions=BASELINE,
+        base_fade=Quantity(value=fade, unit="%/cycle", provenance="fitted"),
+        coefficients=[
+            CoefficientOut(name="base_fade", value=fade, provenance="fitted"),
+            CoefficientOut(name="temperature", value=TEMP_EXP_PER_C, provenance="assumed"),
+            CoefficientOut(name="c_rate", value=C_RATE_LINEAR, provenance="assumed"),
+            CoefficientOut(name="dod", value=DOD_EXPONENT, provenance="assumed"),
+            CoefficientOut(name="acceleration", value=ACCELERATION_CYCLES, provenance="assumed"),
+        ],
+        sliders=[
+            SliderOut(
+                key=LEGACY_KEYS[s.key],
+                legacy_key=s.key,
+                label=s.label,
+                min=s.min,
+                max=s.max,
+                step=s.step,
+                unit=s.unit,
+            )
+            for s in SLIDERS
+        ],
+        model=SIMULATOR_MODEL,
+    )
+
+
+def simulate_response(battery: BatteryInfo, result: SimulationResult) -> SimulateResponse:
+    c = result.comparison
+    trajectories = (
+        TrajectoriesOut(
+            cycles=result.trajectory_cycles,
+            scenario=result.trajectory,
+            baseline=result.baseline_trajectory,
+        )
+        if result.trajectory_cycles is not None
+        and result.trajectory is not None
+        and result.baseline_trajectory is not None
+        else None
+    )
+    return SimulateResponse(
+        context=context(battery, c.params.eol_pct),
+        params=params_model(c.params),
+        baseline_params=params_model(c.baseline_params),
+        rate=Quantity(value=result.rate_pct_per_cycle, unit="%/cycle", provenance="simulated"),
+        cycles_to_eol=c.cycles_to_eol,
+        baseline_cycles_to_eol=c.baseline_cycles_to_eol,
+        delta_cycles=c.delta_cycles,
+        delta_pct=c.delta_pct,
+        soh_after_horizon=Quantity(value=c.soh_after_horizon_pct, unit="%", provenance="simulated"),
+        baseline_soh_after_horizon=Quantity(
+            value=c.baseline_soh_after_horizon_pct, unit="%", provenance="simulated"
+        ),
+        trajectories=trajectories,
+        known_issues=["F4"],
+    )
+
+
+def advisor_response(battery: BatteryInfo, table: AdvisorTable) -> AdvisorResponse:
+    return AdvisorResponse(
+        context=context(battery, table.eol_pct),
+        start_soh_pct=table.start_soh_pct,
+        eol_pct=table.eol_pct,
+        baseline_conditions=BASELINE,
+        baseline_cycles_to_eol=table.baseline_cycles_to_eol,
+        rows=[
+            AdvisorRowOut(
+                change=r.change.label,
+                why=r.change.why,
+                override={LEGACY_KEYS[k]: v for k, v in r.change.override.items()},
+                cycles_to_eol=r.cycles_to_eol,
+                delta_pct=r.delta_pct,
+            )
+            for r in table.rows
+        ],
+        note=ADVISOR_NOTE,
+        known_issues=["F8"],
     )

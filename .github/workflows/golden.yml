@@ -1,0 +1,32 @@
+# Phase 1: golden reference fixtures exported from the legacy prototype.
+# Verifies the exporter is deterministic (two runs identical), that the committed fixtures in
+# backend/tests/golden/ match a fresh export, and that the result is stable across Node versions.
+name: golden-fixtures
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  golden:
+    name: Golden fixtures (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["18", "20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Exporter tests
+        run: node --test legacy/tools/
+      - name: Fixtures match a fresh export
+        run: node legacy/tools/export_golden.js --check
+      - name: Legacy prototype unchanged
+        run: git diff --exit-code HEAD -- legacy/index.html legacy/core.js legacy/ui.js legacy/style.css

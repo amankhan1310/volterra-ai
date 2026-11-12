@@ -47,6 +47,11 @@ class ApiError(Exception):
         self.details = details
 
 
+def error_responses(*status_codes: int) -> dict[int | str, dict[str, Any]]:
+    """OpenAPI ``responses`` entries documenting the error envelope for the given codes."""
+    return {code: {"model": ErrorResponse} for code in status_codes}
+
+
 def not_found(resource: str, identifier: object) -> ApiError:
     return ApiError(404, f"{resource}_not_found", f"{resource.capitalize()} {identifier} not found")
 

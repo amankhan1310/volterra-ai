@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "fixture": "display_rules",
+    "schema_version": 1,
+    "description": "Health colour and condition labels used across pages.",
+    "provenance": "assumed",
+    "source": ["legacy/core.js:166-175"],
+    "units": {
+      "soh_pct": "%"
+    },
+    "definitions": {
+      "colour": "soh >= 85 -> var(--gr); soh >= 80 -> var(--am); else var(--rd)",
+      "condition": ">= 90 Healthy; >= 85 Good; >= 80 Approaching end-of-life threshold; else Below threshold"
+    }
+  },
+  "cases": [
+    {
+      "soh_pct": 100,
+      "colour": "var(--gr)",
+      "condition": "Healthy"
+    },
+    {
+      "soh_pct": 95,
+      "colour": "var(--gr)",
+      "condition": "Healthy"
+    },
+    {
+      "soh_pct": 90,
+      "colour": "var(--gr)",
+      "condition": "Healthy"
+    },
+    {
+      "soh_pct": 89.99,
+      "colour": "var(--gr)",
+      "condition": "Good"
+    },
+    {
+      "soh_pct": 85.5,
+      "colour": "var(--gr)",
+      "condition": "Good"
+    },
+    {
+      "soh_pct": 85,
+      "colour": "var(--gr)",
+      "condition": "Good"
+    },
+    {
+      "soh_pct": 84.99,
+      "colour": "var(--am)",
+      "condition": "Approaching end-of-life threshold"
+    },
+    {
+      "soh_pct": 82,
+      "colour": "var(--am)",
+      "condition": "Approaching end-of-life threshold"
+    },
+    {
+      "soh_pct": 80,
+      "colour": "var(--am)",
+      "condition": "Approaching end-of-life threshold"
+    },
+    {
+      "soh_pct": 79.99,
+      "colour": "var(--rd)",
+      "condition": "Below threshold"
+    },
+    {
+      "soh_pct": 50,
+      "colour": "var(--rd)",
+      "condition": "Below threshold"
+    },
+    {
+      "soh_pct": 0,
+      "colour": "var(--rd)",
+      "condition": "Below threshold"
+    }
+  ],
+  "current": {
+    "soh_pct": 86.08941987140724,
+    "colour": "var(--gr)",
+    "condition": "Good"
+  }
+}

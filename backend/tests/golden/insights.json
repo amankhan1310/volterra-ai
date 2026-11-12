@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "fixture": "insights",
+    "schema_version": 1,
+    "description": "Rule-based insight strings, captured verbatim.",
+    "provenance": "fitted",
+    "source": ["legacy/core.js:277-291", "legacy/ui.js:196-199", "legacy/ui.js:228"],
+    "units": {
+      "fade_pct_per_cycle": "% SOH per cycle"
+    },
+    "known_issues": {
+      "F5": "Insight #2 always says 'Fade is accelerating' regardless of the computed slopes."
+    }
+  },
+  "inputs": {
+    "first_soh_pct": 99.8966312480066,
+    "soh_now_pct": 86.08941987140724,
+    "n_cycles": 320,
+    "first_half_fade_pct_per_cycle": 0.03640014492993955,
+    "recent_fade_pct_per_cycle": 0.05401766159185438,
+    "temp_events": 1,
+    "volt_events": 2,
+    "backtest_mae": 0.5777011523851212
+  },
+  "insights": ["Capacity fell from 99.9% to 86.1% SOH over 320 cycles; recent fade is 0.054 %/cycle.", "Fade is accelerating: first-half 0.036 vs last-120 0.054 %/cycle.", "1 temperature and 2 voltage events were flagged. With so few events there is insufficient evidence to link them to degradation (correlation ≠ causation).", "The straight-line forecast has a hold-out MAE of 0.58 SOH points; treat the RUL as an estimate."],
+  "overview_hero": {
+    "rule": "fade > first_half_fade * 1.2 [legacy/ui.js:228]",
+    "accelerated": true,
+    "appended_text": " Fade has accelerated over the cell’s life, so the true remaining life may be shorter than a linear fit implies."
+  }
+}

@@ -1,0 +1,167 @@
+/* Digital Twin, ported from legacy/style.css (.tw, .tb, .scene, .mod, .leg, .stats2, label, range). */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  gap: 16px;
+}
+
+.layout > * {
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.scene {
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  background: radial-gradient(
+      55% 60% at 50% 48%,
+      var(--twin-glow),
+      transparent 72%
+    ),
+    var(--twin-scene);
+}
+
+.pack {
+  width: 100%;
+}
+
+.module {
+  cursor: pointer;
+  transition: transform 0.25s;
+}
+
+.module[data-selected="true"] {
+  transform: translateY(-9px);
+}
+
+/* No rectangular outline on the SVG group; keyboard focus outlines the module's top face. */
+.module:focus,
+.module:focus-visible {
+  outline: none;
+}
+
+.module:focus-visible .top {
+  stroke: var(--cy);
+  stroke-width: 2;
+}
+
+.module polygon {
+  transition:
+    fill 0.5s,
+    stroke 0.2s;
+}
+
+.left {
+  fill-opacity: 0.5;
+}
+
+.right {
+  fill-opacity: 0.32;
+}
+
+.top {
+  fill-opacity: 0.95;
+}
+
+/* Legacy `label` with the value floated right in cyan. */
+.cycleLabel {
+  display: block;
+  margin: 12px 0 2px;
+  font-weight: 600;
+}
+
+.cycleLabel span {
+  float: right;
+  color: var(--cy);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider {
+  width: 100%;
+  height: 4px;
+  margin: 10px 0;
+  border-radius: 4px;
+  background: var(--hi);
+  accent-color: var(--cy);
+  appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--cy);
+  box-shadow: 0 0 0 1px var(--cy);
+  appearance: none;
+}
+
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--cy);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 6px;
+  color: var(--mu);
+  font-size: 12.5px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  margin-right: 5px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.tags {
+  margin: 8px 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.inlineError {
+  margin: 0 0 10px;
+  color: var(--rd);
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  /* Larger touch target for the cycle slider. */
+  .slider::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+  }
+}

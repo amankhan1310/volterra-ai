@@ -1,7 +1,8 @@
 /**
  * Number parity with the frozen prototype (Phase 4 Definition of Done): every value the legacy
- * Overview shows must appear identically in React. The prototype computes in the browser; React
- * shows what the API returns, so this checks the whole chain (Python port → API → UI).
+ * Overview and Digital Twin show must appear identically in React. The prototype computes in the
+ * browser; React shows what the API returns, so this checks the whole chain (Python port → API →
+ * UI).
  *
  * Needs the prototype served at LEGACY_URL (default http://127.0.0.1:8080/):
  *   python -m http.server 8080 --directory legacy
@@ -123,3 +124,86 @@ test("every Overview number matches the legacy prototype", async ({ page }) => {
   expect(legacy.timeline.observed.length).toBeGreaterThan(300);
   expect(react).toEqual(legacy);
 });
+
+interface TwinValues {
+  heading: string;
+  stats: string[];
+  message: string;
+  fill: string;
+  legend: string[];
+}
+
+/** Digital Twin parity at the first, middle, warm-excursion and latest cycles, both modes. */
+for (const [cycle, mode] of [
+  [0, "soh"],
+  [160, "soh"],
+  [170, "temp"],
+  [319, "soh"],
+  [319, "temp"],
+] as const) {
+  test(`Digital Twin at cycle ${String(cycle)} (${mode}) matches the legacy prototype`, async ({
+    page,
+  }) => {
+    await page.goto(`${LEGACY_URL}#digital`);
+    await page.locator("#pack .mod").first().waitFor();
+    await page.evaluate(
+      ([c, m]) => {
+        const slider = document.getElementById("cs") as HTMLInputElement;
+        slider.value = String(c);
+        slider.dispatchEvent(new Event("input"));
+        if (m === "temp")
+          (
+            document.querySelector('#sg button[data-m="temp"]') as HTMLElement
+          ).click();
+      },
+      [cycle, mode] as const,
+    );
+    const legacy: TwinValues = await page.evaluate(() => {
+      const info = document.getElementById("tinfo") as HTMLElement;
+      const text = (e: Element | null) =>
+        (e?.textContent ?? "").replace(/\s+/g, " ").trim();
+      return {
+        heading: text(info.querySelector(".lb")),
+        stats: [...info.querySelectorAll(".stats2 .big")].map(text),
+        message: text(info.querySelector("p.mu")),
+        fill: (document.querySelector("#pack .mod .t") as SVGElement).style
+          .fill,
+        // Prototype defect: the logo's SVG gradient also has id="lg", so the legend is written
+        // into that gradient and never shown (and the logo icon disappears). Its text is still
+        // the intended legend, which React displays.
+        legend: [...document.querySelectorAll("#lg span")].map(text),
+      };
+    });
+
+    await page.goto("/digital-twin");
+    await settled(page);
+    await page.getByRole("slider", { name: /Cycle/ }).fill(String(cycle));
+    if (mode === "temp")
+      await page
+        .getByRole("group", { name: "Colour modules by" })
+        .getByRole("button", { name: "Temperature" })
+        .click();
+    await expect(page.getByTestId("page-content")).toContainText(
+      `Pack state at cycle ${String(cycle)}`,
+    );
+    const panel = page.getByTestId("page-content");
+    const react: TwinValues = {
+      heading: clean(await panel.locator(".lb").first().textContent()),
+      stats: (
+        await page.getByTestId("pack-stats").locator(".big").allTextContents()
+      ).map(clean),
+      message: clean(await page.getByTestId("module-message").textContent()),
+      fill:
+        (await page
+          .getByRole("button", { name: "Module 1" })
+          .locator("polygon")
+          .nth(2)
+          .getAttribute("fill")) ?? "",
+      legend: (
+        await page.getByLabel("Colour legend").locator("span").allTextContents()
+      ).map(clean),
+    };
+    expect(legacy.stats).toHaveLength(4);
+    expect(react).toEqual(legacy);
+  });
+}

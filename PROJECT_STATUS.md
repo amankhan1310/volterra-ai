@@ -8,7 +8,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 1. Golden fixtures              | ✅ Complete |
 | 2. Analytics parity in Python   | ✅ Complete |
 | 3. DB + API (parity)            | ✅ Complete |
-| 4. React parity                 | 🚧 M2 of 6  |
+| 4. React parity                 | 🚧 M3 of 6  |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
@@ -252,6 +252,23 @@ Deviations from the prototype: capacity-step events are marked on the SOH line a
 (the prototype plotted their ≈ ±0.3 residuals on the SOH axis); chart legend swatches match the
 line colours; the insights subtitle says they come from the API, not "your browser".
 
+### Milestone 3 — Digital Twin (2026-11-13)
+
+Branch: `feat/frontend-digital-twin`. M2 merged as PR #7 (`0a67fe9`) with all checks green.
+
+Delivered: the Digital Twin page from `GET /twin` and `GET /cycles`: isometric pack (module
+count from the API, colours from `health_level` / `temperature_band`), Health/Temperature modes,
+cycle slider (label updates at once, requests debounced 120 ms, results cached per cycle, last
+good state kept with an inline error if a request fails), module selection by mouse, Enter or
+Space, Reset view, pack-state panel with provenance and the SOH mini chart with a cycle cursor.
+
+Verification: 140 unit and component tests; 47 Playwright tests including parity with the
+prototype at cycles 0, 160, 170 and 319 in both modes; axe and responsive checks; build.
+
+Found in the prototype: the logo's SVG gradient and the twin legend share the id `lg`, so the
+legend is written into the gradient: it never appears and the logo icon disappears on that page.
+React shows the legend.
+
 ## Next
 
-Phase 4 Milestone 3 (Digital Twin), after the M2 review and merge.
+Phase 4 Milestone 4 (What-If Simulator), after the M3 review and merge.

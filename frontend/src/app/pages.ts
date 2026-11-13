@@ -46,7 +46,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "A software representation driven by the selected cycle of the dataset. It is not connected to a vehicle.",
     milestone: 3,
-    built: false,
+    built: true,
   },
   {
     key: "sim",

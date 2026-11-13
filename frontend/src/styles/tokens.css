@@ -47,5 +47,12 @@
   --chart-zoom-fill: rgba(84, 231, 255, 0.12);
   --gauge-glow: rgba(84, 231, 255, 0.14);
 
+  /* Digital Twin scene (legacy .scene and the pack drawing) */
+  --twin-scene: #070b11;
+  --twin-glow: rgba(84, 231, 255, 0.13);
+  --twin-plate: #0f1621;
+  --twin-plate-edge: #223149;
+  --twin-edge: rgba(255, 255, 255, 0.18);
+
   --font: Manrope, system-ui, sans-serif;
 }

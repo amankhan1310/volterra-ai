@@ -1,0 +1,5 @@
+/* Legacy `.ech`: full width; the height comes from the component. */
+.chart {
+  width: 100%;
+  min-width: 0;
+}

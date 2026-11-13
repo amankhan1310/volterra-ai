@@ -10,5 +10,23 @@ export default defineConfig({
   plugins: [react()],
   server: { port: 5173, strictPort: true, proxy },
   preview: { port: 4173, strictPort: true, proxy },
-  build: { target: "es2022", sourcemap: true },
+  build: {
+    target: "es2022",
+    sourcemap: true,
+    // ECharts gets its own chunk, shared by every chart page and loaded with the first of them
+    // (plan §9). It is ~520 kB minified (~175 kB gzip) on its own, hence the higher warning limit.
+    chunkSizeWarningLimit: 600,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "echarts",
+              test: /node_modules[\/](echarts|zrender|tslib)[\/]/,
+            },
+          ],
+        },
+      },
+    },
+  },
 });

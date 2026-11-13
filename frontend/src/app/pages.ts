@@ -22,6 +22,8 @@ export interface PageMeta {
   subtitle: string;
   /** Phase 4 milestone that rebuilds the page. */
   milestone: number;
+  /** True once that milestone has shipped; until then the route shows a labelled placeholder. */
+  built: boolean;
 }
 
 /** Order of the legacy quick-navigation select (`Object.entries(names)`). */
@@ -34,6 +36,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "Understand degradation. Anticipate risk. Make smarter battery decisions.",
     milestone: 2,
+    built: true,
   },
   {
     key: "digital",
@@ -43,6 +46,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "A software representation driven by the selected cycle of the dataset. It is not connected to a vehicle.",
     milestone: 3,
+    built: false,
   },
   {
     key: "sim",
@@ -52,6 +56,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "Compare operating scenarios against a 25 °C, 1C, 80% DoD baseline.",
     milestone: 4,
+    built: false,
   },
   {
     key: "anom",
@@ -61,6 +66,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "Robust z-score (median/MAD, threshold 3.5). Events are patterns to investigate, not confirmed faults.",
     milestone: 5,
+    built: false,
   },
   {
     key: "advisor",
@@ -70,6 +76,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "How each change would move cycles to end-of-life, under this simulator’s assumed coefficients.",
     milestone: 5,
+    built: false,
   },
   {
     key: "about",
@@ -78,6 +85,7 @@ export const PAGES: readonly PageMeta[] = [
     title: "About",
     subtitle: "Project information, method and limits.",
     milestone: 6,
+    built: false,
   },
 ];
 

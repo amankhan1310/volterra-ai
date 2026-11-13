@@ -1,0 +1,79 @@
+{
+  "context": {
+    "battery_id": "5b0f37f1-3383-4495-a70d-bd0ff24be316",
+    "dataset": "synthetic-v1",
+    "is_synthetic": true,
+    "data_provenance": "simulated",
+    "algorithm_version": "v1",
+    "eol_pct": 80
+  },
+  "soh_now": {
+    "value": 86.08941987140724,
+    "unit": "%",
+    "provenance": "fitted"
+  },
+  "observed_last_soh": {
+    "value": 85.86592724723863,
+    "unit": "%",
+    "provenance": "simulated"
+  },
+  "fade_rate": {
+    "value": 0.05401766159185438,
+    "unit": "%/cycle",
+    "provenance": "fitted"
+  },
+  "rul": {
+    "point": 112.73016439359348,
+    "lower": 111.46112593857329,
+    "upper": 114.02843287115154,
+    "level": 0.95,
+    "method": "slope_se",
+    "unit": "cycles",
+    "provenance": "predicted"
+  },
+  "health_level": "healthy",
+  "condition": "Good",
+  "life_used_fraction": {
+    "value": 0.6955290064296378,
+    "unit": "fraction",
+    "provenance": "fitted"
+  },
+  "cycle_count": 320,
+  "latest": {
+    "cycle": 319,
+    "capacity": {
+      "value": 1.7173185449447725,
+      "unit": "Ah",
+      "provenance": "simulated"
+    },
+    "temperature": {
+      "value": 26.354432521162522,
+      "unit": "°C",
+      "provenance": "simulated"
+    },
+    "voltage": {
+      "value": 3.6574460592632416,
+      "unit": "V",
+      "provenance": "simulated"
+    }
+  },
+  "anomalies": {
+    "total": 8,
+    "high": 2,
+    "medium": 6
+  },
+  "acceleration": {
+    "accelerated": true,
+    "note": " Fade has accelerated over the cell’s life, so the true remaining life may be shorter than a linear fit implies.",
+    "provenance": "fitted"
+  },
+  "trend": {
+    "slope": -0.05401766159185438,
+    "intercept": 103.3210539192088,
+    "residual_sd": 0.11906859553126277,
+    "slope_se": 0.0003137841952038305,
+    "fit_from_cycle": 200,
+    "fit_to_cycle": 319,
+    "provenance": "fitted"
+  }
+}

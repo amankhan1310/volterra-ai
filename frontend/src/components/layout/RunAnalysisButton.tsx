@@ -9,18 +9,24 @@ import { useToast } from "../ui/Toast";
 export function reloadMessage(
   dataset: string | undefined,
   algorithm: string | undefined,
+  detail?: string | null,
 ): string {
   const source = [dataset, algorithm && `algorithm ${algorithm}`]
     .filter(Boolean)
     .join(", ");
-  return `Analysis results reloaded from the API${source ? ` (${source})` : ""}. No model was retrained.`;
+  return `Analysis results reloaded from the API${source ? ` (${source})` : ""}${detail ? `: ${detail}` : ""}. No model was retrained.`;
 }
 
 /**
  * Legacy "Run analysis" (decision D6). The prototype re-rendered static results; here the page's
  * API queries are fetched again and the toast says exactly that.
  */
-export function RunAnalysisButton() {
+export function RunAnalysisButton({
+  summarize,
+}: {
+  /** Key results to repeat in the toast after the reload (the prototype quoted SOH and RUL). */
+  summarize?: () => string | null;
+} = {}) {
   const queryClient = useQueryClient();
   const toast = useToast();
   // Read during render: TanStack Query only re-renders for result fields the render used.
@@ -42,7 +48,7 @@ export function RunAnalysisButton() {
     if (failed) {
       toast(`Reload failed: ${describeError(failed.state.error).message}`);
     } else {
-      toast(reloadMessage(dataset, algorithm));
+      toast(reloadMessage(dataset, algorithm, summarize?.()));
     }
   };
 

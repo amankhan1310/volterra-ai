@@ -5,6 +5,7 @@ import { queryKeys } from "../api/hooks";
 import { apiError, fixtures, server } from "../test/msw";
 import { renderApp } from "../test/render";
 import { PAGES } from "./pages";
+import { BUILT } from "./router";
 
 const mainNav = () => screen.getByRole("navigation", { name: "Main" });
 const breadcrumb = () => screen.getByRole("navigation", { name: "Breadcrumb" });
@@ -31,7 +32,7 @@ describe("routing", () => {
     expect(router.state.location.pathname).toBe(path);
   });
 
-  it.each(PAGES.map((p) => [p.path, p] as const))(
+  it.each(PAGES.filter((p) => !p.built).map((p) => [p.path, p] as const))(
     "renders %s with the legacy title and a labelled placeholder",
     async (path, page) => {
       renderApp(path);
@@ -48,6 +49,14 @@ describe("routing", () => {
       expect(document.title).toBe(`${page.label} · VOLTERRA AI`);
     },
   );
+
+  it("routes exactly the pages marked as built to their rebuilt component", () => {
+    expect(Object.keys(BUILT).sort()).toEqual(
+      PAGES.filter((p) => p.built)
+        .map((p) => p.key)
+        .sort(),
+    );
+  });
 
   it("shows a 404 page for unknown paths", async () => {
     renderApp("/nowhere");
@@ -193,7 +202,7 @@ describe("header and status (real API fixtures)", () => {
 
 describe("data states", () => {
   it("shows the loading state, then the placeholder", async () => {
-    renderApp("/overview");
+    renderApp("/about");
     expect(
       screen.getByRole("status", { name: "Loading battery data" }),
     ).toBeTruthy();
@@ -202,7 +211,7 @@ describe("data states", () => {
 
   it("explains an unreachable API, with a working retry", async () => {
     server.use(http.get("*/api/v1/batteries", () => HttpResponse.error()));
-    const { user } = renderApp("/overview");
+    const { user } = renderApp("/about");
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toContain("API unreachable");
     expect(alert.textContent).toContain("uvicorn");

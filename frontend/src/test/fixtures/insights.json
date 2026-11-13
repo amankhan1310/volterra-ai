@@ -1,0 +1,53 @@
+{
+  "context": {
+    "battery_id": "5b0f37f1-3383-4495-a70d-bd0ff24be316",
+    "dataset": "synthetic-v1",
+    "is_synthetic": true,
+    "data_provenance": "simulated",
+    "algorithm_version": "v1",
+    "eol_pct": null
+  },
+  "insights": [
+    {
+      "kind": "observation",
+      "text": "Capacity fell from 99.9% to 86.1% SOH over 320 cycles; recent fade is 0.054 %/cycle.",
+      "values": {
+        "first_soh_pct": 99.8966312480066,
+        "soh_now_pct": 86.08941987140724,
+        "n_cycles": 320
+      },
+      "provenance": "fitted"
+    },
+    {
+      "kind": "watch",
+      "text": "Fade is accelerating: first-half 0.036 vs last-120 0.054 %/cycle.",
+      "values": {
+        "first_half_fade_pct_per_cycle": 0.03640014492993955,
+        "recent_fade_pct_per_cycle": 0.05401766159185438
+      },
+      "provenance": "fitted"
+    },
+    {
+      "kind": "note",
+      "text": "1 temperature and 2 voltage events were flagged. With so few events there is insufficient evidence to link them to degradation (correlation ≠ causation).",
+      "values": {
+        "temp_events": 1,
+        "volt_events": 2
+      },
+      "provenance": "fitted"
+    },
+    {
+      "kind": "model",
+      "text": "The straight-line forecast has a hold-out MAE of 0.58 SOH points; treat the RUL as an estimate.",
+      "values": {
+        "backtest_mae": 0.5777011523851212
+      },
+      "provenance": "fitted"
+    }
+  ],
+  "acceleration": {
+    "accelerated": true,
+    "note": " Fade has accelerated over the cell’s life, so the true remaining life may be shorter than a linear fit implies.",
+    "provenance": "fitted"
+  }
+}

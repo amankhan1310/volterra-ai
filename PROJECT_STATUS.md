@@ -8,7 +8,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 1. Golden fixtures              | ✅ Complete |
 | 2. Analytics parity in Python   | ✅ Complete |
 | 3. DB + API (parity)            | ✅ Complete |
-| 4. React parity                 | 🚧 M3 of 6  |
+| 4. React parity                 | 🚧 M4 of 6  |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
@@ -269,6 +269,26 @@ Found in the prototype: the logo's SVG gradient and the twin legend share the id
 legend is written into the gradient: it never appears and the logo icon disappears on that page.
 React shows the legend.
 
+### Milestone 4 — What-If Simulator (2026-11-14)
+
+Branch: `feat/frontend-simulator`. M3 merged as PR #8 (`8813e94`).
+
+Delivered: the What-If Simulator from `GET /simulator`, `POST /simulate` and the scenario
+endpoints: six sliders defined by the API, writing the shared draft (D1, so EOL and initial SOH
+reach Overview and Advisor with the U1 chip); simulations debounced 150 ms, cached by parameters,
+last good result kept with an inline error; chart with baseline, current (EOL line and end
+bubble) and up to four saved-scenario overlays drawn over the current horizon, as in the
+prototype; results with the prototype's text. Saved scenarios are now persistent (database):
+save, rename (accessible dialog, 30 characters, U2), duplicate and delete; Save and Duplicate stop
+at four (D3). If the scenario list cannot load, saving is disabled and the simulator still works.
+
+Verification: 161 unit and component tests; Playwright for the full scenario lifecycle (tests
+delete only the scenarios they create) and parity with the prototype on the defaults and five
+presets (including ">5000" and the already-at-EOL case); axe and responsive checks; build.
+
+Deviations: when both sides start at EOL the prototype printed "(NaN%)"; this shows "(n/a)".
+Saved scenarios persist instead of resetting on reload (plan item B10).
+
 ## Next
 
-Phase 4 Milestone 4 (What-If Simulator), after the M3 review and merge.
+Phase 4 Milestone 5 (Anomaly Detection and Charging Advisor), after the M4 review and merge.

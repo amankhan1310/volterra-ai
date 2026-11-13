@@ -43,6 +43,7 @@ export function timelineOption(
     dataZoom: base.dataZoom.map((z) => ({ ...z, startValue, endValue: xMax })),
     series: [
       {
+        id: "observed",
         name: observedName,
         type: "line",
         showSymbol: false,
@@ -72,6 +73,7 @@ export function timelineOption(
         },
       },
       {
+        id: "forecast",
         name: "Forecast (linear fit)",
         type: "line",
         showSymbol: false,
@@ -163,6 +165,7 @@ export function telemetryOption(
   });
   const series: object[] = [
     {
+      id: "telemetry",
       name: `${meta.label} (${meta.unit})`,
       type: "line",
       showSymbol: false,
@@ -173,6 +176,7 @@ export function telemetryOption(
   ];
   if (flagged.length > 0)
     series.push({
+      id: "flagged",
       name: "Flagged",
       type: "scatter",
       symbolSize: 9,

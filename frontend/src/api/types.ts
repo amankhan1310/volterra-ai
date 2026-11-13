@@ -23,3 +23,6 @@ export type HealthLevel = Summary["health_level"];
 export type InsightKind = Schemas["InsightOut"]["kind"];
 export type Twin = Schemas["TwinResponse"];
 export type TemperatureBand = Twin["temperature_band"];
+export type Simulation = Schemas["SimulateResponse"];
+export type Scenario = Schemas["ScenarioOut"];
+export type Slider = Schemas["SliderOut"];

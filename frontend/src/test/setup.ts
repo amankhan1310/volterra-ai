@@ -1,7 +1,7 @@
 import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { charts } from "./echartsMock";
-import { server } from "./msw";
+import { resetScenarioStore, server } from "./msw";
 import { installMatchMedia, setViewportWidth } from "./viewport";
 
 // jsdom has no canvas: every chart gets the recording fake (see echartsMock.ts).
@@ -23,6 +23,7 @@ afterEach(() => {
   cleanup();
   charts.length = 0;
   server.resetHandlers();
+  resetScenarioStore();
   setViewportWidth(1440);
 });
 

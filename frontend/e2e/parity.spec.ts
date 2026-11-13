@@ -207,3 +207,133 @@ for (const [cycle, mode] of [
     expect(react).toEqual(legacy);
   });
 }
+
+interface SimValues {
+  labels: string[];
+  cycles: string;
+  delta: string;
+  stats: string[];
+  assumptions: string;
+  current: string[];
+  baseline: string[];
+}
+
+/** Legacy slider ids (`i` + prototype key) and the React slider names. */
+const SIM_SLIDERS = {
+  T: /^Temperature/,
+  C: /^Charge rate/,
+  D: /^Depth of discharge/,
+  N: /^Cycles to simulate/,
+  S: /^Initial SOH/,
+  E: /^End-of-life SOH/,
+} as const;
+
+/** Defaults plus five presets: hot and fast, cool and gentle, extreme, never-EOL, already at EOL. */
+const PRESETS: Partial<Record<keyof typeof SIM_SLIDERS, number>>[] = [
+  {},
+  { T: 35, C: 2, D: 100 },
+  { T: 15, C: 0.5, D: 60, N: 1000 },
+  { T: 45, C: 3, D: 100, N: 1500, S: 70, E: 60 },
+  { T: 5, C: 0.5, D: 20, N: 100, S: 100, E: 60 },
+  { S: 80, E: 80 },
+];
+
+for (const preset of PRESETS) {
+  test(`Simulator ${JSON.stringify(preset)} matches the legacy prototype`, async ({
+    page,
+  }) => {
+    await page.goto(`${LEGACY_URL}#sim`);
+    await page.locator("#schart canvas").first().waitFor();
+    await page.evaluate((p) => {
+      for (const [k, v] of Object.entries(p)) {
+        const input = document.getElementById(`i${k}`) as HTMLInputElement;
+        input.value = String(v);
+        input.dispatchEvent(new Event("input"));
+      }
+    }, preset);
+    const legacy: SimValues = await page.evaluate(() => {
+      const text = (e: Element | null | undefined) =>
+        (e?.textContent ?? "").replace(/\s+/g, " ").trim();
+      const res = document.getElementById("sres") as HTMLElement;
+      const chart = (
+        window as unknown as {
+          echarts: {
+            getInstanceByDom(el: Element | null): {
+              getOption(): { series: { data: [number, number][] }[] };
+            };
+          };
+        }
+      ).echarts
+        .getInstanceByDom(document.getElementById("schart"))
+        .getOption();
+      return {
+        labels: ["T", "C", "D", "N", "S", "E"].map((k) =>
+          text(document.getElementById(`o${k}`)),
+        ),
+        cycles: text(res.querySelector(".big")),
+        // Approved deviation: when both sides start at EOL the prototype printed "(NaN%)".
+        delta: text(res.querySelector(":scope > p")).replace("(NaN%)", "(n/a)"),
+        stats: [...res.querySelectorAll(".stats2 b")].map(text),
+        assumptions: text(res.querySelector("p.mu")),
+        current: (chart.series[1]?.data ?? []).map(([, y]) => y.toFixed(2)),
+        baseline: (chart.series[0]?.data ?? []).map(([, y]) => y.toFixed(2)),
+      };
+    });
+
+    await page.goto("/simulator");
+    await settled(page);
+    for (const [k, v] of Object.entries(preset))
+      await page
+        .getByRole("slider", {
+          name: SIM_SLIDERS[k as keyof typeof SIM_SLIDERS],
+        })
+        .fill(String(v));
+    const results = page.getByTestId("sim-results");
+    // Wait for the debounced simulation of exactly these parameters.
+    const expected = { T: 25, C: 1, D: 80, N: 600, S: 86.1, E: 80, ...preset };
+    await expect(results).toHaveAttribute(
+      "data-params",
+      [
+        expected.T,
+        expected.C,
+        expected.D,
+        expected.N,
+        expected.S,
+        expected.E,
+      ].join("|"),
+    );
+    const rows = await page
+      .getByRole("table", {
+        name: "Scenario SOH trajectories (%)",
+        includeHidden: true,
+      })
+      .locator("tbody tr")
+      .evaluateAll((trs) =>
+        trs.map((tr) =>
+          [...tr.querySelectorAll("td")].map((td) => td.textContent),
+        ),
+      );
+    const react: SimValues = {
+      labels: await Promise.all(
+        [
+          "temp_c",
+          "c_rate",
+          "dod_pct",
+          "horizon_cycles",
+          "start_soh_pct",
+          "eol_pct",
+        ].map(async (k) =>
+          clean(await page.getByTestId(`value-${k}`).textContent()),
+        ),
+      ),
+      cycles: clean(await page.getByTestId("cycles-to-eol").textContent()),
+      delta: clean(await page.getByTestId("delta").textContent()),
+      stats: (await results.locator("b").allTextContents()).map(clean),
+      assumptions: clean(await page.getByTestId("assumptions").textContent()),
+      current: rows.map((r) => r[2] ?? ""),
+      baseline: rows.map((r) => r[1] ?? ""),
+    };
+    expect(legacy.stats).toHaveLength(4);
+    expect(react).toEqual(legacy);
+  });
+}

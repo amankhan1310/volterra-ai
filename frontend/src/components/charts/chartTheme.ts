@@ -8,11 +8,13 @@ export interface ChartTheme {
   gr: string;
   am: string;
   rd: string;
+  violet: string;
   tx: string;
   mu: string;
   bd: string;
   el: string;
   bdStrong: string;
+  onAccent: string;
   grid: string;
   zoomFill: string;
   font: string;
@@ -24,11 +26,13 @@ const TOKENS: Record<keyof ChartTheme, string> = {
   gr: "--gr",
   am: "--am",
   rd: "--rd",
+  violet: "--violet",
   tx: "--tx",
   mu: "--mu",
   bd: "--bd",
   el: "--el",
   bdStrong: "--bd-strong",
+  onAccent: "--on-accent",
   grid: "--chart-grid",
   zoomFill: "--chart-zoom-fill",
   font: "--font",

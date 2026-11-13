@@ -1,6 +1,12 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api, request } from "./client";
-import type { Battery } from "./types";
+import type { Battery, Scenario, ScenarioParams } from "./types";
 
 /** Query keys: one factory so invalidation and tests agree on the shapes. */
 export const queryKeys = {
@@ -21,6 +27,10 @@ export const queryKeys = {
     ["batteries", batteryId, "insights"] as const,
   twin: (batteryId: string, cycle: number | undefined) =>
     ["batteries", batteryId, "twin", { cycle }] as const,
+  simulate: (batteryId: string, params: ScenarioParams | null) =>
+    ["batteries", batteryId, "simulate", params] as const,
+  scenarios: (batteryId: string) =>
+    ["batteries", batteryId, "scenarios"] as const,
 };
 
 const batteryPath = (batteryId: string | undefined) => ({
@@ -193,4 +203,93 @@ export function useTwin(
     enabled: batteryId !== undefined && cycle !== undefined,
     placeholderData: keepPreviousData,
   });
+}
+
+const simulateQuery = (batteryId: string, params: ScenarioParams | null) => ({
+  queryKey: queryKeys.simulate(batteryId, params),
+  queryFn: () =>
+    request(() =>
+      api.POST("/api/v1/batteries/{battery_id}/simulate", {
+        params: batteryPath(batteryId),
+        body: {
+          // `params` is non-null whenever the query is enabled.
+          params: params ?? ({} as ScenarioParams),
+          include_trajectories: true,
+        },
+      }),
+    ),
+  enabled: params !== null,
+});
+
+/**
+ * `POST /simulate` for one parameter set. A pure computation, so it is cached by its parameters
+ * like a GET; the previous result stays on screen while the next one loads.
+ */
+export function useSimulation(
+  batteryId: string,
+  params: ScenarioParams | null,
+) {
+  return useQuery({
+    ...simulateQuery(batteryId, params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** One simulation per parameter set (the saved-scenario overlays). */
+export function useSimulations(
+  batteryId: string,
+  paramSets: readonly ScenarioParams[],
+) {
+  return useQueries({
+    queries: paramSets.map((p) => simulateQuery(batteryId, p)),
+  });
+}
+
+export function useScenarios(batteryId: string) {
+  return useQuery({
+    queryKey: queryKeys.scenarios(batteryId),
+    queryFn: () =>
+      request(() =>
+        api.GET("/api/v1/batteries/{battery_id}/scenarios", {
+          params: batteryPath(batteryId),
+        }),
+      ),
+  });
+}
+
+/** Create, rename and delete saved scenarios; each refreshes the battery's scenario list. */
+export function useScenarioMutations(batteryId: string) {
+  const queryClient = useQueryClient();
+  const onSuccess = () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.scenarios(batteryId) });
+  const create = useMutation({
+    mutationFn: (body: { name: string; params: ScenarioParams }) =>
+      request(() =>
+        api.POST("/api/v1/batteries/{battery_id}/scenarios", {
+          params: batteryPath(batteryId),
+          body,
+        }),
+      ),
+    onSuccess,
+  });
+  const rename = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      request(() =>
+        api.PATCH("/api/v1/scenarios/{scenario_id}", {
+          params: { path: { scenario_id: id } },
+          body: { name },
+        }),
+      ),
+    onSuccess,
+  });
+  const remove = useMutation({
+    mutationFn: (scenario: Scenario) =>
+      request(() =>
+        api.DELETE("/api/v1/scenarios/{scenario_id}", {
+          params: { path: { scenario_id: scenario.id } },
+        }),
+      ),
+    onSuccess,
+  });
+  return { create, rename, remove };
 }

@@ -28,6 +28,11 @@ export const BUILT: Partial<Record<PageKey, ComponentType>> = {
       default: m.DigitalTwinPage,
     })),
   ),
+  sim: lazy(() =>
+    import("../features/simulator/SimulatorPage").then((m) => ({
+      default: m.SimulatorPage,
+    })),
+  ),
 };
 
 function PageRoute({ pageKey }: { pageKey: PageKey }) {

@@ -8,10 +8,10 @@ import {
   escapeHtml,
   readChartTheme,
   withAlpha,
-  type ChartTheme,
 } from "../../components/charts/chartTheme";
 import { sparklinePath } from "../../components/charts/Sparkline";
 import { fixtures } from "../../test/msw";
+import { theme } from "../../test/theme";
 import {
   CHANNELS,
   flaggedPoints,
@@ -20,22 +20,6 @@ import {
   timelineOption,
 } from "./options";
 import { INNER_C, OUTER_C, arcOffsets, gaugeTicks } from "./SohGauge";
-
-const theme: ChartTheme = {
-  cy: "#54e7ff",
-  ib: "#8dafff",
-  gr: "#7cf2bc",
-  am: "#ffc56e",
-  rd: "#ff7185",
-  tx: "#f5f7fc",
-  mu: "#8998ad",
-  bd: "#1b2638",
-  el: "#121a26",
-  bdStrong: "#2a3b57",
-  grid: "rgba(137, 152, 173, 0.12)",
-  zoomFill: "rgba(84, 231, 255, 0.12)",
-  font: "Manrope, system-ui, sans-serif",
-};
 
 interface Series {
   name: string;
@@ -150,6 +134,19 @@ describe("degradation timeline", () => {
     ]);
     expect(observed?.markLine?.data[0]?.xAxis).toBe(319);
     expect(observed?.markLine?.data[1]?.yAxis).toBe(80);
+  });
+
+  it("never passes CSS variables to the canvas", () => {
+    expect(JSON.stringify(build("all"))).not.toContain("var(--");
+    expect(
+      JSON.stringify(
+        telemetryOption(theme, {
+          channel: "temp",
+          items: fixtures.cycles.items,
+          events: fixtures.anomalies.events,
+        }),
+      ),
+    ).not.toContain("var(--");
   });
 
   it("zooms to the last 120 observed cycles or the full range", () => {

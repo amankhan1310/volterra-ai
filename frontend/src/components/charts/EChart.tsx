@@ -34,8 +34,9 @@ interface EChartProps {
 }
 
 /**
- * Minimal ECharts wrapper: initialises on mount, applies option changes (series are replaced,
- * everything else merges so zoom changes animate as in the prototype), follows container size
+ * Minimal ECharts wrapper: initialises on mount, applies option changes (series are replaced by
+ * id, so a series that keeps its id animates to its new data instead of being redrawn; everything
+ * else merges, so zoom changes animate as in the prototype), follows container size
  * changes, including the sidebar collapsing, and disposes on unmount.
  */
 export function EChart({ option, label, height = 340 }: EChartProps) {

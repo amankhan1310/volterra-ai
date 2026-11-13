@@ -1,0 +1,153 @@
+/* What-If Simulator, ported from legacy/style.css (.sg, label, range, .row, .stats2, .tag). */
+
+.layout {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr) 310px;
+  gap: 16px;
+}
+
+.layout > * {
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  margin: 12px 0 2px;
+  font-weight: 600;
+}
+
+.label span {
+  float: right;
+  color: var(--cy);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider {
+  width: 100%;
+  height: 4px;
+  margin: 10px 0;
+  border-radius: 4px;
+  background: var(--hi);
+  accent-color: var(--cy);
+  appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--cy);
+  box-shadow: 0 0 0 1px var(--cy);
+  appearance: none;
+}
+
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--cy);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.savedArea {
+  margin-top: 14px;
+}
+
+.savedTitle {
+  margin-bottom: 6px;
+}
+
+.savedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.saved {
+  padding: 8px 0;
+  border-top: 1px solid var(--bd);
+}
+
+.saved .row {
+  margin-top: 6px;
+}
+
+.hint {
+  font-size: 12.5px;
+}
+
+.delta {
+  font-weight: 700;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.stats b {
+  display: block;
+  font-size: 18px;
+}
+
+.assumptions {
+  font-size: 12.5px;
+}
+
+.tags {
+  margin-top: 8px;
+}
+
+.inlineError {
+  margin: 0 0 10px;
+  color: var(--rd);
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.textInput {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--el);
+  color: var(--tx);
+  font: inherit;
+}
+
+.count {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .slider::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+  }
+}

@@ -56,7 +56,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "Compare operating scenarios against a 25 °C, 1C, 80% DoD baseline.",
     milestone: 4,
-    built: false,
+    built: true,
   },
   {
     key: "anom",

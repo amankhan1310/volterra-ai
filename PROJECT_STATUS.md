@@ -132,12 +132,14 @@ Decisions applied:
 
 ## Milestone: Phase 3 — PostgreSQL, migrations and parity API (2026-11-12)
 
-Branch: `feat/backend-db-api` (PR into `main`). Phase 2 was merged as PR #3 (`f6bd10c`).
+Branch: `feat/backend-db-api` (PR into `main`). Phase 2 was merged as PR #3 (`f6bd10c`). Phase 3
+was merged as PR #4 (`00427a6`).
 
 Delivered:
 
 - **Database:** PostgreSQL 16 schema with four tables (`datasets`, `batteries`, `cycles`,
-  `scenarios`). Numeric values are `DOUBLE PRECISION`, and SOH is stored as generated.
+  `scenarios`). Numeric values are `DOUBLE PRECISION`, and SOH is stored as produced by the data
+  source.
   - Async SQLAlchemy 2 with asyncpg.
   - Alembic migration `0001`, which can be rolled back. `alembic check` reports no differences
     between models and database.

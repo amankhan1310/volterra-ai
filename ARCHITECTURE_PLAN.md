@@ -392,6 +392,8 @@ erDiagram
 
 All tables have `id` (UUID, or BIGINT identity for `cycles`) and `created_at` / `updated_at` `timestamptz`.
 
+**Implementation status:** this is the target schema. Phase 3 implemented four tables (`datasets`, `batteries`, `cycles`, `scenarios`) in Alembic migration `0001`; the other tables are added by the phase that first needs them, each through a new migration. Numeric measurements are `DOUBLE PRECISION` (IEEE-754 binary64) so values round-trip bit-exactly between Python, PostgreSQL and the v1 analytics; `NUMERIC` would alter the binary value. Where the tables below differ from the implemented ones, migration `0001` and `backend/app/db/models.py` are authoritative.
+
 **`datasets`** — a source collection.
 `name`, `source` (`nasa_pcoe|calce|severson|upload|synthetic`), `version`, `licence`, `citation`, `description`, `status` (`registered|importing|ready|failed`), `checksum`, `meta JSONB`.
 
@@ -399,10 +401,10 @@ All tables have `id` (UUID, or BIGINT identity for `cycles`) and `created_at` / 
 `dataset_id FK`, `kind` (`raw|processed|parquet_samples`), `path`, `bytes`, `sha256`, `format`.
 
 **`batteries`** — one physical cell or pack.
-`dataset_id FK`, `external_id` (e.g. `B0005`), `chemistry` (`NMC|LCO|LFP|NCA|…`), `form_factor`, `nominal_capacity_ah NUMERIC(8,4)`, `nominal_voltage_v`, `eol_threshold_pct` (default 80), `test_conditions JSONB` (ambient T, charge policy, DoD), `is_synthetic BOOL`. `UNIQUE(dataset_id, external_id)`.
+`dataset_id FK`, `external_id` (e.g. `B0005`), `chemistry` (`NMC|LCO|LFP|NCA|…`), `form_factor`, `nominal_capacity_ah DOUBLE PRECISION`, `nominal_voltage_v`, `eol_threshold_pct` (default 80), `test_conditions JSONB` (ambient T, charge policy, DoD), `is_synthetic BOOL`. `UNIQUE(dataset_id, external_id)`.
 
 **`cycles`** — the main time-series table, one row per cycle.
-`battery_id FK`, `cycle_index INT`, `cycle_type` (`charge|discharge|impedance|full`), `start_time timestamptz NULL`, `capacity_ah`, `soh_pct` (generated: `capacity_ah / nominal × 100`, stored), `energy_wh`, `temp_mean_c`, `temp_max_c`, `temp_min_c`, `voltage_mean_v`, `voltage_min_v`, `voltage_max_v`, `current_mean_a`, `charge_time_s`, `discharge_time_s`, `internal_resistance_ohm NULL`, `ambient_temp_c NULL`, `c_rate NULL`, `dod_pct NULL`, `samples_file_id FK NULL`, `quality_flags JSONB`.
+`battery_id FK`, `cycle_index INT`, `cycle_type` (`charge|discharge|impedance|full`), `start_time timestamptz NULL`, `capacity_ah`, `soh_pct DOUBLE PRECISION` (stored as produced by the data source; not a database-generated column), `energy_wh`, `temp_mean_c`, `temp_max_c`, `temp_min_c`, `voltage_mean_v`, `voltage_min_v`, `voltage_max_v`, `current_mean_a`, `charge_time_s`, `discharge_time_s`, `internal_resistance_ohm NULL`, `ambient_temp_c NULL`, `c_rate NULL`, `dod_pct NULL`, `samples_file_id FK NULL`, `quality_flags JSONB`.
 - `UNIQUE(battery_id, cycle_index, cycle_type)`
 - B-tree on `(battery_id, cycle_index)`; BRIN on `start_time`.
 
@@ -542,10 +544,10 @@ These are evaluated on **synthetic data with known injections** (precision, reca
 |---|---|---|
 | **0. Foundations** | Repo hygiene, tooling, CI skeleton | `.gitignore`, `README`, `.editorconfig`, `.env.example`; `legacy/` move (with your approval); empty `frontend/`, `backend/`, `ml/` scaffolds; CI runs lint on all three. |
 | **1. Golden fixtures** | Freeze the prototype's exact behaviour | `legacy/tools/export_golden.js` (Node, no DOM) writes dataset, fit, RUL, backtest, anomalies and simulator outputs to JSON. Committed as test fixtures. |
-| **2. Analytics parity in Python** | Port `mulberry32`, generator, `lin`, `med`, robust z, `rulAt`, backtest, simulator, insights | Bit-exact dataset (32-bit integer arithmetic replicating `Math.imul`); analytics match goldens to `1e-9`. **Quirks F1–F8 reproduced on purpose and marked `xfail`-documented.** |
+| **2. Analytics parity in Python** | Port `mulberry32`, generator, `lin`, `med`, robust z, `rulAt`, backtest, simulator, insights | Bit-exact dataset (32-bit integer arithmetic replicating `Math.imul`); analytics match goldens exactly by default; a `1e-12` tolerance is allowed only for fields derived from `sin`/`exp`/`pow`. **Quirks F1–F8 reproduced on purpose and marked `xfail`-documented.** |
 | **3. DB + API (parity)** | Postgres schema v1, Alembic, `seed_db` with synthetic-v1, read endpoints (`summary`, `cycles`, `forecast`, `anomalies`, `simulate`, `advisor`, `insights`, `twin`) | API integration tests against real Postgres; OpenAPI published. |
 | **4. React parity** | Rebuild all 6 pages against the API with the same design system | Feature-by-feature checklist from §1.2 passes. Playwright e2e for each page. Light theme works. No `innerHTML`. |
-| **5. Correctness fixes** | Resolve F1–F8 as deliberate, tested behaviour changes | Golden tests updated with changelog entries; anomaly precision/recall on synthetic injections ≥ target; the RUL interval comes from proper calibration. |
+| **5. Correctness fixes** | Resolve F1–F8 as deliberate, tested behaviour changes | v1 algorithms stay permanent and keep matching the goldens (strict `xfail` defect tests keep failing for v1); each fix is a separate v2 implementation with its own expected-value tests and a changelog entry; golden fixtures are never modified; anomaly precision/recall on synthetic injections ≥ target; the RUL interval comes from proper calibration. |
 | **6. Real data** | Loaders for NASA → CALCE → Severson; upload + column-mapping UI; job runner | All loaders validated; multi-battery selector in the UI; import progress via jobs. |
 | **7. ML models** | Feature sets, baselines, LightGBM/quantile, GP, conformal; registry; model comparison page | Leaderboard on held-out cells; a production model chosen on evidence; model cards written. |
 | **8. Calibrated simulator + advisor** | Fitted stress coefficients with per-coefficient provenance | Simulator and Overview agree on the baseline (F4); coefficient CIs shown in the UI. |
@@ -566,7 +568,7 @@ These are evaluated on **synthetic data with known injections** (precision, reca
 
 | Layer | Tooling | What is tested |
 |---|---|---|
-| **Golden parity** | pytest + JSON fixtures from `legacy/` | Python port reproduces prototype outputs exactly (phase 2), then documented deltas (phase 5). |
+| **Golden parity** | pytest + JSON fixtures from `legacy/` | Python v1 port reproduces prototype outputs exactly (phase 2) and keeps doing so permanently; phase 5 fixes are separate v2 implementations tested against their own expected values. Golden fixtures are never modified. |
 | **Backend unit** | pytest, **hypothesis** | Pure analytics: OLS against `numpy.polyfit`; robust z invariances (shift/scale); RUL monotonic in threshold; simulator monotonic in T/C/D; edge cases (flat series, MAD = 0, < 3 points, null EOL). |
 | **Backend API** | pytest + httpx `AsyncClient` | Status codes, Pydantic validation (slider ranges like T 5–45 enforced server-side), provenance fields present, pagination, error format. |
 | **Integration / DB** | pytest + **Testcontainers Postgres** (or the CI Postgres service) | Alembic `upgrade head` / `downgrade base` round-trip; constraints; seed; job queue locking (two workers never take the same job). |
@@ -632,7 +634,7 @@ Each line is roughly one commit; groups are one PR.
 
 **PR 6–11 — one PR per page:** Overview → Anomalies → Simulator → Advisor → Digital Twin → About. Each has a component commit, a chart commit and a test commit, plus a Playwright spec.
 
-**PR 12 — `fix/analytics-correctness`:** F1–F8, each in its own commit with an updated golden and a changelog entry. → **tag `v0.1.0`**
+**PR 12 — `fix/analytics-correctness`:** F1–F8, each in its own commit as a separate v2 implementation with its own expected-value tests and a changelog entry (v1 and the golden fixtures stay unchanged). → **tag `v0.1.0`**
 
 **PR 13+ — `feat/ml-*`:** ML package scaffold → NASA loader → CALCE → Severson → features → baselines → LightGBM/quantile → GP → conformal → registry → model comparison UI → **tag `v0.2.0` / `v0.3.0`** → simulator calibration → reports/notifications → hardening → **`v1.0.0`**.
 
@@ -641,12 +643,14 @@ Only `ARCHITECTURE_PLAN.md` has been created. Nothing has been committed or push
 
 ---
 
-## Appendix A — Decisions to confirm during review
+## Appendix A — Decisions (resolved)
 
-1. **Moving the prototype into `legacy/`** (recommended) vs. leaving it at the root during the migration.
-2. **Postgres-backed job queue** (recommended, no Redis) vs. Celery + Redis.
-3. **Python version:** 3.11/3.12 (recommended) vs. staying on the installed 3.10. **Node:** upgrade to 20/22 LTS (recommended).
-4. **Auth:** deferred to phase 9 (recommended for an academic single-user build) vs. needed from the start.
-5. **Initial real dataset:** NASA PCoE first (recommended: matches the 2.0 Ah profile and has temperature variation).
-6. **Deep learning (phase 7):** include as optional, or drop and stay with GBM/GP.
-7. **Deployment target**, if any (local only, a VPS, or a managed platform). This affects phase 10 only.
+All decisions were taken during review; outcomes are also recorded in `PROJECT_STATUS.md`.
+
+1. **Prototype location:** moved into `legacy/` (Phase 0, `git mv`, history preserved).
+2. **Job queue:** Postgres-backed job queue (no Redis/Celery).
+3. **Runtime versions:** Python 3.11+ and Node 20+ recommended; Python 3.10 and Node 18 are the supported minimum (CI tests Python 3.10 and 3.12).
+4. **Auth:** deferred to phase 9.
+5. **Initial real dataset:** NASA PCoE first.
+6. **Deep learning (phase 7):** optional.
+7. **Deployment target:** to be decided before phase 10 (affects phase 10 only).

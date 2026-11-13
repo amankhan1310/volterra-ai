@@ -1,0 +1,26 @@
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--el);
+}
+
+.option {
+  all: unset;
+  padding: 6px 14px;
+  border-radius: 8px;
+  color: var(--mu);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--cy);
+  outline-offset: 1px;
+}
+
+.on {
+  background: var(--hi);
+  color: var(--tx);
+}

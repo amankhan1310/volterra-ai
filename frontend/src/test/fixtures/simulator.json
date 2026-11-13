@@ -1,0 +1,113 @@
+{
+  "context": {
+    "battery_id": "5b0f37f1-3383-4495-a70d-bd0ff24be316",
+    "dataset": "synthetic-v1",
+    "is_synthetic": true,
+    "data_provenance": "simulated",
+    "algorithm_version": "v1",
+    "eol_pct": 80
+  },
+  "version": "v1",
+  "defaults": {
+    "temp_c": 25,
+    "c_rate": 1,
+    "dod_pct": 80,
+    "horizon_cycles": 600,
+    "start_soh_pct": 86.1,
+    "eol_pct": 80
+  },
+  "baseline_conditions": {
+    "temp_c": 25,
+    "c_rate": 1,
+    "dod_pct": 80
+  },
+  "base_fade": {
+    "value": 0.05401766159185438,
+    "unit": "%/cycle",
+    "provenance": "fitted"
+  },
+  "coefficients": [
+    {
+      "name": "base_fade",
+      "value": 0.05401766159185438,
+      "provenance": "fitted"
+    },
+    {
+      "name": "temperature",
+      "value": 0.06,
+      "provenance": "assumed"
+    },
+    {
+      "name": "c_rate",
+      "value": 0.4,
+      "provenance": "assumed"
+    },
+    {
+      "name": "dod",
+      "value": 0.9,
+      "provenance": "assumed"
+    },
+    {
+      "name": "acceleration",
+      "value": 1500,
+      "provenance": "assumed"
+    }
+  ],
+  "sliders": [
+    {
+      "key": "temp_c",
+      "legacy_key": "T",
+      "label": "Temperature",
+      "min": 5,
+      "max": 45,
+      "step": 1,
+      "unit": "°C"
+    },
+    {
+      "key": "c_rate",
+      "legacy_key": "C",
+      "label": "Charge rate",
+      "min": 0.5,
+      "max": 3,
+      "step": 0.1,
+      "unit": "C"
+    },
+    {
+      "key": "dod_pct",
+      "legacy_key": "D",
+      "label": "Depth of discharge",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "%"
+    },
+    {
+      "key": "horizon_cycles",
+      "legacy_key": "N",
+      "label": "Cycles to simulate",
+      "min": 100,
+      "max": 1500,
+      "step": 50,
+      "unit": ""
+    },
+    {
+      "key": "start_soh_pct",
+      "legacy_key": "S",
+      "label": "Initial SOH",
+      "min": 70,
+      "max": 100,
+      "step": 0.5,
+      "unit": "%"
+    },
+    {
+      "key": "eol_pct",
+      "legacy_key": "E",
+      "label": "End-of-life SOH",
+      "min": 60,
+      "max": 90,
+      "step": 1,
+      "unit": "%"
+    }
+  ],
+  "model": "soh(n) = S - r*n*(1 + n/1500), r = base_fade * exp(0.06*(T-25)) * (1 + 0.4*(C-1)) * (D/80)^0.9; stress coefficients are assumed, not fitted"
+}

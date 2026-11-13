@@ -1,0 +1,31 @@
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  max-width: 340px;
+  padding: 12px 16px;
+  border: 1px solid var(--bd);
+  border-left: 3px solid var(--cy);
+  border-radius: 10px;
+  background: var(--hi);
+  color: var(--tx);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: 0.25s;
+}
+
+.on {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+@media (max-width: 860px) {
+  .toast {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}

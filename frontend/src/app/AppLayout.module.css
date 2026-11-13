@@ -1,0 +1,58 @@
+.shell {
+  display: flex;
+  height: 100%;
+}
+
+.col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 30px 32px 64px;
+  overflow: auto;
+}
+
+.main:focus {
+  outline: none;
+}
+
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--hi);
+  color: var(--tx);
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}
+
+/* Tap outside the open drawer to close it (the prototype had no way to). */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 860px) {
+  .main {
+    padding: 20px 16px 56px;
+  }
+}

@@ -18,7 +18,8 @@ for architecture, phases and conventions; **`PROJECT_STATUS.md`** records progre
 - `backend/`: FastAPI service (`app/`: analytics, db, schemas, services, api), Alembic
   migrations (`alembic/`), API contract (`openapi.json`), tests in `backend/tests/`.
 - `ml/`: `volterra_ml` package, tests in `ml/tests/`.
-- `frontend/`: React + TypeScript app.
+- `frontend/`: React 19 + TypeScript app (Vite 8, React Router 7, TanStack Query 5); unit tests
+  in `src/**/*.test.tsx`, Playwright suites in `frontend/e2e/`.
 - `data/`, `artifacts/`: git-ignored. Never commit datasets, model binaries or `.env`.
 
 ## Working rules
@@ -43,7 +44,13 @@ for architecture, phases and conventions; **`PROJECT_STATUS.md`** records progre
   `tests/support/database.py`). Never run destructive operations against the development
   database or print credentials from `backend/.env`.
 - Schema changes go through new Alembic migrations (never edit merged ones). After API changes,
-  regenerate `backend/openapi.json` (`uv run python -m app.openapi`); Phase 4 consumes it.
+  regenerate `backend/openapi.json` (`uv run python -m app.openapi`), then the frontend types
+  (`cd frontend && npm run api:types`); CI fails if either is stale.
+- Frontend: read every value from the API, never re-implement analytics, and never ship runtime
+  mock data. MSW fixtures are test-only and recorded from the real API
+  (`npm run record:fixtures`). No `innerHTML`, `prompt()` or `alert()` (lint-enforced); colours
+  come from `src/styles/tokens.css`, not literals. Phase 4 is built milestone by milestone
+  (M1–M6), one branch and PR each, with a live review before the next starts.
 
 ## Commands
 
@@ -57,6 +64,9 @@ node --test legacy/tools/export_golden.test.js  # golden exporter tests
 cd backend && uv sync --locked && uv run mypy && uv run pytest   # backend (coverage gate 85%)
 cd backend && uv run alembic upgrade head && uv run python -m app.db.seed   # dev database
 cd backend && uv run uvicorn --factory app.main:create_app --reload      # API on :8000
+cd frontend && npm ci && npm run dev       # React app on :5173 (proxies /api to :8000)
+cd frontend && npm run api:types:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build
+cd frontend && PW_CHANNEL=msedge npm run e2e   # E2E + axe against the running API (local browser)
 ```
 
 Golden fixtures in `backend/tests/golden/` are generated, never hand-edited; see the README
@@ -67,3 +77,7 @@ there. In Phase 2 they are the specification: fix the Python port, not the fixtu
 - The `python` on PATH may belong to an unrelated project's virtualenv; create a project venv
   (or use `uv`) rather than installing into it.
 - Line endings are normalised to LF via `.gitattributes`.
+- Node 24 (`frontend/.nvmrc`) is managed with nvm-windows; uv 0.12.24 (the CI version) is at
+  `~/.local/bin/uv.exe`.
+- Do not download Playwright browsers locally without the user's approval; run local E2E with an
+  installed browser (`PW_CHANNEL=msedge`). CI downloads Chromium itself.

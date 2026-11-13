@@ -1,0 +1,109 @@
+.hd {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  height: 62px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.fx {
+  flex: 1;
+}
+
+.crumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ib {
+  all: unset;
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--mu);
+  cursor: pointer;
+}
+
+.ib:hover {
+  background: var(--el);
+  color: var(--tx);
+}
+
+.ib:focus-visible {
+  outline: 2px solid var(--cy);
+}
+
+.bdg {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--rd);
+  color: var(--on-danger);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 15px;
+}
+
+.burger {
+  display: none;
+}
+
+.qn {
+  padding: 7px 10px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--el);
+  color: var(--tx);
+  font: inherit;
+  font-weight: 600;
+}
+
+.tag {
+  display: inline-flex;
+}
+
+@media (max-width: 860px) {
+  .hd {
+    padding: 0 16px;
+  }
+
+  .burger {
+    display: grid;
+  }
+
+  .collapse {
+    display: none;
+  }
+}
+
+/*
+ * Phone widths (improvement over the prototype, whose header overflowed here): keep the page name,
+ * quick navigation and bell; the provenance pill and "Workspace /" prefix need the room.
+ */
+@media (max-width: 600px) {
+  .hd {
+    gap: 8px;
+  }
+
+  .workspace {
+    display: none;
+  }
+
+  .tag {
+    display: none;
+  }
+
+  .qn {
+    max-width: 150px;
+  }
+}

@@ -1,0 +1,8 @@
+.note {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--am);
+  border-radius: 6px;
+  background: var(--el);
+  color: var(--mu);
+}

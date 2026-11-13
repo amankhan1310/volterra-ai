@@ -1,0 +1,72 @@
+.card {
+  margin-top: auto;
+  padding: 12px;
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  background: var(--el);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.card small {
+  display: block;
+  margin-top: 2px;
+  color: var(--mu);
+  font-weight: 500;
+}
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--mu);
+}
+
+.online {
+  background: var(--gr);
+}
+
+.degraded {
+  background: var(--am);
+}
+
+.offline {
+  background: var(--rd);
+}
+
+.checking {
+  background: var(--mu);
+}
+
+.service {
+  font-size: 11px;
+}
+
+/* Desktop collapsed sidebar: the legacy hid the whole card; the status dot stays visible (U8). */
+@media (min-width: 861px) {
+  :global([data-collapsed="true"]) .card {
+    display: flex;
+    justify-content: center;
+    padding: 12px 0;
+  }
+
+  :global([data-collapsed="true"]) .card .dot {
+    margin: 0;
+  }
+
+  :global([data-collapsed="true"]) .title,
+  :global([data-collapsed="true"]) .detail {
+    display: none;
+  }
+
+  :global([data-collapsed="true"]) .service {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

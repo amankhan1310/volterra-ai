@@ -13,9 +13,17 @@ backend/openapi.json
 # Reviewed and approved as written; table alignment differs from prettier output.
 ARCHITECTURE_PLAN.md
 
+# Frontend generated files: API types (npm run api:types), API fixtures recorded for tests
+# (npm run record:fixtures) and the npm lockfile.
+frontend/src/api/schema.d.ts
+frontend/src/test/fixtures/*.json
+frontend/package-lock.json
+
 # Generated / third-party
 node_modules/
 dist/
 coverage/
+playwright-report/
+test-results/
 data/
 artifacts/

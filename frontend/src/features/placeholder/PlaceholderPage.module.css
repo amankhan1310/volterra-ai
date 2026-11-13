@@ -1,0 +1,8 @@
+.placeholder {
+  border-style: dashed;
+  border-color: var(--bd-strong);
+}
+
+.heading {
+  margin-top: 8px;
+}

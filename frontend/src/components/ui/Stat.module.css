@@ -1,0 +1,12 @@
+.value {
+  display: block;
+  margin-top: 4px;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  color: var(--mu);
+  font-size: 12px;
+  font-weight: 600;
+}

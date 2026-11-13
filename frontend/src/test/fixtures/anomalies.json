@@ -1,0 +1,124 @@
+{
+  "context": {
+    "battery_id": "5b0f37f1-3383-4495-a70d-bd0ff24be316",
+    "dataset": "synthetic-v1",
+    "is_synthetic": true,
+    "data_provenance": "simulated",
+    "algorithm_version": "v1",
+    "eol_pct": null
+  },
+  "detector": {
+    "name": "robust_z",
+    "version": "v1",
+    "mode": "retrospective"
+  },
+  "method": {
+    "z_scale": 0.6745,
+    "flag_threshold_abs_z": 3.5,
+    "high_severity_abs_z": 6,
+    "mad_floor": 1e-9,
+    "residual_half_window": 7
+  },
+  "summary": {
+    "total": 8,
+    "high": 2,
+    "medium": 6
+  },
+  "events": [
+    {
+      "cycle": 125,
+      "channel": "soh",
+      "type": "Irregular capacity step",
+      "value": -0.3259068639723637,
+      "unit": "% resid.",
+      "expected_low": -0.3195799218176732,
+      "expected_high": 0.3195799218176732,
+      "z": -3.5692918923550225,
+      "severity": "medium"
+    },
+    {
+      "cycle": 127,
+      "channel": "soh",
+      "type": "Irregular capacity step",
+      "value": 0.33964065830268453,
+      "unit": "% resid.",
+      "expected_low": -0.3195799218176732,
+      "expected_high": 0.3195799218176732,
+      "z": 3.7197027188009555,
+      "severity": "medium"
+    },
+    {
+      "cycle": 130,
+      "channel": "volt",
+      "type": "Voltage dip/spike",
+      "value": 3.515818314480712,
+      "unit": "V",
+      "expected_low": 3.597477707765362,
+      "expected_high": 3.7766304215433366,
+      "z": -6.690661982943528,
+      "severity": "high"
+    },
+    {
+      "cycle": 170,
+      "channel": "temp",
+      "type": "Temperature excursion",
+      "value": 36.400061569997774,
+      "unit": "°C",
+      "expected_low": 14.376837596495333,
+      "expected_high": 34.85741404826657,
+      "z": 4.027257261412899,
+      "severity": "medium"
+    },
+    {
+      "cycle": 254,
+      "channel": "soh",
+      "type": "Irregular capacity step",
+      "value": 0.32259606106718763,
+      "unit": "% resid.",
+      "expected_low": -0.3195799218176732,
+      "expected_high": 0.3195799218176732,
+      "z": 3.53303238611881,
+      "severity": "medium"
+    },
+    {
+      "cycle": 271,
+      "channel": "volt",
+      "type": "Voltage dip/spike",
+      "value": 3.488636538038799,
+      "unit": "V",
+      "expected_low": 3.597477707765362,
+      "expected_high": 3.7766304215433366,
+      "z": -7.75273037744855,
+      "severity": "high"
+    },
+    {
+      "cycle": 315,
+      "channel": "soh",
+      "type": "Irregular capacity step",
+      "value": -0.34905099189411715,
+      "unit": "% resid.",
+      "expected_low": -0.3195799218176732,
+      "expected_high": 0.3195799218176732,
+      "z": -3.822763534958251,
+      "severity": "medium"
+    },
+    {
+      "cycle": 319,
+      "channel": "soh",
+      "type": "Irregular capacity step",
+      "value": -0.35994001265372333,
+      "unit": "% resid.",
+      "expected_low": -0.3195799218176732,
+      "expected_high": 0.3195799218176732,
+      "z": -3.9420187511240687,
+      "severity": "medium"
+    }
+  ],
+  "channels": null,
+  "known_issues": [
+    "F1",
+    "F2",
+    "F7"
+  ],
+  "provenance": "fitted"
+}

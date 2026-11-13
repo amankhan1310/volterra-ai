@@ -1,0 +1,112 @@
+# Frontend (Phase 4): API-type drift, lint, strict types, unit/component tests with the 85% line and
+# branch coverage gate, and the production build. A second job runs the end-to-end and
+# accessibility (axe) suites against the real API on PostgreSQL 16 (migrated and seeded) and the
+# production build. Playwright's Chromium is downloaded here, in CI only.
+name: frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Frontend (lint, types, tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: API types match backend/openapi.json
+        run: npm run api:types:check
+      - name: ESLint
+        run: npm run lint
+      - name: TypeScript (strict)
+        run: npm run typecheck
+      - name: Unit and component tests (coverage >= 85% lines and branches)
+        run: npm run test:coverage
+      - name: Production build
+        run: npx vite build
+
+  e2e:
+    name: Frontend E2E + accessibility (real API, PostgreSQL 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          # Throwaway credentials for an ephemeral CI container; not a secret.
+          POSTGRES_USER: volterra
+          POSTGRES_PASSWORD: volterra-ci
+          POSTGRES_DB: volterra_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U volterra -d volterra_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      UV_PYTHON_DOWNLOADS: never
+      DATABASE_URL: postgresql+asyncpg://volterra:volterra-ci@localhost:5432/volterra_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install uv==0.12.24
+      - name: Backend environment, migrations and seed
+        working-directory: backend
+        run: |
+          uv sync --locked --python 3.12
+          uv run --no-sync alembic upgrade head
+          uv run --no-sync python -m app.db.seed
+      - name: Start the API
+        working-directory: backend
+        run: |
+          nohup uv run --no-sync uvicorn --factory app.main:create_app \
+            --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/api.log" 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/api/v1/health && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/api.log"
+          exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright Chromium (CI only)
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Production build
+        working-directory: frontend
+        run: npx vite build
+      - name: E2E, responsive and axe tests (vite preview + real API)
+        working-directory: frontend
+        run: npx playwright test
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
+      - name: API log
+        if: failure()
+        run: cat "$RUNNER_TEMP/api.log"

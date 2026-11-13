@@ -5,7 +5,7 @@
 // Uses an installed browser (PW_CHANNEL, e.g. msedge or chrome) with a fresh temporary profile;
 // it never downloads one. Expects the API (:8000), `npm run dev` (:5173) and the legacy prototype
 // (`python -m http.server 8080 --directory legacy`) to be running.
-/* global document -- used inside page.evaluate callbacks, which run in the browser */
+/* global document, Event, MouseEvent -- used inside page.evaluate callbacks, which run in the browser */
 import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -157,6 +157,40 @@ await mkdir(join(outDir, "overview"), { recursive: true });
   await react.waitForTimeout(300);
   await shot(react, "overview", "react-about-these-results.png");
   await react.close();
+  await legacy.close();
+  await context.close();
+}
+
+// Digital Twin interactions: cycle 170 in Temperature mode with module 9 lifted, both apps.
+await mkdir(join(outDir, "twin"), { recursive: true });
+for (const [width, height] of [
+  [1440, HEIGHT],
+  [390, 1700],
+]) {
+  const context = await browser.newContext({ viewport: { width, height } });
+  const react = await openReact(context, "digital-twin");
+  await react.getByRole("slider", { name: /Cycle/ }).fill("170");
+  await react
+    .getByRole("group", { name: "Colour modules by" })
+    .getByRole("button", { name: "Temperature" })
+    .click();
+  await react.getByRole("button", { name: "Module 9" }).click();
+  await react.getByText("Pack state at cycle 170").waitFor();
+  await react.waitForTimeout(700);
+  await shot(react, "twin", `react-170-temp-module9-${width}.png`);
+  await react.close();
+  const legacy = await openLegacy(context, "digital");
+  await legacy.evaluate(() => {
+    const slider = document.getElementById("cs");
+    slider.value = "170";
+    slider.dispatchEvent(new Event("input"));
+    document.querySelector('#sg button[data-m="temp"]').click();
+    document
+      .querySelector('#pack .mod[data-k="8"]')
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+  await legacy.waitForTimeout(700);
+  await shot(legacy, "twin", `legacy-170-temp-module9-${width}.png`);
   await legacy.close();
   await context.close();
 }

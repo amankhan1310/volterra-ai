@@ -83,6 +83,16 @@ jobs:
           done
           cat "$RUNNER_TEMP/api.log"
           exit 1
+      # The frozen prototype, for the legacy-vs-React number parity check (e2e/parity.spec.ts).
+      - name: Serve the legacy prototype
+        run: |
+          nohup python -m http.server 8080 --bind 127.0.0.1 --directory legacy \
+            > "$RUNNER_TEMP/legacy.log" 2>&1 &
+          for _ in $(seq 1 15); do
+            curl -sf http://127.0.0.1:8080/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
       - uses: actions/setup-node@v4
         with:
           node-version-file: frontend/.nvmrc

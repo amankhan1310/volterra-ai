@@ -195,6 +195,55 @@ for (const [width, height] of [
   await context.close();
 }
 
+// Simulator: 35 °C with two saved overlays, both apps; the rename dialog; the phone layout.
+// Scenarios saved here are deleted again through the API.
+await mkdir(join(outDir, "simulator"), { recursive: true });
+{
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+  });
+  const react = await openReact(context, "simulator");
+  const existing = await react.getByTestId("saved-scenario").count();
+  if (existing === 0) {
+    await react.getByRole("button", { name: "Save scenario" }).click();
+    await react.getByRole("slider", { name: /^Temperature/ }).fill("35");
+    await react.getByRole("button", { name: "Save scenario" }).click();
+    await react.getByTestId("saved-scenario").nth(1).waitFor();
+    await react.getByRole("slider", { name: /^Charge rate/ }).fill("2");
+    await react.waitForTimeout(2500);
+    await shot(react, "simulator", "react-overlays.png");
+    await react.getByRole("button", { name: "Rename Scenario 2" }).click();
+    await react.waitForTimeout(300);
+    await shot(react, "simulator", "react-rename-dialog.png");
+    await react.keyboard.press("Escape");
+    const legacy = await openLegacy(context, "sim");
+    await legacy.evaluate(() => {
+      const set = (k, v) => {
+        const input = document.getElementById(`i${k}`);
+        input.value = String(v);
+        input.dispatchEvent(new Event("input"));
+      };
+      document.getElementById("sv").click();
+      set("T", 35);
+      document.getElementById("sv").click();
+      set("C", 2);
+    });
+    await legacy.waitForTimeout(2500);
+    await shot(legacy, "simulator", "legacy-overlays.png");
+    await legacy.close();
+    for (const name of ["Scenario 2", "Scenario 1"]) {
+      await react.getByRole("button", { name: `Delete ${name}` }).click();
+      await react.waitForTimeout(400);
+    }
+  } else {
+    log.push(
+      `simulator: ${existing} saved scenarios exist; overlay shots skipped`,
+    );
+  }
+  await react.close();
+  await context.close();
+}
+
 // Interactions.
 await mkdir(join(outDir, "interactions"), { recursive: true });
 {

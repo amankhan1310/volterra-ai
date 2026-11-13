@@ -1,0 +1,46 @@
+/*
+ * Design tokens: the legacy "Obsidian Intelligence" redesign (legacy/style.css:324-338).
+ * Dark theme only for now; the light theme is designed, reviewed and approved in Milestone 6
+ * (decision D2). Components and charts read colours from these variables, never from literals.
+ */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #070a0f;
+  --side: #0a0e15;
+  --card: #0d121b;
+  --el: #121a26;
+  --hi: #182333;
+
+  /* Accents and status */
+  --cy: #54e7ff;
+  --ib: #8dafff;
+  --gr: #7cf2bc;
+  --am: #ffc56e;
+  --rd: #ff7185;
+
+  /* Text and lines */
+  --tx: #f5f7fc;
+  --mu: #8998ad;
+  --bd: #1b2638;
+
+  /* Literal colours the legacy redesign used outside its token block */
+  --bd-strong: #2a3b57;
+  --group-label: #5d6c82;
+  --side-glass: rgba(10, 14, 21, 0.95);
+  --on-accent: #04141a;
+  --on-danger: #1a0509;
+  --glow-cy: rgba(84, 231, 255, 0.09);
+  --glow-ib: rgba(141, 175, 255, 0.07);
+  --nav-active-from: rgba(84, 231, 255, 0.14);
+  --nav-active-to: rgba(84, 231, 255, 0.02);
+  --card-sheen: rgba(255, 255, 255, 0.028);
+  --card-inset: rgba(255, 255, 255, 0.05);
+  --card-shadow: #000;
+  --tag-bg: rgba(255, 255, 255, 0.02);
+  --heading-from: #f5f7fc;
+
+  --font: Manrope, system-ui, sans-serif;
+}

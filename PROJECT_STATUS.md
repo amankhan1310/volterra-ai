@@ -8,7 +8,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 1. Golden fixtures              | ✅ Complete |
 | 2. Analytics parity in Python   | ✅ Complete |
 | 3. DB + API (parity)            | ✅ Complete |
-| 4. React parity                 | ⏳ Next     |
+| 4. React parity                 | 🚧 M1 of 6  |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
@@ -181,7 +181,57 @@ Verification (local; Windows; PostgreSQL 16.16):
 - **Live run:** `uvicorn` against the development database (migrated and seeded) served the
   golden SOH (86.0894…) and RUL (112.73, 111.46–114.03) values.
 
+## Phase 4 — React parity frontend (in progress)
+
+Plan approved 2026-11-13 (decisions D1–D10 and U1–U8; see the Phase 4 plan review). Six
+milestones, each on its own branch and PR, each reviewed live before the next starts:
+M1 shell · M2 Overview · M3 Digital Twin · M4 Simulator · M5 Anomalies + Advisor · M6 About,
+light theme, responsive and accessibility pass.
+
+Environment: Node 24.22.3 (nvm-windows), uv 0.12.24; `uv lock --check` and
+`uv sync --locked --dry-run` were clean.
+
+### Milestone 1 — foundation and application shell (2026-11-13)
+
+Branch: `feat/frontend-shell` (PR into `main`). Docs sync was merged as PR #5 (`f847b80`).
+
+Delivered:
+
+- **Foundation:** Vite 8, React 19, TypeScript 5.9 (strict, `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`), React Router 7, TanStack Query 5, openapi-fetch. Versions are
+  pinned exactly and `package-lock.json` is committed; peer dependencies were checked before
+  installing and `npm install` reported no conflicts.
+- **Design system:** the legacy redesign tokens (dark), global styles and self-hosted Manrope
+  (D5). Base components: Card, Button, Segmented, ProvenanceTag, Note, Stat, InfoTip, Dialog,
+  Toast, loading/error/empty states.
+- **Shell:** sidebar with the legacy groups and icons, collapse to icons, off-canvas drawer below
+  860px (closes on navigation, Escape or backdrop; inert while closed), header with breadcrumb,
+  quick navigation, data-source pill, notification bell, status card with the API/database status
+  dot (U8), page header with Run analysis (D6), data-context bar, skip link, 404 page and error
+  boundary. Legacy hash URLs (`/#sim`) redirect to the new routes.
+- **API:** types generated from `backend/openapi.json` (drift check), typed client with the API's
+  error envelope, query hooks. The shell shows live API data: battery, dataset, algorithm
+  version, anomaly count and health. The six pages are labelled placeholders with no data.
+- **Shared simulator state (D1):** EOL and initial SOH, starting from the API defaults, with the
+  "changed from default" flags for the U1 chips.
+- **CI:** `frontend` workflow: type drift, ESLint, `tsc`, Vitest with the 85% line and branch
+  gate, build; an E2E job runs Playwright and axe against the real API on PostgreSQL 16 and the
+  production build (Chromium downloaded in CI only).
+
+Verification (local; Windows; Node 24.22.3; API on the seeded development database):
+
+- **Unit and component tests:** 88 passed. Coverage: 99.62% lines, 96.19% branches.
+- **E2E (Playwright, installed Edge, no browser download):** 34 passed: navigation, live API
+  values, toasts, collapse, drawer, failure states, no horizontal scroll at 1440/1180/980/860/
+  390 px, and axe (WCAG 2.1 A/AA) with no serious or critical violations on every page. The
+  shell suite also passes against the production build (`vite preview`).
+- **Static checks:** ESLint and `tsc -b` clean; prettier clean; API types match the contract.
+- **Unchanged:** backend, golden fixtures, legacy files and `openapi.json`.
+
+Found while comparing with the prototype: at phone widths the legacy header overflows and its
+menu button shrinks to 0px wide, so the drawer cannot be opened. The React header keeps every
+control usable at 390px.
+
 ## Next
 
-Phase 4: React + TypeScript frontend rebuilt against this API (types generated from
-`backend/openapi.json`). This waits for review and approval.
+Phase 4 Milestone 2 (Overview), after the M1 live review and approval.

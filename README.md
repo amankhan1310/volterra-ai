@@ -4,8 +4,9 @@ Intelligent battery health and predictive analytics: state-of-health (SOH) estim
 degradation analysis, remaining-useful-life (RUL) prediction, anomaly detection and
 scenario simulation.
 
-> **Status:** Phase 3 complete: the v1 analytics (Phase 2) are served by a FastAPI + PostgreSQL
-> backend. The React frontend follows in Phase 4. See [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
+> **Status:** Phase 4 in progress: the React frontend is being rebuilt against the FastAPI +
+> PostgreSQL backend (Phase 3), one milestone at a time. Milestone 1 (application shell) is done;
+> the six pages follow. See [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
 > [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for progress.
 
 ## Repository layout
@@ -13,7 +14,7 @@ scenario simulation.
 | Path        | Contents                                                                  |
 | ----------- | ------------------------------------------------------------------------- |
 | `legacy/`   | The original static browser prototype (reference implementation).         |
-| `frontend/` | React + TypeScript single-page app _(scaffold only — Phase 4)_.           |
+| `frontend/` | React + TypeScript single-page app (see its README; Phase 4 in progress). |
 | `backend/`  | FastAPI API, PostgreSQL models/migrations, v1 analytics (see its README). |
 | `ml/`       | `volterra_ml` package: data loaders, features, models _(scaffold only)_.  |
 | `infra/`    | `docker-compose.yml` for an optional local PostgreSQL 16.                 |
@@ -30,6 +31,18 @@ python -m http.server 8080 --directory legacy
 ```
 
 All data in the prototype is a seeded synthetic dataset; it is not connected to any vehicle.
+
+## Running the React frontend
+
+Needs Node 24 and the backend running on port 8000 with a seeded database (see
+[`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)).
+
+```sh
+cd frontend
+npm ci
+npm run dev
+# then open http://localhost:5173
+```
 
 ## Linting
 
@@ -52,10 +65,10 @@ node legacy/tools/export_golden.js --check   # deterministic + matches committed
 node --test legacy/tools/export_golden.test.js  # exporter test suite
 ```
 
-## Planned stack
+## Stack
 
-React 18 · TypeScript · Vite · ECharts · FastAPI · Pydantic v2 · SQLAlchemy 2 · Alembic ·
-PostgreSQL 16 · scikit-learn · LightGBM · pandas.
+React 19 · TypeScript · Vite 8 · TanStack Query · ECharts (from Phase 4 Milestone 2) · FastAPI ·
+Pydantic v2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · planned: scikit-learn · LightGBM · pandas.
 
 ## Disclaimer
 

@@ -642,7 +642,7 @@ Each line is roughly one commit; groups are one PR.
 Status as of 2026-11-13:
 
 - Phases 0–3 are complete and merged into `main` (PR #1–#4; Phase 3 merged as PR #4, `00427a6`). Progress is recorded in `PROJECT_STATUS.md`.
-- The documentation synchronisation that aligns this plan with the implemented Phase 0–3 decisions is committed locally on `docs/sync-architecture-plan`, to be reviewed as a documentation-only PR.
+- This plan has been synchronized with the implementation decisions from Phases 0–3. The synchronization changes are recorded in the documentation-only commit history.
 - The next development milestone is **Phase 4 — React parity frontend** (§10), consuming `backend/openapi.json`. It starts only after the documentation PR is merged and the Phase 4 plan is approved.
 
 ---

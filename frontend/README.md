@@ -48,7 +48,7 @@ use an installed browser instead of downloading one:
 PW_CHANNEL=msedge npm run e2e            # reuses `npm run dev` if it is running
 ```
 
-`e2e/parity.spec.ts` compares every Overview number with the legacy prototype, so it also needs
+`e2e/parity.spec.ts` compares the Overview and Digital Twin values with the legacy prototype, so it needs
 `legacy/` served on port 8080 (`LEGACY_URL` overrides the address); CI serves it.
 
 ### Test fixtures and review screenshots
@@ -73,9 +73,9 @@ src/
   components/layout/  sidebar, header, status card, page header, context bar, data gate
   components/ui/      Card, Button, Segmented, ProvenanceTag, Note, Stat, InfoTip, Dialog, Toast, states
   components/charts/  ECharts registry and wrapper (own lazy chunk), theme from CSS tokens, sparkline
-  features/           pages: overview (M2); the rest are labelled placeholders until their milestone
+  features/           pages: overview (M2), digital-twin (M3); the rest are labelled placeholders
   test/               Vitest setup, MSW server, recorded fixtures, render helpers
-e2e/                  Playwright: shell, overview, legacy parity, responsive, accessibility
+e2e/                  Playwright: shell, overview, twin, legacy parity, responsive, accessibility
 scripts/              type drift check, fixture recorder, review screenshots
 ```
 

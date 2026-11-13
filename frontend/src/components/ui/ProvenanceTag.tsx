@@ -26,18 +26,35 @@ export const PROVENANCE_LABEL: Record<Provenance, string> = {
 interface ProvenanceTagProps {
   /** Omit for the neutral pill (legacy `.tag`). */
   provenance?: Provenance;
+  /**
+   * Colour of a descriptive pill that is not a provenance claim, e.g. the prototype's green
+   * "Pack-level" tag. Ignored when `provenance` is set.
+   */
+  tone?: "amber" | "green" | "cyan";
   title?: string;
   children?: ReactNode;
 }
 
+const TONE_CLASS = {
+  amber: styles.simulated,
+  green: styles.fitted,
+  cyan: styles.predicted,
+};
+
 export function ProvenanceTag({
   provenance,
+  tone,
   title,
   children,
 }: ProvenanceTagProps) {
+  const toneClass = provenance
+    ? TONE[provenance]
+    : tone
+      ? TONE_CLASS[tone]
+      : undefined;
   return (
     <span
-      className={cx(styles.tag, provenance && TONE[provenance])}
+      className={cx(styles.tag, toneClass)}
       data-provenance={provenance}
       title={title}
     >

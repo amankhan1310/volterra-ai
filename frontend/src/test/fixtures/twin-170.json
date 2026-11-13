@@ -1,0 +1,41 @@
+{
+  "context": {
+    "battery_id": "5b0f37f1-3383-4495-a70d-bd0ff24be316",
+    "dataset": "synthetic-v1",
+    "is_synthetic": true,
+    "data_provenance": "simulated",
+    "algorithm_version": "v1",
+    "eol_pct": null
+  },
+  "cycle": 170,
+  "last_cycle": 319,
+  "pack": {
+    "soh": {
+      "value": 93.97281378979562,
+      "unit": "%",
+      "provenance": "simulated"
+    },
+    "capacity": {
+      "value": 1.8794562757959126,
+      "unit": "Ah",
+      "provenance": "simulated"
+    },
+    "temperature": {
+      "value": 36.400061569997774,
+      "unit": "°C",
+      "provenance": "simulated"
+    },
+    "voltage": {
+      "value": 3.6799260634154782,
+      "unit": "V",
+      "provenance": "simulated"
+    }
+  },
+  "health_level": "healthy",
+  "temperature_band": "warm",
+  "modules": {
+    "count": 24,
+    "illustrative": true,
+    "note": "The dataset has pack-level measurements only; every module shows the pack value (illustrative, not a per-cell measurement)."
+  }
+}

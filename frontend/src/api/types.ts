@@ -21,3 +21,5 @@ export type Cycle = Schemas["CycleOut"];
 export type AnomalyEvent = Schemas["AnomalyEventOut"];
 export type HealthLevel = Summary["health_level"];
 export type InsightKind = Schemas["InsightOut"]["kind"];
+export type Twin = Schemas["TwinResponse"];
+export type TemperatureBand = Twin["temperature_band"];

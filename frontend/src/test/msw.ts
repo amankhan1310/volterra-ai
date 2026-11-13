@@ -10,6 +10,7 @@ import type {
   Insights,
   SimulatorConfig,
   Summary,
+  Twin,
 } from "../api/types";
 import anomaliesJson from "./fixtures/anomalies.json";
 import backtestJson from "./fixtures/backtest.json";
@@ -22,6 +23,10 @@ import insightsJson from "./fixtures/insights.json";
 import simulatorJson from "./fixtures/simulator.json";
 import summaryEol70Json from "./fixtures/summary-eol-70.json";
 import summaryJson from "./fixtures/summary.json";
+import twin0Json from "./fixtures/twin-0.json";
+import twin160Json from "./fixtures/twin-160.json";
+import twin170Json from "./fixtures/twin-170.json";
+import twin319Json from "./fixtures/twin-319.json";
 
 /** Recorded API responses (see fixtures/README.md), typed against the generated contract. */
 export const fixtures = {
@@ -37,22 +42,33 @@ export const fixtures = {
   forecastEol70: forecastEol70Json as Forecast,
   backtest: backtestJson as Backtest,
   insights: insightsJson as Insights,
+  /** Pack state per recorded cycle. */
+  twin: {
+    0: twin0Json as Twin,
+    160: twin160Json as Twin,
+    170: twin170Json as Twin,
+    319: twin319Json as Twin,
+  } as Record<number, Twin>,
 };
 
 /**
- * Only thresholds that were actually recorded are served; any other `eol_pct` is a test bug and
+ * Serves only parameter values that were actually recorded; any other value is a test bug and
  * gets a 500, so no test can pass on a response the API never produced.
  */
-function byEol<T>(recorded: Record<string, T>) {
+function byParam<T>(
+  param: string,
+  fallback: string,
+  recorded: Record<string, T>,
+) {
   return ({ request }: { request: Request }) => {
-    const eol = new URL(request.url).searchParams.get("eol_pct") ?? "80";
-    const body = recorded[eol];
+    const value = new URL(request.url).searchParams.get(param) ?? fallback;
+    const body = recorded[value];
     return body === undefined
       ? HttpResponse.json(
           {
             error: {
               code: "test_fixture_missing",
-              message: `No fixture for eol_pct=${eol}`,
+              message: `No fixture for ${param}=${value}`,
               details: null,
             },
           },
@@ -61,6 +77,9 @@ function byEol<T>(recorded: Record<string, T>) {
       : HttpResponse.json(body);
   };
 }
+
+const byEol = <T>(recorded: Record<string, T>) =>
+  byParam("eol_pct", "80", recorded);
 
 export const handlers = [
   http.get("*/api/v1/health", () => HttpResponse.json(fixtures.health)),
@@ -87,6 +106,10 @@ export const handlers = [
   ),
   http.get("*/api/v1/batteries/:id/insights", () =>
     HttpResponse.json(fixtures.insights),
+  ),
+  http.get(
+    "*/api/v1/batteries/:id/twin",
+    byParam("cycle", "319", fixtures.twin),
   ),
 ];
 

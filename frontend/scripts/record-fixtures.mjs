@@ -40,6 +40,11 @@ const fixtures = {
   "forecast-eol-70": await get(`/api/v1/batteries/${id}/forecast?eol_pct=70`),
   backtest: await get(`/api/v1/batteries/${id}/backtest`),
   insights: await get(`/api/v1/batteries/${id}/insights`),
+  // Digital Twin: first, middle, the temperature excursion (warm band) and latest cycle.
+  "twin-0": await get(`/api/v1/batteries/${id}/twin?cycle=0`),
+  "twin-160": await get(`/api/v1/batteries/${id}/twin?cycle=160`),
+  "twin-170": await get(`/api/v1/batteries/${id}/twin?cycle=170`),
+  "twin-319": await get(`/api/v1/batteries/${id}/twin?cycle=319`),
 };
 
 await mkdir(outDir, { recursive: true });

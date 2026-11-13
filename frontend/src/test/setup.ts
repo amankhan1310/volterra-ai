@@ -1,4 +1,4 @@
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { charts } from "./echartsMock";
 import { server } from "./msw";
@@ -8,6 +8,10 @@ import { installMatchMedia, setViewportWidth } from "./viewport";
 vi.mock("../components/charts/echarts", () => import("./echartsMock"));
 
 installMatchMedia();
+
+// Pages are lazy-loaded routes; under a parallel test run the first import can exceed the
+// 1 s default for findBy*/waitFor.
+configure({ asyncUtilTimeout: 3000 });
 
 beforeAll(() => {
   // Any request without a handler is a test bug: fail loudly instead of hitting the network.

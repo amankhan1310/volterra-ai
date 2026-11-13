@@ -23,6 +23,11 @@ export const BUILT: Partial<Record<PageKey, ComponentType>> = {
       default: m.OverviewPage,
     })),
   ),
+  digital: lazy(() =>
+    import("../features/digital-twin/DigitalTwinPage").then((m) => ({
+      default: m.DigitalTwinPage,
+    })),
+  ),
 };
 
 function PageRoute({ pageKey }: { pageKey: PageKey }) {

@@ -19,6 +19,8 @@ export const queryKeys = {
     ["batteries", batteryId, "backtest"] as const,
   insights: (batteryId: string) =>
     ["batteries", batteryId, "insights"] as const,
+  twin: (batteryId: string, cycle: number | undefined) =>
+    ["batteries", batteryId, "twin", { cycle }] as const,
 };
 
 const batteryPath = (batteryId: string | undefined) => ({
@@ -166,5 +168,29 @@ export function useSimulatorConfig(batteryId: string | undefined) {
         }),
       ),
     enabled: batteryId !== undefined,
+  });
+}
+
+/**
+ * Pack state at one cycle. Results are cached per cycle; while the next cycle loads, the previous
+ * one stays on screen so dragging the slider never flickers.
+ */
+export function useTwin(
+  batteryId: string | undefined,
+  cycle: number | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.twin(batteryId ?? "", cycle),
+    queryFn: () =>
+      request(() =>
+        api.GET("/api/v1/batteries/{battery_id}/twin", {
+          params: {
+            ...batteryPath(batteryId),
+            query: cycle === undefined ? {} : { cycle },
+          },
+        }),
+      ),
+    enabled: batteryId !== undefined && cycle !== undefined,
+    placeholderData: keepPreviousData,
   });
 }

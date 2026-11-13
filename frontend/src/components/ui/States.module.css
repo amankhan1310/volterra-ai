@@ -1,0 +1,38 @@
+.skeleton {
+  border-radius: 16px;
+  background: linear-gradient(
+    90deg,
+    var(--el) 0%,
+    var(--hi) 50%,
+    var(--el) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.error {
+  border-left: 3px solid var(--rd);
+}
+
+.code {
+  color: var(--mu);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.retry {
+  margin-top: 10px;
+}
+
+.empty {
+  border-left: 3px solid var(--am);
+}

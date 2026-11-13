@@ -1,0 +1,38 @@
+.tip {
+  position: relative;
+  border-bottom: 1px dotted var(--mu);
+  cursor: help;
+}
+
+.bubble {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: 260px;
+  padding: 6px 10px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: var(--hi);
+  color: var(--tx);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 1.4;
+  text-transform: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.tip:hover .bubble,
+.tip:focus-visible .bubble {
+  opacity: 1;
+}
+
+.dismissed .bubble,
+.dismissed:hover .bubble,
+.dismissed:focus-visible .bubble {
+  opacity: 0;
+}

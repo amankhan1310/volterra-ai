@@ -1,0 +1,26 @@
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid var(--bd-strong);
+  border-radius: 99px;
+  background: var(--tag-bg);
+  color: var(--mu);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.simulated {
+  border-color: var(--am);
+  color: var(--am);
+}
+
+.fitted {
+  border-color: var(--gr);
+  color: var(--gr);
+}
+
+.predicted {
+  border-color: var(--cy);
+  color: var(--cy);
+}

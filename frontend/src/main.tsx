@@ -8,12 +8,18 @@ import "./styles/global.css";
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { RouterProvider, createBrowserRouter } from "react-router";
+import { AppProviders } from "./app/providers";
+import { createQueryClient } from "./app/queryClient";
+import { routes } from "./app/router";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html is missing #root");
 
 createRoot(root).render(
   <StrictMode>
-    <h1>VOLTERRA AI</h1>
+    <AppProviders client={createQueryClient()}>
+      <RouterProvider router={createBrowserRouter(routes)} />
+    </AppProviders>
   </StrictMode>,
 );

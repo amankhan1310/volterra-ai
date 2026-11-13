@@ -1,0 +1,130 @@
+.side {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 236px;
+  padding: 20px 14px;
+  overflow: auto;
+  border-right: 1px solid var(--bd);
+  background: var(--side-glass);
+  transition: width 0.25s;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 2px 8px 14px;
+}
+
+.brandText b {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.brandText small {
+  display: block;
+  color: var(--mu);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.group {
+  padding: 16px 12px 6px;
+  color: var(--group-label);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.link {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* The legacy highlight runs to the sidebar's right edge (its right padding is 14px). */
+  width: calc(100% + 14px);
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--mu);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.link:hover {
+  background: var(--el);
+  color: var(--tx);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--cy);
+  outline-offset: 2px;
+}
+
+.link[aria-current="page"] {
+  background: linear-gradient(
+    90deg,
+    var(--nav-active-from),
+    var(--nav-active-to)
+  );
+  box-shadow: inset 2px 0 var(--cy);
+  color: var(--tx);
+}
+
+.link[aria-current="page"] svg {
+  color: var(--cy);
+}
+
+.link svg {
+  flex: none;
+}
+
+/* Desktop collapsed mode (legacy aside.min). */
+@media (min-width: 861px) {
+  .min {
+    width: 72px;
+    padding: 20px 10px;
+  }
+
+  .min .brandText,
+  .min .label,
+  .min .group {
+    display: none;
+  }
+
+  .min .link {
+    width: calc(100% + 10px);
+  }
+}
+
+/* Off-canvas drawer (legacy @media (max-width: 860px)). */
+@media (max-width: 860px) {
+  .side {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: 250px;
+    padding: 20px 14px;
+    transform: translateX(-102%);
+    transition: transform 0.25s;
+  }
+
+  .open {
+    transform: none;
+  }
+
+  .link {
+    white-space: normal;
+  }
+}

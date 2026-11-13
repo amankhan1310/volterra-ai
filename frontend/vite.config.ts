@@ -22,7 +22,7 @@ export default defineConfig({
           groups: [
             {
               name: "echarts",
-              test: /node_modules[\/](echarts|zrender|tslib)[\/]/,
+              test: /node_modules[\\/](echarts|zrender|tslib)[\\/]/,
             },
           ],
         },

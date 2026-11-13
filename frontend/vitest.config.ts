@@ -15,6 +15,7 @@ export default mergeConfig(
         exclude: [
           "src/api/schema.d.ts", // generated from backend/openapi.json
           "src/main.tsx", // browser bootstrap only
+          "src/components/charts/echarts.ts", // module registry; mocked in jsdom, exercised by E2E
           "src/test/**",
           "src/**/*.test.{ts,tsx}",
         ],

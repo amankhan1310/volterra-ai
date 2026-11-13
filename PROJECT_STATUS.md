@@ -8,7 +8,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 1. Golden fixtures              | ✅ Complete |
 | 2. Analytics parity in Python   | ✅ Complete |
 | 3. DB + API (parity)            | ✅ Complete |
-| 4. React parity                 | 🚧 M1 of 6  |
+| 4. React parity                 | 🚧 M2 of 6  |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
@@ -232,6 +232,26 @@ Found while comparing with the prototype: at phone widths the legacy header over
 menu button shrinks to 0px wide, so the drawer cannot be opened. The React header keeps every
 control usable at 390px.
 
+### Milestone 2 — Overview (2026-11-13)
+
+Branch: `feat/frontend-overview`. M1 merged as PR #6 (`499917c`) with CI green.
+
+Delivered: the Overview page rebuilt from the API (`summary`, `forecast`, `backtest`,
+`insights`, `cycles`, `anomalies`): SOH gauge, condition panel (RUL, fit interval, backtest MAE,
+provenance tags), six KPI cards with sparklines, degradation timeline (zoom, Full/Last 120),
+insights, telemetry explorer (four channels, flagged points) and the collapsed "About these
+results" section (U3). EOL follows the shared simulator state, with the chip when it differs from
+the default (D1, U1). ECharts 5.6.0 is lazy-loaded in its own chunk, coloured from the CSS
+tokens; every chart has a screen-reader data table. Each card loads and fails independently.
+
+Verification: unit and component tests (126) with coverage above the gate; Playwright and axe
+against the real API, including `e2e/parity.spec.ts`, which compares every Overview number and
+both chart series with the legacy prototype (CI now serves `legacy/` for it); production build.
+
+Deviations from the prototype: capacity-step events are marked on the SOH line at their cycle
+(the prototype plotted their ≈ ±0.3 residuals on the SOH axis); chart legend swatches match the
+line colours; the insights subtitle says they come from the API, not "your browser".
+
 ## Next
 
-Phase 4 Milestone 2 (Overview), after the M1 live review and approval.
+Phase 4 Milestone 3 (Digital Twin), after the M2 review and merge.

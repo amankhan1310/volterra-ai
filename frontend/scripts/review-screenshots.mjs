@@ -49,14 +49,18 @@ async function openReact(context, path) {
   );
   await page.goto(`${reactUrl}/${path}`);
   await page.locator("h1").first().waitFor();
-  // Wait until the page has settled on content or a state (not a loading skeleton).
+  // Wait until the page has settled on content or a state, with no loading skeleton left.
   await page
     .locator(
-      '[data-testid="page-placeholder"], [role="alert"], h1:has-text("Page not found")',
+      '[data-testid="page-content"], [data-testid="page-placeholder"], [role="alert"], h1:has-text("Page not found")',
     )
     .first()
     .waitFor({ timeout: 15_000 });
-  await page.waitForTimeout(400);
+  await page
+    .locator('[role="status"][aria-label^="Loading"]')
+    .first()
+    .waitFor({ state: "detached", timeout: 15_000 });
+  await page.waitForTimeout(1200); // gauge and ECharts entry animations
   return page;
 }
 
@@ -94,6 +98,66 @@ for (const width of WIDTHS) {
     await shot(legacy, String(width), `legacy-${path}.png`);
     await legacy.close();
   }
+  await context.close();
+}
+
+// Full-length Overview (a tall viewport, because both apps scroll inside <main>).
+await mkdir(join(outDir, "full"), { recursive: true });
+for (const [width, height] of [
+  [1440, 2300],
+  [390, 6200],
+]) {
+  const context = await browser.newContext({ viewport: { width, height } });
+  const react = await openReact(context, "overview");
+  await shot(react, "full", `react-overview-${width}.png`);
+  await react.close();
+  const legacy = await openLegacy(context, "overview");
+  await shot(legacy, "full", `legacy-overview-${width}.png`);
+  await legacy.close();
+  await context.close();
+}
+
+// Overview interactions, React and legacy in the same state.
+await mkdir(join(outDir, "overview"), { recursive: true });
+{
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 2300 },
+  });
+  const react = await openReact(context, "overview");
+  const legacy = await openLegacy(context, "overview");
+  await react
+    .getByRole("group", { name: "Timeline range" })
+    .getByRole("button", { name: "Last 120" })
+    .click();
+  await legacy.locator('#rg button[data-r="120"]').click();
+  await react
+    .getByRole("group", { name: "Telemetry channel" })
+    .getByRole("button", { name: "Voltage" })
+    .click();
+  await legacy.locator('#tsel button[data-m="volt"]').click();
+  await react.waitForTimeout(1000);
+  await legacy.waitForTimeout(1000);
+  await shot(react, "overview", "react-last120-voltage.png");
+  await shot(legacy, "overview", "legacy-last120-voltage.png");
+  for (const [page, selector] of [
+    [react, '[role="img"][aria-label^="SOH over"]'],
+    [legacy, "#tl"],
+  ]) {
+    const box = await page.locator(selector).boundingBox();
+    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.45);
+  }
+  await react.waitForTimeout(500);
+  await legacy.waitForTimeout(500);
+  await shot(react, "overview", "react-timeline-tooltip.png");
+  await shot(legacy, "overview", "legacy-timeline-tooltip.png");
+  await react.getByText("95% fit interval").hover();
+  await react.waitForTimeout(300);
+  await shot(react, "overview", "react-infotip.png");
+  await react.getByText("About these results").click();
+  await react.waitForTimeout(300);
+  await shot(react, "overview", "react-about-these-results.png");
+  await react.close();
+  await legacy.close();
   await context.close();
 }
 

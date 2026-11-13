@@ -42,5 +42,10 @@
   --tag-bg: rgba(255, 255, 255, 0.02);
   --heading-from: #f5f7fc;
 
+  /* Chart literals from legacy ui.js `eb()` (charts read these at render time) */
+  --chart-grid: rgba(137, 152, 173, 0.12);
+  --chart-zoom-fill: rgba(84, 231, 255, 0.12);
+  --gauge-glow: rgba(84, 231, 255, 0.14);
+
   --font: Manrope, system-ui, sans-serif;
 }

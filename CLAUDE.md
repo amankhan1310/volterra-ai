@@ -66,7 +66,7 @@ cd backend && uv run alembic upgrade head && uv run python -m app.db.seed   # de
 cd backend && uv run uvicorn --factory app.main:create_app --reload      # API on :8000
 cd frontend && npm ci && npm run dev       # React app on :5173 (proxies /api to :8000)
 cd frontend && npm run api:types:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build
-cd frontend && PW_CHANNEL=msedge npm run e2e   # E2E + axe against the running API (local browser)
+cd frontend && PW_CHANNEL=msedge npm run e2e   # E2E + axe + legacy parity (API :8000, legacy :8080)
 ```
 
 Golden fixtures in `backend/tests/golden/` are generated, never hand-edited; see the README

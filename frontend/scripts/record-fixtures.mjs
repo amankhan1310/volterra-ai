@@ -32,6 +32,14 @@ const fixtures = {
   batteries,
   anomalies: await get(`/api/v1/batteries/${id}/anomalies`),
   simulator: await get(`/api/v1/batteries/${id}/simulator`),
+  cycles: await get(`/api/v1/batteries/${id}/cycles`),
+  summary: await get(`/api/v1/batteries/${id}/summary?eol_pct=80`),
+  // A second threshold, for the tests that move EOL away from its default (D1, U1).
+  "summary-eol-70": await get(`/api/v1/batteries/${id}/summary?eol_pct=70`),
+  forecast: await get(`/api/v1/batteries/${id}/forecast?eol_pct=80`),
+  "forecast-eol-70": await get(`/api/v1/batteries/${id}/forecast?eol_pct=70`),
+  backtest: await get(`/api/v1/batteries/${id}/backtest`),
+  insights: await get(`/api/v1/batteries/${id}/insights`),
 };
 
 await mkdir(outDir, { recursive: true });

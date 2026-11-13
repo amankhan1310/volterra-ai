@@ -28,9 +28,7 @@ test.describe("application shell against the real API", () => {
     await expect(context).toContainText(`Dataset ${battery.dataset}`);
     await expect(context).toContainText(`Battery ${battery.external_id}`);
     await expect(context).toContainText("Algorithm v1");
-    await expect(page.getByTestId("page-placeholder")).toContainText(
-      "Milestone 2",
-    );
+    await expect(page.getByTestId("page-content")).toBeVisible();
   });
 
   for (const target of PAGES) {
@@ -56,9 +54,12 @@ test.describe("application shell against the real API", () => {
       ).toHaveAttribute("aria-current", "page");
       await expect(page).toHaveTitle(`${target.label} · VOLTERRA AI`);
       await settled(page);
-      await expect(page.getByTestId("page-placeholder")).toContainText(
-        `Milestone ${target.milestone}`,
-      );
+      if (target.built)
+        await expect(page.getByTestId("page-content")).toBeVisible();
+      else
+        await expect(page.getByTestId("page-placeholder")).toContainText(
+          `Milestone ${target.milestone}`,
+        );
       expect(errors).toEqual([]);
     });
   }
@@ -124,6 +125,9 @@ test.describe("application shell against the real API", () => {
     ).toHaveText(
       `${anomalies.summary.total} anomaly events flagged in the dataset. Open Anomaly Detection to review.`,
     );
+    // Placeholder pages report the reload only; Overview adds SOH and RUL (overview.spec.ts).
+    await page.goto("/about");
+    await settled(page);
     await page.getByRole("button", { name: "Run analysis" }).click();
     await expect(
       page.getByRole("status").filter({ hasText: "reloaded" }),
@@ -151,7 +155,7 @@ test.describe("failure states", () => {
     ).toContainText("API unreachable");
     down = false;
     await alert.getByRole("button", { name: "Retry" }).click();
-    await expect(page.getByTestId("page-placeholder")).toBeVisible();
+    await expect(page.getByTestId("page-content")).toBeVisible();
   });
 
   test("an empty database explains how to seed it", async ({ page }) => {

@@ -98,7 +98,7 @@ describe("Run analysis (D6)", () => {
         return Response.json(fixtures.batteries);
       }),
     );
-    const { user } = renderApp("/overview");
+    const { user } = renderApp("/about");
     await screen.findByTestId("page-placeholder");
     await screen.findByText("v1");
     const before = batteryRequests;
@@ -113,7 +113,7 @@ describe("Run analysis (D6)", () => {
   });
 
   it("reports a failed reload", async () => {
-    const { user } = renderApp("/overview");
+    const { user } = renderApp("/about");
     await screen.findByTestId("page-placeholder");
     server.use(
       http.get("*/api/v1/batteries", () =>

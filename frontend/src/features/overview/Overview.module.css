@@ -19,8 +19,23 @@
   );
 }
 
-.gauge {
+.gaugeFigure {
+  width: 100%;
   max-width: 340px;
+  margin: 0;
+  text-align: center;
+}
+
+.gauge {
+  display: block;
+  max-width: 340px;
+}
+
+/* Under the dial, never across its rings (the prototype drew it inside them). */
+.gaugeCaption {
+  margin-top: 4px;
+  color: var(--ib);
+  font-size: 12px;
 }
 
 .arc {

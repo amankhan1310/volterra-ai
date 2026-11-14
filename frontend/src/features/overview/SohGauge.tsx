@@ -85,67 +85,69 @@ export function SohGauge({ soh, lifeUsed, eolPct, color }: SohGaugeProps) {
         role="img"
         aria-label={`State of health ${sohText} percent`}
       >
-        <defs>
-          <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="var(--cy)" />
-            <stop offset="1" stopColor={color} />
-          </linearGradient>
-        </defs>
-        {gaugeTicks(soh).map((t, k) => (
-          <line
-            key={k}
-            x1={t.x1}
-            y1={t.y1}
-            x2={t.x2}
-            y2={t.y2}
-            stroke={t.lit ? "var(--cy)" : "var(--bd-strong)"}
-            strokeOpacity={t.lit ? 0.75 : 1}
-            strokeWidth={t.major ? 1.6 : 1}
-          />
-        ))}
-        <g transform="rotate(-90 170 170)">
-          <circle
-            cx="170"
-            cy="170"
-            r={OUTER_R}
-            fill="none"
-            stroke="var(--el)"
-            strokeWidth="12"
-          />
-          <circle
-            className={styles.arc}
-            data-testid="gauge-outer"
-            cx="170"
-            cy="170"
-            r={OUTER_R}
-            fill="none"
-            stroke={`url(#${gradient})`}
-            strokeWidth="12"
-            strokeLinecap="round"
-            strokeDasharray={OUTER_C}
-            strokeDashoffset={drawn ? target.outer : OUTER_C}
-          />
-          <circle
-            cx="170"
-            cy="170"
-            r={INNER_R}
-            fill="none"
-            stroke="var(--el)"
-            strokeWidth="4"
-          />
-          <circle
-            className={styles.arc}
-            data-testid="gauge-inner"
-            cx="170"
-            cy="170"
-            r={INNER_R}
-            fill="none"
-            stroke="var(--ib)"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray={INNER_C}
-            strokeDashoffset={drawn ? target.inner : INNER_C}
-          />
+        <g className="graphic">
+          <defs>
+            <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="var(--cy)" />
+              <stop offset="1" stopColor={color} />
+            </linearGradient>
+          </defs>
+          {gaugeTicks(soh).map((t, k) => (
+            <line
+              key={k}
+              x1={t.x1}
+              y1={t.y1}
+              x2={t.x2}
+              y2={t.y2}
+              stroke={t.lit ? "var(--cy)" : "var(--bd-strong)"}
+              strokeOpacity={t.lit ? 0.75 : 1}
+              strokeWidth={t.major ? 1.6 : 1}
+            />
+          ))}
+          <g transform="rotate(-90 170 170)">
+            <circle
+              cx="170"
+              cy="170"
+              r={OUTER_R}
+              fill="none"
+              stroke="var(--el)"
+              strokeWidth="12"
+            />
+            <circle
+              className={styles.arc}
+              data-testid="gauge-outer"
+              cx="170"
+              cy="170"
+              r={OUTER_R}
+              fill="none"
+              stroke={`url(#${gradient})`}
+              strokeWidth="12"
+              strokeLinecap="round"
+              strokeDasharray={OUTER_C}
+              strokeDashoffset={drawn ? target.outer : OUTER_C}
+            />
+            <circle
+              cx="170"
+              cy="170"
+              r={INNER_R}
+              fill="none"
+              stroke="var(--el)"
+              strokeWidth="4"
+            />
+            <circle
+              className={styles.arc}
+              data-testid="gauge-inner"
+              cx="170"
+              cy="170"
+              r={INNER_R}
+              fill="none"
+              stroke="var(--ib)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray={INNER_C}
+              strokeDashoffset={drawn ? target.inner : INNER_C}
+            />
+          </g>
         </g>
         <text
           x="170"

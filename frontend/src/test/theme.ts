@@ -3,6 +3,7 @@ import type { ChartTheme } from "../components/charts/chartTheme";
 /** The dark token values (src/styles/tokens.css), for chart-option tests; jsdom loads no CSS. */
 export const theme: ChartTheme = {
   cy: "#54e7ff",
+  cyStrong: "#54e7ff",
   ib: "#8dafff",
   gr: "#7cf2bc",
   am: "#ffc56e",

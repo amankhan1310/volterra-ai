@@ -9,6 +9,16 @@
     <meta name="theme-color" content="#070a0f" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>VOLTERRA AI · Battery Intelligence</title>
+    <script>
+      // Theme (decision D2): dark by default; apply a saved light choice before the first paint.
+      // Same key as src/state/theme.ts.
+      try {
+        if (localStorage.getItem("volterra-theme") === "light")
+          document.documentElement.setAttribute("data-theme", "light");
+      } catch (e) {
+        // Storage unavailable: stay dark.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

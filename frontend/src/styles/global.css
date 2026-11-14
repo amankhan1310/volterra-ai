@@ -124,6 +124,22 @@ a:focus-visible,
   }
 }
 
+/*
+ * Drawings (gauge, sparklines, twin, timeline, bars, dots, slider thumbs) use the graphic accents:
+ * inside this scope the accent names resolve to their -fill tokens (tokens.css). Text inside a
+ * drawing that uses an accent therefore also gets the fill, which is still AA for --rd, --ib and
+ * --violet but not for the others; keep SVG text on --tx/--mu or check it in contrast.test.ts.
+ * In dark the fills equal the text accents, so this scope changes nothing there.
+ */
+.graphic {
+  --cy: var(--cy-fill);
+  --ib: var(--ib-fill);
+  --gr: var(--gr-fill);
+  --am: var(--am-fill);
+  --rd: var(--rd-fill);
+  --violet: var(--violet-fill);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

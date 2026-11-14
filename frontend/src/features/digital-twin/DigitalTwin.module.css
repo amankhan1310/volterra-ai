@@ -72,6 +72,52 @@
   fill-opacity: 0.95;
 }
 
+/*
+ * Light theme (M6, approved): lighter, restrained faces, each outlined in the AA shade of the
+ * module's own status colour (>= 4.49:1 against the plate), so modules read as distinct units
+ * rather than one solid block. The dark drawing above is unchanged.
+ */
+.pack[data-tone="cy"] {
+  --module-edge: var(--twin-module-edge-cy);
+}
+
+.pack[data-tone="gr"] {
+  --module-edge: var(--twin-module-edge-gr);
+}
+
+.pack[data-tone="am"] {
+  --module-edge: var(--twin-module-edge-am);
+}
+
+.pack[data-tone="rd"] {
+  --module-edge: var(--twin-module-edge-rd);
+}
+
+:global(:root[data-theme="light"]) .module polygon {
+  stroke: var(--module-edge);
+  stroke-linejoin: round;
+  stroke-width: 1;
+}
+
+:global(:root[data-theme="light"]) .right {
+  fill-opacity: 0.34;
+}
+
+:global(:root[data-theme="light"]) .top {
+  fill-opacity: 0.72;
+}
+
+/* Selection and keyboard focus keep their strong outlines over the module edge. */
+:global(:root[data-theme="light"]) .module[data-selected="true"] .top {
+  stroke: var(--tx);
+  stroke-width: 1.5;
+}
+
+:global(:root[data-theme="light"]) .module:focus-visible .top {
+  stroke: var(--cy);
+  stroke-width: 2;
+}
+
 /* Legacy `label` with the value floated right in cyan. */
 .cycleLabel {
   display: block;

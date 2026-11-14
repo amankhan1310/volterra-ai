@@ -60,7 +60,7 @@ export function StatusCard() {
     >
       <div>
         <i
-          className={cx(styles.dot, styles[service.status])}
+          className={cx(styles.dot, styles[service.status], "graphic")}
           aria-hidden="true"
         />
         <span className={styles.title}>{source.title}</span>

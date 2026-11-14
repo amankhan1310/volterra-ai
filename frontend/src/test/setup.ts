@@ -26,6 +26,9 @@ afterEach(() => {
   server.resetHandlers();
   resetScenarioStore();
   setViewportWidth(1440);
+  // Every test starts in the first-visit theme (dark, nothing saved).
+  document.documentElement.setAttribute("data-theme", "dark");
+  localStorage.clear();
 });
 
 afterAll(() => {

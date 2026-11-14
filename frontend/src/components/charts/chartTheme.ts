@@ -1,9 +1,12 @@
 /**
  * Chart colours, read from the CSS tokens at render time (plan §7: no colour literals in charts,
  * so a theme change reaches the charts too). Canvas cannot resolve `var(--x)`, hence the lookup.
+ * Series are graphics, so the accents are the `-fill` tokens (3:1); `cyStrong` is the text accent
+ * (4.5:1), for a filled marker that carries a label in `onAccent`.
  */
 export interface ChartTheme {
   cy: string;
+  cyStrong: string;
   ib: string;
   gr: string;
   am: string;
@@ -21,12 +24,13 @@ export interface ChartTheme {
 }
 
 const TOKENS: Record<keyof ChartTheme, string> = {
-  cy: "--cy",
-  ib: "--ib",
-  gr: "--gr",
-  am: "--am",
-  rd: "--rd",
-  violet: "--violet",
+  cy: "--cy-fill",
+  cyStrong: "--cy",
+  ib: "--ib-fill",
+  gr: "--gr-fill",
+  am: "--am-fill",
+  rd: "--rd-fill",
+  violet: "--violet-fill",
   tx: "--tx",
   mu: "--mu",
   bd: "--bd",

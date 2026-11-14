@@ -31,7 +31,7 @@ function SliderField({
       </label>
       <input
         id={id}
-        className={styles.slider}
+        className={`${styles.slider} graphic`}
         type="range"
         min={slider.min}
         max={slider.max}

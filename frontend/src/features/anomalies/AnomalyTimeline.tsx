@@ -65,6 +65,7 @@ export function AnomalyTimeline({
   return (
     <div ref={ref} className={styles.track}>
       <svg
+        className="graphic"
         viewBox={`0 0 ${String(width)} ${String(TIMELINE.height)}`}
         width={width}
         height={TIMELINE.height}

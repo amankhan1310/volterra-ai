@@ -1,7 +1,12 @@
 /*
- * Design tokens: the legacy "Obsidian Intelligence" redesign (legacy/style.css:324-338).
- * Dark theme only for now; the light theme is designed, reviewed and approved in Milestone 6
- * (decision D2). Components and charts read colours from these variables, never from literals.
+ * Design tokens. Dark is the legacy "Obsidian Intelligence" redesign (legacy/style.css:324-338)
+ * and the first-visit default; light was designed and approved in Milestone 6 (decision D2).
+ * Components and charts read colours from these variables, never from literals.
+ *
+ * Accents come in two roles. `--cy`, `--gr`, … are for text and meet WCAG AA (4.5:1) on every
+ * surface. `--cy-fill`, `--gr-fill`, … are for graphics (chart lines, gauge arcs, twin modules,
+ * bars, dots) and meet the 3:1 non-text minimum (WCAG 1.4.11). Inside a `.graphic` scope
+ * (global.css) the plain names resolve to the fills. In dark the two roles are identical.
  */
 :root,
 :root[data-theme="dark"] {
@@ -21,6 +26,14 @@
   --am: #ffc56e;
   --rd: #ff7185;
   --violet: #b58cff; /* fourth saved-scenario colour (legacy SCol/SC2) */
+
+  /* Graphic accents: identical to the text accents in dark. */
+  --cy-fill: #54e7ff;
+  --ib-fill: #8dafff;
+  --gr-fill: #7cf2bc;
+  --am-fill: #ffc56e;
+  --rd-fill: #ff7185;
+  --violet-fill: #b58cff;
 
   /* Text and lines */
   --tx: #f5f7fc;
@@ -56,4 +69,71 @@
   --twin-edge: rgba(255, 255, 255, 0.18);
 
   --font: Manrope, system-ui, sans-serif;
+}
+
+/*
+ * Light theme (Milestone 6, approved). Same hues and roles as dark. Text accents are darkened to
+ * meet AA on every surface; graphic accents are the prototype's own light palette
+ * (legacy/style.css:17-44), all at least 3:1. Checked by src/styles/contrast.test.ts.
+ */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #eef2f7;
+  --side: #e6ecf3;
+  --card: #ffffff;
+  --el: #eef2f7;
+  --hi: #e4eaf2;
+
+  /* Text accents (AA, 4.5:1) */
+  --cy: #006e84;
+  --ib: #3a5bc7;
+  --gr: #08714a;
+  --am: #8a5700;
+  --rd: #c0283f;
+  --violet: #7247c9;
+
+  /* Graphic accents (WCAG 1.4.11, 3:1) */
+  --cy-fill: #0793b0;
+  --ib-fill: #4a6fd6;
+  --gr-fill: #12895c;
+  --am-fill: #b87500;
+  --rd-fill: #d12e48;
+  --violet-fill: #8a5fd6;
+
+  /* Text and lines */
+  --tx: #0e1726;
+  --mu: #4f6075;
+  --bd: #d5dde8;
+
+  --bd-strong: #b9c6d6;
+  --group-label: #56667c;
+  --side-glass: rgba(230, 236, 243, 0.96);
+  --on-accent: #ffffff;
+  --on-danger: #ffffff;
+  --glow-cy: rgba(0, 110, 132, 0.07);
+  --glow-ib: rgba(58, 91, 199, 0.06);
+  --nav-active-from: rgba(0, 110, 132, 0.12);
+  --nav-active-to: rgba(0, 110, 132, 0.02);
+  --card-sheen: rgba(255, 255, 255, 0.7);
+  --card-inset: rgba(255, 255, 255, 0.9);
+  --card-shadow: rgba(15, 23, 42, 0.12);
+  --tag-bg: rgba(14, 23, 38, 0.03);
+  --heading-from: #0e1726;
+
+  --chart-grid: rgba(79, 96, 117, 0.16);
+  --chart-zoom-fill: rgba(0, 110, 132, 0.1);
+  --gauge-glow: rgba(0, 110, 132, 0.1);
+
+  --twin-scene: #e9eef5;
+  --twin-glow: rgba(0, 110, 132, 0.1);
+  --twin-plate: #dbe3ed;
+  --twin-plate-edge: #bccada;
+  --twin-edge: rgba(14, 23, 38, 0.16);
+  /* Module outlines: the AA shade of each module colour (>= 4.49:1 against the plate). */
+  --twin-module-edge-cy: #006e84;
+  --twin-module-edge-gr: #08714a;
+  --twin-module-edge-am: #8a5700;
+  --twin-module-edge-rd: #c0283f;
 }

@@ -85,7 +85,7 @@ function SensitivityRow({
         ) : null}
       </div>
       <div
-        className={styles.bar}
+        className={`${styles.bar} graphic`}
         role="img"
         aria-label={`${delta.text} versus baseline`}
       >

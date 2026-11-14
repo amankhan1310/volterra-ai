@@ -61,6 +61,7 @@ export function MiniLineChart({
   const g = miniChartGeometry(values, { height, cursor });
   return (
     <svg
+      className="graphic"
       viewBox={`0 0 ${String(WIDTH)} ${String(height)}`}
       role="img"
       aria-label={label}

@@ -133,7 +133,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Observed SOH and the v1 linear forecast */
+        /** Observed SOH and the forecast (v1 linear; v2 interim quadratic) */
         get: operations["get_forecast_api_v1_batteries__battery_id__forecast_get"];
         put?: never;
         post?: never;
@@ -150,7 +150,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Time-ordered hold-out backtest of the linear forecast */
+        /** Time-ordered hold-out backtest of the forecast */
         get: operations["get_backtest_api_v1_batteries__battery_id__backtest_get"];
         put?: never;
         post?: never;
@@ -167,7 +167,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Rule-based insights (v1, includes known defect F5) */
+        /** Rule-based insights (v1 includes known defect F5; fixed in v2) */
         get: operations["get_insights_api_v1_batteries__battery_id__insights_get"];
         put?: never;
         post?: never;
@@ -184,7 +184,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Robust z-score anomaly events (v1; see known_issues) */
+        /** Robust z-score anomaly events (v1 default, see known_issues; v2 opt-in) */
         get: operations["get_anomalies_api_v1_batteries__battery_id__anomalies_get"];
         put?: never;
         post?: never;
@@ -252,7 +252,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Charging Advisor: one-factor sensitivity (v1, includes known defect F8) */
+        /** Charging Advisor: one-factor sensitivity (v1 includes known defect F8; fixed in v2) */
         get: operations["get_advisor_api_v1_batteries__battery_id__advisor_get"];
         put?: never;
         post?: never;
@@ -359,9 +359,19 @@ export interface components {
             cycles_to_eol: number | null;
             /**
              * Delta Pct
-             * @description v1: 0 when either cycle count is missing or 0 (F8).
+             * @description v1 meaning in every version: 0 when either cycle count is missing or 0 (F8). With ?algorithm=v2 use change_pct and comparison.
              */
             delta_pct: number;
+            /**
+             * Change Pct
+             * @description v2 only: % change in cycles to EOL vs the baseline; null when not comparable (see comparison).
+             */
+            change_pct?: number | null;
+            /**
+             * Comparison
+             * @description v2 only: whether the change can be compared, and if not why.
+             */
+            comparison?: ("comparable" | "at_or_below_eol" | "beyond_horizon") | null;
         };
         /**
          * AnalysisContext
@@ -385,10 +395,11 @@ export interface components {
             data_provenance: "measured" | "simulated";
             /**
              * Algorithm Version
+             * @description v1 (default) reproduces the prototype, including defects F1-F8; v2 (?algorithm=v2) has the corrected methods (see CHANGELOG.md).
              * @default v1
-             * @constant
+             * @enum {string}
              */
-            algorithm_version: "v1";
+            algorithm_version: "v1" | "v2";
             /**
              * Eol Pct
              * @description End-of-life SOH threshold used.
@@ -468,6 +479,26 @@ export interface components {
             mad_floor: number;
             /** Residual Half Window */
             residual_half_window: number;
+            /**
+             * Step Window
+             * @description v2 only: cycles on each side of a candidate capacity step.
+             */
+            step_window?: number | null;
+            /**
+             * Min Step Soh Pct
+             * @description v2 only: smallest capacity step reported (SOH points).
+             */
+            min_step_soh_pct?: number | null;
+            /**
+             * Causal Fit Window
+             * @description v2 only: causal mode: previous cycles used per prediction.
+             */
+            causal_fit_window?: number | null;
+            /**
+             * Causal Min History
+             * @description v2 only: causal mode: earlier statistics needed to judge.
+             */
+            causal_min_history?: number | null;
         };
         /** BacktestPointOut */
         BacktestPointOut: {
@@ -489,6 +520,8 @@ export interface components {
             /** Points */
             points: components["schemas"]["BacktestPointOut"][];
             mae: components["schemas"]["Quantity"];
+            /** @description v2 only: mean of predicted - observed (bias). */
+            mean_signed_error?: components["schemas"]["Quantity"] | null;
             /**
              * Provenance
              * @default fitted
@@ -569,6 +602,11 @@ export interface components {
             values: number[];
             /** Z */
             z: number[];
+            /**
+             * Cycles
+             * @description v2 only: cycles the detector evaluated; values and z align with them.
+             */
+            cycles?: number[] | null;
         };
         /** CoefficientOut */
         CoefficientOut: {
@@ -679,7 +717,7 @@ export interface components {
             version: string;
             /**
              * Mode
-             * @description 'retrospective': uses past and future cycles (see F7).
+             * @description 'retrospective': uses past and future cycles (see F7); 'causal' (v2 only, ?mode=causal): uses past cycles only.
              */
             mode: string;
         };
@@ -793,7 +831,7 @@ export interface components {
             level: number;
             /**
              * Method
-             * @description How the interval was computed (v1: 'slope_se', see F3).
+             * @description How the interval was computed (v1: 'slope_se', see F3; v2: 'rolling_origin_backtest_quantiles').
              */
             method: string;
             /** Unit */
@@ -803,6 +841,16 @@ export interface components {
              * @enum {string}
              */
             provenance: "measured" | "simulated" | "fitted" | "predicted" | "assumed";
+            /**
+             * Label
+             * @description v2 only: display label, e.g. '90% prediction interval'.
+             */
+            label?: string | null;
+            /**
+             * Max Calibrated Horizon Cycles
+             * @description v2 only: bounds beyond this many cycles ahead are not calibrated and are null.
+             */
+            max_calibrated_horizon_cycles?: number | null;
         };
         /** LatestCycle */
         LatestCycle: {
@@ -822,6 +870,16 @@ export interface components {
             residual_sd: number;
             /** Slope Se */
             slope_se: number;
+            /**
+             * Curvature
+             * @description v2 only: quadratic coefficient (SOH points per cycle²); slope and intercept are then the slope and value at origin_cycle (interim model, see F6).
+             */
+            curvature?: number | null;
+            /**
+             * Origin Cycle
+             * @description v2 only: cycle at which slope and intercept are given.
+             */
+            origin_cycle?: number | null;
         };
         /** Quantity */
         Quantity: {
@@ -1046,6 +1104,16 @@ export interface components {
             residual_sd: number;
             /** Slope Se */
             slope_se: number;
+            /**
+             * Curvature
+             * @description v2 only: quadratic coefficient (SOH points per cycle²); slope and intercept are then the slope and value at origin_cycle (interim model, see F6).
+             */
+            curvature?: number | null;
+            /**
+             * Origin Cycle
+             * @description v2 only: cycle at which slope and intercept are given.
+             */
+            origin_cycle?: number | null;
             /** Fit From Cycle */
             fit_from_cycle: number;
             /** Fit To Cycle */
@@ -1309,6 +1377,8 @@ export interface operations {
             query?: {
                 /** @description End-of-life SOH threshold in percent (60-90, as in the prototype). */
                 eol_pct?: number;
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
             };
             header?: never;
             path: {
@@ -1352,6 +1422,8 @@ export interface operations {
             query?: {
                 /** @description End-of-life SOH threshold in percent (60-90, as in the prototype). */
                 eol_pct?: number;
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
             };
             header?: never;
             path: {
@@ -1392,7 +1464,10 @@ export interface operations {
     };
     get_backtest_api_v1_batteries__battery_id__backtest_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
+            };
             header?: never;
             path: {
                 battery_id: string;
@@ -1432,7 +1507,10 @@ export interface operations {
     };
     get_insights_api_v1_batteries__battery_id__insights_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
+            };
             header?: never;
             path: {
                 battery_id: string;
@@ -1475,6 +1553,10 @@ export interface operations {
             query?: {
                 /** @description Include per-cycle detector inputs and z-scores. */
                 include_scores?: boolean;
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
+                /** @description Anomaly detection mode (v2 only). 'retrospective' (default) looks back over the history using windows centred on each cycle; 'causal' is the live mode and uses only cycles up to each judged cycle. */
+                mode?: "retrospective" | "causal";
             };
             header?: never;
             path: {
@@ -1558,7 +1640,10 @@ export interface operations {
     };
     get_simulator_api_v1_batteries__battery_id__simulator_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
+            };
             header?: never;
             path: {
                 battery_id: string;
@@ -1598,7 +1683,10 @@ export interface operations {
     };
     post_simulate_api_v1_batteries__battery_id__simulate_post: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
+            };
             header?: never;
             path: {
                 battery_id: string;
@@ -1644,8 +1732,10 @@ export interface operations {
         parameters: {
             query?: {
                 eol_pct?: number;
-                /** @description Initial SOH; default is the simulator default (current SOH, rounded). */
+                /** @description Initial SOH; default is the simulator default (current SOH; rounded in v1, unrounded in v2). */
                 start_soh_pct?: number | null;
+                /** @description Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model. */
+                algorithm?: "v1" | "v2";
             };
             header?: never;
             path: {

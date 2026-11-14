@@ -9,7 +9,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 2. Analytics parity in Python   | ✅ Complete |
 | 3. DB + API (parity)            | ✅ Complete |
 | 4. React parity                 | ✅ Complete |
-| 5. Correctness fixes (F1–F8)    | Not started |
+| 5. Correctness fixes (F1–F8)    | ✅ Complete |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
 | 8. Calibrated simulator         | Not started |
@@ -405,7 +405,61 @@ the light theme works, no `innerHTML`.
 | Light theme works                                                                                                      | ✅                         | theme E2E, axe in light, contrast test              |
 | No `innerHTML`                                                                                                         | ✅                         | lint-enforced                                       |
 
+## Phase 5 — Correctness fixes F1–F8 (2026-11-15)
+
+Branch: `feat/phase-5-analytics-fixes` (one PR). M6 merged as PR #11 (`638aa87`).
+
+Decisions (approved before implementation): v2 is opt-in through the API (`?algorithm=v2`, v1
+default, additive contract); F6 uses an interim quadratic over the same 120-cycle window; F3 is a
+90% prediction interval calibrated from repeated historical backtests; F2 needs a 0.5 SOH-point
+step; F7 defaults to look-back with `mode=causal` for live use; F4 anchors the simulator to the
+shared v2 forecast (no acceleration term); F5 uses ratio thresholds 1.2 and 1/1.2; F8 keeps
+`delta_pct` (a number) and adds `change_pct` and `comparison`; `algorithm_version` widens to
+`"v1" | "v2"`.
+
+Delivered (one commit per defect, details in `CHANGELOG.md`):
+
+| Defect | v1 (unchanged)                            | v2                                                                         |
+| ------ | ----------------------------------------- | -------------------------------------------------------------------------- |
+| F1     | temperature flags `[170]` only            | detrended robust z: temperature `[90, 170, 251]`, voltage `[130, 271]`     |
+| F2     | five false capacity steps                 | step detector (≥ 0.5 SOH pts): none; an injected 1.0-point step is found   |
+| F3     | "95% fit interval" 111.5–114.0 (2.6 wide) | 90% prediction interval 92–101; held-out coverage 85.9–88.3%               |
+| F4     | Overview 112.7 vs simulator 106           | baseline 97 = round(Overview RUL 96.5)                                     |
+| F5     | always "Fade is accelerating"             | accelerating / slowing / steady by explicit ratio rule                     |
+| F6     | backtest bias +0.576                      | interim quadratic: bias +0.042                                             |
+| F7     | centred window reads future cycles        | `causal` mode: no result can change when later data changes                |
+| F8     | 0% when not comparable                    | `change_pct: null` with `comparison` (`at_or_below_eol`, `beyond_horizon`) |
+
+- The API exposes v2 with `?algorithm=v2` on the eight analytics endpoints; `context`
+  says which algorithm produced a response. v2-only fields are omitted from v1 responses.
+- `CHANGELOG.md` records each fix; the golden README no longer says the fixtures change.
+
+Limitations (documented in the code, the changelog and the API descriptions):
+
+- The v2 forecast is an **interim quadratic**, not a production-validated model: it matches the
+  synthetic generator's shape by construction and can extrapolate badly on real cells. Phase 7
+  must replace it after validated model comparison on held-out cells.
+- The F3 interval is calibrated from this battery's own history; it does not establish coverage
+  across batteries (needs held-out cells, Phase 6–7). Bounds beyond the calibrated horizon (171
+  cycles here) are reported as unknown.
+- Causal anomaly detection needs about 80 cycles of history before it judges a cycle.
+- The simulator's stress coefficients stay assumed (fitting them is Phase 8).
+- The frontend still shows v1; switching the UI to v2 is a separate, later decision.
+
+Verification (local; Windows; Python 3.10.11; PostgreSQL 16):
+
+- **Backend:** 542 passed, 8 xfailed. The 8 are the strict F1–F8 tests for v1, which must keep
+  failing. Coverage 99.77% (all new modules 100%). ruff, ruff format and strict mypy clean.
+- **Parity:** the golden fixtures and the legacy prototype are unchanged; the parity suites,
+  `export_golden.js --check` and the exporter tests pass.
+- **Contract:** `openapi.json` regenerated; an OpenAPI diff found no removed or newly required
+  fields. Every frontend fixture re-recorded from the API on PostgreSQL is byte-identical, so v1
+  responses are unchanged.
+- **Frontend:** types regenerated with no code change; 225 unit tests and 93 Playwright tests
+  (including prototype parity, axe in both themes and responsive checks) pass against the
+  Phase 5 API; production build clean.
+
 ## Next
 
-Phase 5 (correctness fixes F1–F8 as separate v2 methods), after the M6 review and merge and only
-with approval.
+Phase 6 (real data: NASA → CALCE → Severson loaders, upload and job runner), only after the
+Phase 5 review and merge and with approval.

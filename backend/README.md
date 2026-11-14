@@ -4,25 +4,31 @@ VOLTERRA AI backend:
 
 - a FastAPI service (`/api/v1`) backed by PostgreSQL 16
 - `app/analytics`: the **v1** algorithms, a standard-library-only port of the legacy prototype
-  verified against the golden fixtures in [`tests/golden/`](tests/golden/README.md)
+  verified against the golden fixtures in [`tests/golden/`](tests/golden/README.md), and the
+  corrected **v2** methods for the known defects F1–F8 (opt-in, see
+  [`../CHANGELOG.md`](../CHANGELOG.md))
 
 The API contract is committed as [`openapi.json`](openapi.json).
 
 ## Layout
 
-| Path             | Contents                                                                   |
-| ---------------- | -------------------------------------------------------------------------- |
-| `app/analytics/` | v1 algorithms (Phase 2, unchanged) + `twin.py` (temperature band, Phase 3) |
-| `app/db/`        | SQLAlchemy models, async session, repositories, `synthetic-v1` seed        |
-| `app/schemas/`   | Pydantic request/response models (the public contract)                     |
-| `app/services/`  | `analysis` (cached `legacy_v1.analyze()`), `simulation`, copy-only mappers |
-| `app/api/v1/`    | Routers: health, datasets, analysis, monitoring, simulator, scenarios      |
-| `app/core/`      | Settings (secrets as `SecretStr`) and the error envelope                   |
-| `alembic/`       | Async migration environment and `versions/0001_initial_schema.py`          |
-| `tests/`         | parity, unit, api and db (PostgreSQL) suites                               |
+| Path             | Contents                                                                     |
+| ---------------- | ---------------------------------------------------------------------------- |
+| `app/analytics/` | v1 algorithms (Phase 2, unchanged), `twin.py` (Phase 3), `*_v2.py` (Phase 5) |
+| `app/db/`        | SQLAlchemy models, async session, repositories, `synthetic-v1` seed          |
+| `app/schemas/`   | Pydantic request/response models (the public contract)                       |
+| `app/services/`  | `analysis` (cached `analyze()` / `analyze_v2()`), `simulation`, mappers      |
+| `app/api/v1/`    | Routers: health, datasets, analysis, monitoring, simulator, scenarios        |
+| `app/core/`      | Settings (secrets as `SecretStr`) and the error envelope                     |
+| `alembic/`       | Async migration environment and `versions/0001_initial_schema.py`            |
+| `tests/`         | parity, unit, api, db (PostgreSQL) and `v2` (Phase 5 fixes) suites           |
 
 v1 reproduces the prototype exactly, including known defects F1–F8 (strict expected-failure tests
-in `tests/parity/test_known_defects.py`). Fixes will be separate v2 implementations.
+in `tests/parity/test_known_defects.py`, which keep failing for v1). Phase 5 added the fixes as
+separate **v2** implementations (`forecast_v2`, `anomalies_v2`, `simulator_v2`, `advisor_v2`,
+`insights_v2`, composed by `analysis_v2.analyze_v2()`), with their own expected-value tests in
+`tests/v2/`. v1 stays the API default; v2 is opt-in with `?algorithm=v2`. The v2 forecast is an
+interim quadratic, not a production-validated model (Phase 7 replaces it).
 
 ## Setup
 
@@ -51,10 +57,10 @@ in logs or error messages.
 | `GET /batteries`, `/batteries/{id}`  | Batteries                                                    |
 | `GET /batteries/{id}/cycles`         | Per-cycle data (`from_cycle`, `to_cycle`)                    |
 | `GET /batteries/{id}/summary`        | SOH, fade, RUL interval, health, KPIs (`eol_pct` 60–90)      |
-| `GET /batteries/{id}/forecast`       | Observed series + v1 linear forecast                         |
+| `GET /batteries/{id}/forecast`       | Observed series + forecast (v1 linear, v2 quadratic)         |
 | `GET /batteries/{id}/backtest`       | Hold-out backtest                                            |
 | `GET /batteries/{id}/insights`       | Structured insights (kind, text, values)                     |
-| `GET /batteries/{id}/anomalies`      | v1 detector events (`include_scores` for per-cycle z)        |
+| `GET /batteries/{id}/anomalies`      | Events (`include_scores`; v2 adds `mode=causal`)             |
 | `GET /batteries/{id}/twin`           | Pack state at a cycle (`cycle`), illustrative modules        |
 | `GET /batteries/{id}/simulator`      | Defaults, slider ranges, coefficient provenance              |
 | `POST /batteries/{id}/simulate`      | Scenario vs baseline, trajectories                           |
@@ -64,9 +70,13 @@ in logs or error messages.
 
 Contract conventions:
 
+- **Algorithm version:** `summary`, `forecast`, `backtest`, `insights`, `anomalies`, `simulator`,
+  `simulate` and `advisor` take an optional `algorithm` query parameter: `v1` (default, the
+  prototype's methods including F1–F8) or `v2` (the corrected methods). v2-only response fields
+  are optional and omitted from v1 responses, so v1 clients see no change.
 - **Context:** every analytical response includes `context`: battery, dataset,
-  `algorithm_version: "v1"`, `eol_pct`, and `data_provenance`, which is `simulated` for synthetic
-  data and `measured` for real data.
+  `algorithm_version` (`"v1"` or `"v2"`), `eol_pct`, and `data_provenance`, which is `simulated`
+  for synthetic data and `measured` for real data.
 - **Provenance:** every value carries a `provenance` of `measured`, `simulated`, `fitted`,
   `predicted` or `assumed`.
 - **Not-a-number values:** NaN and ±Infinity are written as the strings `"NaN"`, `"Infinity"`

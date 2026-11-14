@@ -4,9 +4,10 @@ Intelligent battery health and predictive analytics: state-of-health (SOH) estim
 degradation analysis, remaining-useful-life (RUL) prediction, anomaly detection and
 scenario simulation.
 
-> **Status:** Phase 4 complete (pending the M6 review): all six pages are rebuilt in React
-> against the FastAPI + PostgreSQL backend, in dark and light themes, with number parity against
-> the prototype. See [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
+> **Status:** Phase 5 complete (pending review): the known prototype defects F1–F8 have
+> corrected **v2** methods, opt-in through the API with `?algorithm=v2`; v1 (the prototype's
+> behaviour) stays the default and unchanged. See [`CHANGELOG.md`](CHANGELOG.md),
+> [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
 > [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for progress.
 
 ## Repository layout

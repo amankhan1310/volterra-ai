@@ -1,4 +1,4 @@
-"""Anomaly detection and digital twin (v1)."""
+"""Anomaly detection (v1; v2 opt-in) and digital twin."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.analytics.health import DEFAULT_EOL_PCT
 from app.api.deps import get_analysis_service, get_repository
+from app.api.v1.params import AlgorithmQuery, ModeQuery
 from app.core.errors import ApiError, error_responses
 from app.db.repositories import Repository
 from app.schemas.monitoring import AnomaliesResponse, TwinResponse
@@ -25,7 +26,7 @@ ServiceDep = Annotated[AnalysisService, Depends(get_analysis_service)]
     "/anomalies",
     response_model=AnomaliesResponse,
     responses=error_responses(404, 422),
-    summary="Robust z-score anomaly events (v1; see known_issues)",
+    summary="Robust z-score anomaly events (v1 default, see known_issues; v2 opt-in)",
 )
 async def get_anomalies(
     battery_id: uuid.UUID,
@@ -34,7 +35,14 @@ async def get_anomalies(
     include_scores: Annotated[
         bool, Query(description="Include per-cycle detector inputs and z-scores.")
     ] = False,
+    algorithm: AlgorithmQuery = "v1",
+    mode: ModeQuery = "retrospective",
 ) -> AnomaliesResponse:
+    if algorithm == "v2":
+        analysis_v2 = await service.analyze_v2(repo, battery_id, DEFAULT_EOL_PCT)
+        return mappers.anomalies_response_v2(analysis_v2, include_scores, mode)
+    if mode != "retrospective":
+        raise ApiError(422, "unsupported_mode", "mode=causal is only available with algorithm=v2")
     analysis = await service.analyze(repo, battery_id, DEFAULT_EOL_PCT)
     return mappers.anomalies_response(analysis, include_scores)
 

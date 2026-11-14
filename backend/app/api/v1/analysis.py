@@ -1,4 +1,4 @@
-"""Overview analytics (v1): summary, forecast, backtest and insights."""
+"""Overview analytics: summary, forecast, backtest and insights (v1; v2 opt-in)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.analytics.health import DEFAULT_EOL_PCT
 from app.api.deps import get_analysis_service, get_repository
+from app.api.v1.params import AlgorithmQuery
 from app.core.errors import error_responses
 from app.db.repositories import Repository
 from app.schemas.analysis import (
@@ -44,8 +45,14 @@ EolQuery = Annotated[
     summary="Overview: SOH, fade, RUL with interval, health and KPIs",
 )
 async def get_summary(
-    battery_id: uuid.UUID, repo: RepoDep, service: ServiceDep, eol_pct: EolQuery = DEFAULT_EOL_PCT
+    battery_id: uuid.UUID,
+    repo: RepoDep,
+    service: ServiceDep,
+    eol_pct: EolQuery = DEFAULT_EOL_PCT,
+    algorithm: AlgorithmQuery = "v1",
 ) -> SummaryResponse:
+    if algorithm == "v2":
+        return mappers.summary_response_v2(await service.analyze_v2(repo, battery_id, eol_pct))
     return mappers.summary_response(await service.analyze(repo, battery_id, eol_pct))
 
 
@@ -53,11 +60,17 @@ async def get_summary(
     "/forecast",
     response_model=ForecastResponse,
     responses=ERRORS,
-    summary="Observed SOH and the v1 linear forecast",
+    summary="Observed SOH and the forecast (v1 linear; v2 interim quadratic)",
 )
 async def get_forecast(
-    battery_id: uuid.UUID, repo: RepoDep, service: ServiceDep, eol_pct: EolQuery = DEFAULT_EOL_PCT
+    battery_id: uuid.UUID,
+    repo: RepoDep,
+    service: ServiceDep,
+    eol_pct: EolQuery = DEFAULT_EOL_PCT,
+    algorithm: AlgorithmQuery = "v1",
 ) -> ForecastResponse:
+    if algorithm == "v2":
+        return mappers.forecast_response_v2(await service.analyze_v2(repo, battery_id, eol_pct))
     return mappers.forecast_response(await service.analyze(repo, battery_id, eol_pct))
 
 
@@ -65,11 +78,15 @@ async def get_forecast(
     "/backtest",
     response_model=BacktestResponse,
     responses=ERRORS,
-    summary="Time-ordered hold-out backtest of the linear forecast",
+    summary="Time-ordered hold-out backtest of the forecast",
 )
 async def get_backtest(
-    battery_id: uuid.UUID, repo: RepoDep, service: ServiceDep
+    battery_id: uuid.UUID, repo: RepoDep, service: ServiceDep, algorithm: AlgorithmQuery = "v1"
 ) -> BacktestResponse:
+    if algorithm == "v2":
+        return mappers.backtest_response_v2(
+            await service.analyze_v2(repo, battery_id, DEFAULT_EOL_PCT)
+        )
     return mappers.backtest_response(await service.analyze(repo, battery_id, DEFAULT_EOL_PCT))
 
 
@@ -77,9 +94,13 @@ async def get_backtest(
     "/insights",
     response_model=InsightsResponse,
     responses=ERRORS,
-    summary="Rule-based insights (v1, includes known defect F5)",
+    summary="Rule-based insights (v1 includes known defect F5; fixed in v2)",
 )
 async def get_insights(
-    battery_id: uuid.UUID, repo: RepoDep, service: ServiceDep
+    battery_id: uuid.UUID, repo: RepoDep, service: ServiceDep, algorithm: AlgorithmQuery = "v1"
 ) -> InsightsResponse:
+    if algorithm == "v2":
+        return mappers.insights_response_v2(
+            await service.analyze_v2(repo, battery_id, DEFAULT_EOL_PCT)
+        )
     return mappers.insights_response(await service.analyze(repo, battery_id, DEFAULT_EOL_PCT))

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SerializerFunctionWrapHandler, model_serializer
 
 from app.analytics.simulator import SLIDERS
 from app.schemas.common import AnalysisContext, ApiModel, ApiRequestModel, Provenance, Quantity
@@ -105,7 +105,29 @@ class AdvisorRowOut(ApiModel):
     why: str
     override: dict[str, float]
     cycles_to_eol: int | None
-    delta_pct: float = Field(description="v1: 0 when either cycle count is missing or 0 (F8).")
+    delta_pct: float = Field(
+        description="v1 meaning in every version: 0 when either cycle count is missing or 0 "
+        "(F8). With ?algorithm=v2 use change_pct and comparison."
+    )
+    change_pct: float | None = Field(
+        default=None,
+        description="v2 only: % change in cycles to EOL vs the baseline; null when not "
+        "comparable (see comparison).",
+    )
+    comparison: Literal["comparable", "at_or_below_eol", "beyond_horizon"] | None = Field(
+        default=None, description="v2 only: whether the change can be compared, and if not why."
+    )
+
+    # No return annotation on purpose: pydantic would use it as the row's OpenAPI schema
+    # (``Any`` erases every property); without one the model's own schema is kept.
+    @model_serializer(mode="wrap")
+    def _omit_v2_fields_in_v1(self, handler: SerializerFunctionWrapHandler):  # type: ignore[no-untyped-def]
+        # v2 rows always carry `comparison`; v1 rows omit both v2 keys, keeping v1 unchanged.
+        data = handler(self)
+        if self.comparison is None:
+            data.pop("change_pct", None)
+            data.pop("comparison", None)
+        return data
 
 
 class AdvisorResponse(ApiModel):

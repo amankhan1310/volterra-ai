@@ -83,3 +83,20 @@ in `backend/tests/golden/` describe v1 and are never modified.
 - Note: a rolling-median residual (v1) cannot see a sustained step at all, so the v2 channel
   measures level changes ("Capacity step", unit SOH pts).
 - Regression test: `backend/tests/v2/test_f2_capacity_steps.py`.
+
+### F7 — A live (causal) detection mode that never reads future cycles
+
+- **v1 (unchanged):** the capacity residual uses a window centred on each cycle, so it reads
+  later cycles. That suits reviewing history but not live alerting.
+- **v2:** `detect_anomalies_v2(records, mode=...)` has two modes. `retrospective` (the default,
+  for looking back over history) uses the centred windows. `causal` (live) judges every cycle
+  from cycles up to and including it only: point channels compare each value with a Theil–Sen
+  line through the previous 15 cycles; a capacity step is judged once the 10 cycles after its
+  onset have arrived and is reported at that detection cycle; the robust scale comes from earlier
+  statistics only, and a cycle needs 60 earlier statistics before it is judged.
+- Verified: rewriting every channel after cycle _k_ leaves every causal event, input and z-score
+  at or before _k_ unchanged (tested at _k_ = 80–318). Causal mode on `synthetic-v1` finds the
+  injected temperature and voltage anomalies and no false steps; an injected 1.0-point step is
+  reported within 10 cycles after it happens.
+- Limitation: causal mode needs about 80 cycles of history before it can judge a cycle.
+- Regression test: `backend/tests/v2/test_f7_causal.py`.

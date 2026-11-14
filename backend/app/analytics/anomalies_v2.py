@@ -1,4 +1,5 @@
-"""Anomaly detection, version 2: detrended robust z and a capacity-step detector (F1, F2).
+"""Anomaly detection, version 2: detrending, a capacity-step detector and a live mode (F1, F2,
+F7).
 
 v1 scores every raw value against the median/MAD of the **whole** series. Temperature follows a
 ±3 °C sinusoid, which inflates the MAD, so two of the three injected +9 °C spikes (cycles 90 and
@@ -25,6 +26,18 @@ robust z exceeds 3.5; one event per step (the largest change within ±10 cycles)
 10 cycles on each side are not evaluated. On ``synthetic-v1`` nothing is flagged; an injected
 1.0-point step is.
 
+**F7 (two modes).** v1's capacity residual uses a centred window, so it reads future cycles:
+fine for reviewing history, invalid for live alerting. v2 has two modes:
+
+* ``"retrospective"`` (default; look back over history): the centred windows above, one robust
+  scale per channel over all evaluated cycles.
+* ``"causal"`` (live): every verdict at cycle ``t`` uses only cycles ``<= t``. Point channels
+  compare each value with a Theil-Sen line through the previous 15 cycles; a capacity step is
+  judged once the 10 cycles after its onset have arrived and is reported at that detection cycle;
+  the robust scale comes from **earlier** statistics only, and a cycle needs
+  ``CAUSAL_MIN_HISTORY`` (60) earlier statistics before it is judged. Changing future data cannot
+  change any earlier result.
+
 Standard library only; mirrors the v1 module's structure and result types.
 """
 
@@ -49,7 +62,7 @@ from app.analytics.stats import median
 from app.analytics.synthetic import CycleRecord
 from app.analytics.types import Provenance
 
-DetectionMode = Literal["retrospective"]
+DetectionMode = Literal["retrospective", "causal"]
 
 DETECTOR_V2 = "robust_z_detrended"
 DETECTOR_VERSION_V2 = "v2"
@@ -59,6 +72,10 @@ POINT_HALF_WINDOW = 7
 STEP_WINDOW = 10
 #: Smallest capacity step reported, in SOH percentage points.
 MIN_STEP_SOH_PCT = 0.5
+#: Causal mode: previous cycles used to predict the current value of a point channel.
+CAUSAL_FIT_WINDOW = 15
+#: Causal mode: earlier detector statistics needed before a cycle is judged.
+CAUSAL_MIN_HISTORY = 60
 
 CAPACITY_STEP = ChannelSpec("soh", "Capacity step", "SOH pts")
 
@@ -67,7 +84,7 @@ POINT_CHANNELS: tuple[ChannelSpec, ...] = tuple(c for c in CHANNELS if c.key in 
 
 @dataclass(frozen=True)
 class ChannelStatsV2:
-    """Detector inputs for the evaluated cycles of one channel, with the scale used."""
+    """Detector inputs for the evaluated cycles of one channel, with the (latest) scale used."""
 
     spec: ChannelSpec
     cycles: tuple[int, ...]
@@ -83,7 +100,7 @@ class ChannelStatsV2:
 class AnomalyReportV2:
     channels: tuple[ChannelStatsV2, ...]
     events: tuple[AnomalyEvent, ...]
-    mode: str
+    mode: DetectionMode
     detector: str = DETECTOR_V2
     version: str = DETECTOR_VERSION_V2
 
@@ -98,11 +115,21 @@ class AnomalyReportV2:
 
 @dataclass(frozen=True)
 class Residual:
-    """Detector input at one cycle: ``value - baseline``."""
+    """Detector input at one cycle (``index`` into the records): ``value - baseline``."""
 
     index: int
     residual: float
     baseline: float
+
+
+@dataclass(frozen=True)
+class Scored:
+    """A residual with the robust scale it was judged against and its z-score."""
+
+    residual: Residual
+    median: float
+    mad: float
+    z: float
 
 
 def robust_scale(values: Sequence[float]) -> tuple[float, float]:
@@ -112,59 +139,48 @@ def robust_scale(values: Sequence[float]) -> tuple[float, float]:
     return m, (mad if mad > 0 else MAD_FLOOR)
 
 
-def residuals_retrospective(
-    values: Sequence[float], half: int = POINT_HALF_WINDOW
-) -> list[Residual]:
-    """Residual from the centred rolling median; edge cycles (truncated window) are skipped."""
-    return [
-        Residual(i, values[i] - median(values[i - half : i + half + 1]), 0.0)
-        for i in range(half, len(values) - half)
-    ]
+def score(residuals: list[Residual], mode: DetectionMode) -> list[Scored]:
+    """Robust z of each residual.
+
+    Retrospective: one scale over all residuals. Causal: each residual is scaled by the earlier
+    residuals only; the first ``CAUSAL_MIN_HISTORY`` are not judged.
+    """
+    if mode == "retrospective":
+        m, mad = robust_scale([r.residual for r in residuals])
+        return [Scored(r, m, mad, Z_SCALE * (r.residual - m) / mad) for r in residuals]
+    out = []
+    for k in range(CAUSAL_MIN_HISTORY, len(residuals)):
+        m, mad = robust_scale([r.residual for r in residuals[:k]])
+        r = residuals[k]
+        out.append(Scored(r, m, mad, Z_SCALE * (r.residual - m) / mad))
+    return out
 
 
-def _with_baseline(values: Sequence[float], residuals: list[Residual]) -> list[Residual]:
-    return [Residual(r.index, r.residual, values[r.index] - r.residual) for r in residuals]
-
-
-def point_channel(
-    spec: ChannelSpec,
-    values: Sequence[float],
-    cycles: Sequence[int],
-    residuals: list[Residual],
-) -> tuple[ChannelStatsV2, list[AnomalyEvent]]:
-    """Robust z of the residuals (one global scale) and the events it flags."""
-    m, mad = robust_scale([r.residual for r in residuals])
+def channel_stats(spec: ChannelSpec, cycles: Sequence[int], scored: list[Scored]) -> ChannelStatsV2:
+    """Per-cycle detector inputs and z-scores; the scale reported is the latest one used."""
+    m, mad = (scored[-1].median, scored[-1].mad) if scored else (0.0, MAD_FLOOR)
     spread = FLAG_ABS_Z * mad / Z_SCALE
-    zs = [Z_SCALE * (r.residual - m) / mad for r in residuals]
-    events = []
-    for r, z in zip(residuals, zs, strict=True):
-        severity = severity_for(z)
-        if severity is not None:
-            centre = r.baseline + m
-            events.append(
-                AnomalyEvent(
-                    cycles[r.index],
-                    spec.key,
-                    spec.label,
-                    values[r.index],
-                    spec.unit,
-                    centre - spread,
-                    centre + spread,
-                    z,
-                    severity,
-                )
-            )
-    stats = ChannelStatsV2(
+    return ChannelStatsV2(
         spec=spec,
-        cycles=tuple(cycles[r.index] for r in residuals),
-        values=tuple(r.residual for r in residuals),
-        z=tuple(zs),
+        cycles=tuple(cycles[s.residual.index] for s in scored),
+        values=tuple(s.residual.residual for s in scored),
+        z=tuple(s.z for s in scored),
         median=m,
         mad=mad,
         expected_low=m - spread,
         expected_high=m + spread,
     )
-    return stats, events
+
+
+def residuals_retrospective(
+    values: Sequence[float], half: int = POINT_HALF_WINDOW
+) -> list[Residual]:
+    """Residual from the centred rolling median; edge cycles (truncated window) are skipped."""
+    out = []
+    for i in range(half, len(values) - half):
+        baseline = median(values[i - half : i + half + 1])
+        out.append(Residual(i, values[i] - baseline, baseline))
+    return out
 
 
 def theil_sen(xs: Sequence[float], ys: Sequence[float]) -> tuple[float, float]:
@@ -179,6 +195,47 @@ def theil_sen(xs: Sequence[float], ys: Sequence[float]) -> tuple[float, float]:
         raise ValueError("Theil-Sen needs at least two distinct x values")
     slope = median(slopes)
     return slope, median([y - slope * x for x, y in zip(xs, ys, strict=True)])
+
+
+def residuals_causal(values: Sequence[float], w: int = CAUSAL_FIT_WINDOW) -> list[Residual]:
+    """Residual from a Theil-Sen line through the previous ``w`` values (past only)."""
+    out = []
+    for i in range(w, len(values)):
+        slope, intercept = theil_sen([float(k) for k in range(i - w, i)], values[i - w : i])
+        baseline = intercept + slope * i
+        out.append(Residual(i, values[i] - baseline, baseline))
+    return out
+
+
+def point_channel(
+    spec: ChannelSpec,
+    values: Sequence[float],
+    cycles: Sequence[int],
+    residuals: list[Residual],
+    mode: DetectionMode,
+) -> tuple[ChannelStatsV2, list[AnomalyEvent]]:
+    """Point anomalies: robust |z| > 3.5 of the residuals; ranges follow the local baseline."""
+    scored = score(residuals, mode)
+    events = []
+    for s in scored:
+        severity = severity_for(s.z)
+        if severity is not None:
+            spread = FLAG_ABS_Z * s.mad / Z_SCALE
+            centre = s.residual.baseline + s.median
+            events.append(
+                AnomalyEvent(
+                    cycles[s.residual.index],
+                    spec.key,
+                    spec.label,
+                    values[s.residual.index],
+                    spec.unit,
+                    centre - spread,
+                    centre + spread,
+                    s.z,
+                    severity,
+                )
+            )
+    return channel_stats(spec, cycles, scored), events
 
 
 def step_size(values: Sequence[float], onset: int, h: int = STEP_WINDOW) -> tuple[float, float]:
@@ -199,6 +256,15 @@ def steps_retrospective(values: Sequence[float], h: int = STEP_WINDOW) -> list[R
     return out
 
 
+def steps_causal(values: Sequence[float], h: int = STEP_WINDOW) -> list[Residual]:
+    """Step size judged at detection cycle ``t`` for the onset ``t-h+1`` (uses cycles <= t)."""
+    out = []
+    for t in range(2 * h - 1, len(values)):
+        step, predicted = step_size(values, t - h + 1, h)
+        out.append(Residual(t, step, predicted))
+    return out
+
+
 def suppress_neighbours(candidates: list[tuple[int, float]], radius: int) -> list[int]:
     """Keep each candidate whose |step| is the largest within ``radius`` (one event per step)."""
     return [
@@ -208,49 +274,47 @@ def suppress_neighbours(candidates: list[tuple[int, float]], radius: int) -> lis
     ]
 
 
+def first_of_each_run(candidates: list[int], radius: int) -> list[int]:
+    """Causal de-duplication: keep the first detection of each run (no look-ahead)."""
+    return [c for k, c in enumerate(candidates) if k == 0 or c - candidates[k - 1] > radius]
+
+
 def step_channel(
-    cycles: Sequence[int], steps: list[Residual], radius: int = STEP_WINDOW
+    cycles: Sequence[int], steps: list[Residual], mode: DetectionMode, radius: int = STEP_WINDOW
 ) -> tuple[ChannelStatsV2, list[AnomalyEvent]]:
     """Capacity steps: |step| >= 0.5 SOH points and robust |z| > 3.5, one event per step."""
     spec = CAPACITY_STEP
-    m, mad = robust_scale([s.residual for s in steps])
-    spread = FLAG_ABS_Z * mad / Z_SCALE
-    zs = [Z_SCALE * (s.residual - m) / mad for s in steps]
+    scored = score(steps, mode)
     flagged = {
-        s.index: (s, z)
-        for s, z in zip(steps, zs, strict=True)
-        if abs(s.residual) >= MIN_STEP_SOH_PCT and severity_for(z) is not None
+        s.residual.index: s
+        for s in scored
+        if abs(s.residual.residual) >= MIN_STEP_SOH_PCT and severity_for(s.z) is not None
     }
-    keep = suppress_neighbours([(i, s.residual) for i, (s, _) in flagged.items()], radius)
+    keep = (
+        suppress_neighbours([(i, s.residual.residual) for i, s in flagged.items()], radius)
+        if mode == "retrospective"
+        else first_of_each_run(list(flagged), radius)
+    )
     events = []
     for i in keep:
-        s, z = flagged[i]
-        severity = severity_for(z)
+        s = flagged[i]
+        severity = severity_for(s.z)
         assert severity is not None
+        spread = FLAG_ABS_Z * s.mad / Z_SCALE
         events.append(
             AnomalyEvent(
                 cycles[i],
                 spec.key,
                 spec.label,
-                s.residual,
+                s.residual.residual,
                 spec.unit,
-                m - spread,
-                m + spread,
-                z,
+                s.median - spread,
+                s.median + spread,
+                s.z,
                 severity,
             )
         )
-    stats = ChannelStatsV2(
-        spec=spec,
-        cycles=tuple(cycles[s.index] for s in steps),
-        values=tuple(s.residual for s in steps),
-        z=tuple(zs),
-        median=m,
-        mad=mad,
-        expected_low=m - spread,
-        expected_high=m + spread,
-    )
-    return stats, events
+    return channel_stats(spec, cycles, scored), events
 
 
 def detect_anomalies_v2(
@@ -262,16 +326,16 @@ def detect_anomalies_v2(
         "temp": [r.temp_c for r in records],
         "volt": [r.voltage_v for r in records],
     }
+    residuals_for = residuals_retrospective if mode == "retrospective" else residuals_causal
+    steps_for = steps_retrospective if mode == "retrospective" else steps_causal
     channels: list[ChannelStatsV2] = []
     events: list[AnomalyEvent] = []
     for spec in POINT_CHANNELS:
         values = inputs[spec.key]
-        residuals = _with_baseline(values, residuals_retrospective(values))
-        stats, found = point_channel(spec, values, cycles, residuals)
+        stats, found = point_channel(spec, values, cycles, residuals_for(values), mode)
         channels.append(stats)
         events.extend(found)
-    soh = [r.soh_pct for r in records]
-    step_stats, steps = step_channel(cycles, steps_retrospective(soh))
+    step_stats, steps = step_channel(cycles, steps_for([r.soh_pct for r in records]), mode)
     channels.append(step_stats)
     events.extend(steps)
     events.sort(key=lambda e: e.cycle)

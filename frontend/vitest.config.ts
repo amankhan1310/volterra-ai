@@ -9,6 +9,8 @@ export default mergeConfig(
       setupFiles: ["./src/test/setup.ts"],
       include: ["src/**/*.test.{ts,tsx}"],
       restoreMocks: true,
+      // CSS is stubbed in tests, except tokens.css, which contrast.test.ts reads as text (?raw).
+      css: { include: [/styles\/tokens\.css/] },
       // Above setup.ts's 10 s asyncUtilTimeout, so a slow cold page import fails as a missing
       // element (with the DOM printed) rather than a bare test timeout.
       testTimeout: 15000,

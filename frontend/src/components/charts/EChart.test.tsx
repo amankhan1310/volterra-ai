@@ -10,7 +10,7 @@ function ThemeProbe() {
 afterEach(() => {
   vi.unstubAllGlobals();
   document.documentElement.removeAttribute("data-theme");
-  document.documentElement.style.removeProperty("--cy");
+  document.documentElement.style.removeProperty("--cy-fill");
 });
 
 describe("EChart", () => {
@@ -55,10 +55,10 @@ describe("EChart", () => {
   });
 
   it("re-reads the colours when the document theme changes", async () => {
-    document.documentElement.style.setProperty("--cy", "#000001");
+    document.documentElement.style.setProperty("--cy-fill", "#000001");
     const { findByText } = render(<ThemeProbe />);
     expect(await findByText("#000001")).toBeTruthy();
-    document.documentElement.style.setProperty("--cy", "#000002");
+    document.documentElement.style.setProperty("--cy-fill", "#000002");
     act(() => {
       document.documentElement.setAttribute("data-theme", "light");
     });

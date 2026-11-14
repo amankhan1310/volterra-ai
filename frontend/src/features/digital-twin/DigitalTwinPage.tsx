@@ -13,7 +13,7 @@ import { Note } from "../../components/ui/Note";
 import { Segmented } from "../../components/ui/Segmented";
 import { useToast } from "../../components/ui/Toast";
 import { describeError } from "../../api/errors";
-import { BAND_COLOR, HEALTH_COLOR } from "../../lib/health";
+import { BAND_TONE, HEALTH_TONE, type Tone } from "../../lib/health";
 import { useDebouncedValue } from "../../lib/useDebouncedValue";
 import styles from "./DigitalTwin.module.css";
 import { IsometricPack } from "./IsometricPack";
@@ -43,10 +43,10 @@ export const LEGEND: Record<TwinMode, { label: string; color: string }[]> = {
   ],
 };
 
-export function packColor(twin: Twin, mode: TwinMode): string {
+export function packTone(twin: Twin, mode: TwinMode): Tone {
   return mode === "soh"
-    ? HEALTH_COLOR[twin.health_level]
-    : BAND_COLOR[twin.temperature_band];
+    ? HEALTH_TONE[twin.health_level]
+    : BAND_TONE[twin.temperature_band];
 }
 
 function TwinContent({ battery }: { battery: Battery }) {
@@ -79,7 +79,7 @@ function TwinContent({ battery }: { battery: Battery }) {
       />
     );
 
-  const color = packColor(shown, mode);
+  const tone = packTone(shown, mode);
   return (
     <>
       <div className={styles.layout}>
@@ -105,7 +105,7 @@ function TwinContent({ battery }: { battery: Battery }) {
           <div className={styles.scene}>
             <IsometricPack
               count={shown.modules.count}
-              color={color}
+              tone={tone}
               selected={selected}
               onSelect={setSelected}
             />
@@ -115,7 +115,7 @@ function TwinContent({ battery }: { battery: Battery }) {
           </label>
           <input
             id={sliderId}
-            className={styles.slider}
+            className={`${styles.slider} graphic`}
             type="range"
             min={cycles.data.items[0]?.cycle ?? 0}
             max={lastCycle}
@@ -128,7 +128,11 @@ function TwinContent({ battery }: { battery: Battery }) {
           <div className={styles.legend} aria-label="Colour legend">
             {LEGEND[mode].map((row) => (
               <span key={row.label}>
-                <i style={{ background: row.color }} aria-hidden="true" />
+                <i
+                  className="graphic"
+                  style={{ background: row.color }}
+                  aria-hidden="true"
+                />
                 {row.label}
               </span>
             ))}

@@ -52,7 +52,7 @@ async function openReact(context, path) {
   // Wait until the page has settled on content or a state, with no loading skeleton left.
   await page
     .locator(
-      '[data-testid="page-content"], [data-testid="page-placeholder"], [role="alert"], h1:has-text("Page not found")',
+      '[data-testid="page-content"], [role="alert"], h1:has-text("Page not found")',
     )
     .first()
     .waitFor({ timeout: 15_000 });

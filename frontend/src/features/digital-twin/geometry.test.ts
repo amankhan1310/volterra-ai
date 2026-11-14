@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { miniChartGeometry } from "../../components/charts/MiniLineChart";
 import { fixtures } from "../../test/msw";
-import { LEGEND, packColor } from "./DigitalTwinPage";
+import { toneColor } from "../../lib/health";
+import { LEGEND, packTone } from "./DigitalTwinPage";
 import { moduleFaces, platePoints, project } from "./geometry";
 import { moduleMessage } from "./PackStatePanel";
+
+const packColor = (...args: Parameters<typeof packTone>) =>
+  toneColor(packTone(...args));
 
 describe("isometric pack geometry (prototype Q())", () => {
   it("projects with one decimal", () => {

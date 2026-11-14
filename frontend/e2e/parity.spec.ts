@@ -568,3 +568,37 @@ for (const preset of ADVISOR_PRESETS) {
     expect(react).toEqual(legacy);
   });
 }
+
+test("About matches the legacy prototype's text and numbers", async ({
+  page,
+}) => {
+  await page.goto(`${LEGACY_URL}#about`);
+  const legacy = await page.evaluate(() => {
+    const text = (e: Element | null | undefined) =>
+      (e?.textContent ?? "").replace(/\s+/g, " ").trim();
+    const cards = [...document.querySelectorAll("#main .k12 .card.s4 p")];
+    const defs = [...document.querySelectorAll("#main .card")]
+      .find((c) => text(c.querySelector(".lb")) === "Definitions")
+      ?.querySelectorAll("p");
+    return {
+      data: text(cards[0]),
+      method: text(cards[1]),
+      ev: text(cards[2]),
+      definitions: text(defs?.[0]),
+    };
+  });
+  await page.goto("/about");
+  await settled(page);
+  const react = {
+    data: clean(await page.getByTestId("about-data").textContent()),
+    method: clean(await page.getByTestId("about-method").textContent()),
+    ev: clean(await page.getByTestId("about-ev").textContent()),
+    definitions: clean(
+      await page.getByTestId("about-definitions").textContent(),
+    ),
+  };
+  expect(legacy.data).toContain("320");
+  // Approved deviation: the "Not included" list is corrected (the backend now exists), so it is
+  // not compared.
+  expect(react).toEqual(legacy);
+});

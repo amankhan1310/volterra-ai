@@ -22,14 +22,12 @@ export async function liveData(
 }
 
 /**
- * Waits until a page has settled: its content, placeholder or an error is shown, and no card is
+ * Waits until a page has settled: its content or an error is shown, and no card is
  * still showing a loading skeleton.
  */
 export async function settled(page: Page): Promise<void> {
   await page
-    .locator(
-      '[data-testid="page-content"], [data-testid="page-placeholder"], [role="alert"]',
-    )
+    .locator('[data-testid="page-content"], [role="alert"]')
     .first()
     .waitFor();
   await page
@@ -68,4 +66,14 @@ export async function oversizedHidden(page: Page): Promise<string[]> {
       })
       .map((el) => el.textContent.slice(0, 60)),
   );
+}
+
+export type Theme = "dark" | "light";
+
+/** Opens the app as a returning user who chose this theme (dark needs nothing: first-visit default). */
+export async function startInTheme(page: Page, theme: Theme): Promise<void> {
+  if (theme === "light")
+    await page.addInitScript(() => {
+      localStorage.setItem("volterra-theme", "light");
+    });
 }

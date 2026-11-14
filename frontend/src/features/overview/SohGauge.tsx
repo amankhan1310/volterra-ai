@@ -52,7 +52,11 @@ interface SohGaugeProps {
   color: string;
 }
 
-/** The Overview hero dial (legacy ui.js `pages.overview`); the arcs animate in on mount. */
+/**
+ * The Overview hero dial (legacy ui.js `pages.overview`); the arcs animate in on mount. The
+ * caption sits under the dial as HTML: inside the SVG (as in the prototype) it crossed both
+ * rings and shrank with the dial on narrow screens.
+ */
 export function SohGauge({ soh, lifeUsed, eolPct, color }: SohGaugeProps) {
   const gradient = useId();
   const [drawn, setDrawn] = useState(false);
@@ -73,101 +77,105 @@ export function SohGauge({ soh, lifeUsed, eolPct, color }: SohGaugeProps) {
   const sohText = fixed(soh, 1);
 
   return (
-    <svg
-      viewBox="0 0 340 340"
-      width="100%"
-      className={styles.gauge}
-      role="img"
-      aria-label={`State of health ${sohText} percent`}
-    >
-      <defs>
-        <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--cy)" />
-          <stop offset="1" stopColor={color} />
-        </linearGradient>
-      </defs>
-      {gaugeTicks(soh).map((t, k) => (
-        <line
-          key={k}
-          x1={t.x1}
-          y1={t.y1}
-          x2={t.x2}
-          y2={t.y2}
-          stroke={t.lit ? "var(--cy)" : "var(--bd-strong)"}
-          strokeOpacity={t.lit ? 0.75 : 1}
-          strokeWidth={t.major ? 1.6 : 1}
-        />
-      ))}
-      <g transform="rotate(-90 170 170)">
-        <circle
-          cx="170"
-          cy="170"
-          r={OUTER_R}
-          fill="none"
-          stroke="var(--el)"
-          strokeWidth="12"
-        />
-        <circle
-          className={styles.arc}
-          data-testid="gauge-outer"
-          cx="170"
-          cy="170"
-          r={OUTER_R}
-          fill="none"
-          stroke={`url(#${gradient})`}
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeDasharray={OUTER_C}
-          strokeDashoffset={drawn ? target.outer : OUTER_C}
-        />
-        <circle
-          cx="170"
-          cy="170"
-          r={INNER_R}
-          fill="none"
-          stroke="var(--el)"
-          strokeWidth="4"
-        />
-        <circle
-          className={styles.arc}
-          data-testid="gauge-inner"
-          cx="170"
-          cy="170"
-          r={INNER_R}
-          fill="none"
-          stroke="var(--ib)"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeDasharray={INNER_C}
-          strokeDashoffset={drawn ? target.inner : INNER_C}
-        />
-      </g>
-      <text
-        x="170"
-        y="182"
-        textAnchor="middle"
-        fill="var(--tx)"
-        fontSize="58"
-        fontWeight="800"
+    <figure className={styles.gaugeFigure}>
+      <svg
+        viewBox="0 0 340 340"
+        width="100%"
+        className={styles.gauge}
+        role="img"
+        aria-label={`State of health ${sohText} percent`}
       >
-        {sohText}
-        <tspan fontSize="24" fill="var(--mu)">
-          %
-        </tspan>
-      </text>
-      <text
-        x="170"
-        y="208"
-        textAnchor="middle"
-        fill="var(--mu)"
-        fontSize="11"
-        letterSpacing="1.5"
-      >
-        STATE OF HEALTH
-      </text>
-      <text x="170" y="250" textAnchor="middle" fill="var(--ib)" fontSize="10">
+        <g className="graphic">
+          <defs>
+            <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="var(--cy)" />
+              <stop offset="1" stopColor={color} />
+            </linearGradient>
+          </defs>
+          {gaugeTicks(soh).map((t, k) => (
+            <line
+              key={k}
+              x1={t.x1}
+              y1={t.y1}
+              x2={t.x2}
+              y2={t.y2}
+              stroke={t.lit ? "var(--cy)" : "var(--bd-strong)"}
+              strokeOpacity={t.lit ? 0.75 : 1}
+              strokeWidth={t.major ? 1.6 : 1}
+            />
+          ))}
+          <g transform="rotate(-90 170 170)">
+            <circle
+              cx="170"
+              cy="170"
+              r={OUTER_R}
+              fill="none"
+              stroke="var(--el)"
+              strokeWidth="12"
+            />
+            <circle
+              className={styles.arc}
+              data-testid="gauge-outer"
+              cx="170"
+              cy="170"
+              r={OUTER_R}
+              fill="none"
+              stroke={`url(#${gradient})`}
+              strokeWidth="12"
+              strokeLinecap="round"
+              strokeDasharray={OUTER_C}
+              strokeDashoffset={drawn ? target.outer : OUTER_C}
+            />
+            <circle
+              cx="170"
+              cy="170"
+              r={INNER_R}
+              fill="none"
+              stroke="var(--el)"
+              strokeWidth="4"
+            />
+            <circle
+              className={styles.arc}
+              data-testid="gauge-inner"
+              cx="170"
+              cy="170"
+              r={INNER_R}
+              fill="none"
+              stroke="var(--ib)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray={INNER_C}
+              strokeDashoffset={drawn ? target.inner : INNER_C}
+            />
+          </g>
+        </g>
+        <text
+          x="170"
+          y="182"
+          textAnchor="middle"
+          fill="var(--tx)"
+          fontSize="58"
+          fontWeight="800"
+        >
+          {sohText}
+          <tspan fontSize="24" fill="var(--mu)">
+            %
+          </tspan>
+        </text>
+        <text
+          x="170"
+          y="208"
+          textAnchor="middle"
+          fill="var(--mu)"
+          fontSize="11"
+          letterSpacing="1.5"
+        >
+          STATE OF HEALTH
+        </text>
+      </svg>
+      <figcaption className={styles.gaugeCaption}>
         inner ring: life used to {eolPct}% threshold
-      </text>
-    </svg>
+      </figcaption>
+    </figure>
   );
 }

@@ -54,12 +54,7 @@ test.describe("application shell against the real API", () => {
       ).toHaveAttribute("aria-current", "page");
       await expect(page).toHaveTitle(`${target.label} · VOLTERRA AI`);
       await settled(page);
-      if (target.built)
-        await expect(page.getByTestId("page-content")).toBeVisible();
-      else
-        await expect(page.getByTestId("page-placeholder")).toContainText(
-          `Milestone ${target.milestone}`,
-        );
+      await expect(page.getByTestId("page-content")).toBeVisible();
       expect(errors).toEqual([]);
     });
   }
@@ -125,7 +120,7 @@ test.describe("application shell against the real API", () => {
     ).toHaveText(
       `${anomalies.summary.total} anomaly events flagged in the dataset. Open Anomaly Detection to review.`,
     );
-    // Placeholder pages report the reload only; Overview adds SOH and RUL (overview.spec.ts).
+    // Pages other than Overview report the reload only; Overview adds SOH and RUL (overview.spec.ts).
     await page.goto("/about");
     await settled(page);
     await page.getByRole("button", { name: "Run analysis" }).click();

@@ -37,14 +37,19 @@ interface Option {
 }
 
 describe("chart theme", () => {
-  it("reads every colour from the CSS tokens", () => {
-    document.documentElement.style.setProperty("--cy", " #123456 ");
-    document.documentElement.style.setProperty("--chart-grid", "red");
+  it("reads every colour from the CSS tokens: graphic accents for series, the text accent for labelled markers", () => {
+    const root = document.documentElement.style;
+    root.setProperty("--cy-fill", " #123456 ");
+    root.setProperty("--cy", "#654321");
+    root.setProperty("--rd-fill", "#abcdef");
+    root.setProperty("--chart-grid", "red");
     const read = readChartTheme();
     expect(read.cy).toBe("#123456");
+    expect(read.cyStrong).toBe("#654321");
+    expect(read.rd).toBe("#abcdef");
     expect(read.grid).toBe("red");
-    document.documentElement.style.removeProperty("--cy");
-    document.documentElement.style.removeProperty("--chart-grid");
+    for (const token of ["--cy-fill", "--cy", "--rd-fill", "--chart-grid"])
+      root.removeProperty(token);
   });
 
   it("adds alpha to hex colours and leaves other syntaxes alone", () => {

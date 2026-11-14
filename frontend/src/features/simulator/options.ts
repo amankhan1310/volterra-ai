@@ -99,7 +99,8 @@ export function simulatorOption(
           // The prototype marks the unclamped SOH after N cycles.
           data: [{ coord: [n, Number(fin.toFixed(2))], value: fixed(fin, 1) }],
           symbolSize: 44,
-          itemStyle: { color: theme.cy },
+          // The bubble carries its label, so it uses the text accent (AA with onAccent).
+          itemStyle: { color: theme.cyStrong },
           label: { color: theme.onAccent, fontSize: 10, fontWeight: 700 },
         },
       },

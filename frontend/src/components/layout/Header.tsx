@@ -7,7 +7,8 @@ import { cx } from "../../lib/cx";
 import { PROVENANCE_LABEL, ProvenanceTag } from "../ui/ProvenanceTag";
 import { useToast } from "../ui/Toast";
 import styles from "./Header.module.css";
-import { BellIcon, BurgerIcon, CollapseIcon } from "./icons";
+import { useTheme } from "../../state/theme";
+import { BellIcon, BurgerIcon, CollapseIcon, MoonIcon, SunIcon } from "./icons";
 import { SIDEBAR_ID } from "./Sidebar";
 
 interface HeaderProps {
@@ -59,6 +60,7 @@ export function Header({
       <div className={styles.fx} />
       <QuickNav page={page} onNavigate={onNavigate} />
       <DataSourceTag />
+      <ThemeToggle />
       <NotificationBell />
     </header>
   );
@@ -117,6 +119,24 @@ function DataSourceTag() {
 }
 
 /** Legacy notification bell: the badge counts flagged anomaly events; clicking explains it. */
+/** Light/dark switch (D2): a toggle button, pressed in light; the icon shows the other theme. */
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  const light = theme === "light";
+  return (
+    <button
+      type="button"
+      className={styles.ib}
+      aria-label="Light theme"
+      aria-pressed={light}
+      title={light ? "Switch to dark theme" : "Switch to light theme"}
+      onClick={toggle}
+    >
+      {light ? <MoonIcon /> : <SunIcon />}
+    </button>
+  );
+}
+
 function NotificationBell() {
   const { battery } = useDefaultBattery();
   const anomalies = useAnomalies(battery?.id);

@@ -1,12 +1,13 @@
 import type { KeyboardEvent } from "react";
+import { toneColor, type Tone } from "../../lib/health";
 import styles from "./DigitalTwin.module.css";
 import { moduleFaces, platePoints } from "./geometry";
 
 interface IsometricPackProps {
   /** Number of modules to draw (the API's `modules.count`). */
   count: number;
-  /** Fill for every module: the pack value, since modules are illustrative. */
-  color: string;
+  /** Status tone of every module: the pack value, since modules are illustrative. */
+  tone: Tone;
   selected: number | null;
   onSelect: (index: number) => void;
 }
@@ -17,7 +18,7 @@ interface IsometricPackProps {
  */
 export function IsometricPack({
   count,
-  color,
+  tone,
   selected,
   onSelect,
 }: IsometricPackProps) {
@@ -27,9 +28,11 @@ export function IsometricPack({
       onSelect(index);
     }
   };
+  const color = toneColor(tone);
   return (
     <svg
-      className={styles.pack}
+      className={`${styles.pack} graphic`}
+      data-tone={tone}
       viewBox="-200 -50 480 320"
       role="group"
       aria-label={`Isometric battery pack of ${String(count)} illustrative modules`}

@@ -99,7 +99,7 @@ describe("Run analysis (D6)", () => {
       }),
     );
     const { user } = renderApp("/about");
-    await screen.findByTestId("page-placeholder");
+    await screen.findByTestId("page-content");
     await screen.findByText("v1");
     const before = batteryRequests;
     await user.click(screen.getByRole("button", { name: "Run analysis" }));
@@ -114,7 +114,7 @@ describe("Run analysis (D6)", () => {
 
   it("reports a failed reload", async () => {
     const { user } = renderApp("/about");
-    await screen.findByTestId("page-placeholder");
+    await screen.findByTestId("page-content");
     server.use(
       http.get("*/api/v1/batteries", () =>
         apiError(503, "database_unavailable", "The database is not configured"),

@@ -8,7 +8,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 1. Golden fixtures              | ✅ Complete |
 | 2. Analytics parity in Python   | ✅ Complete |
 | 3. DB + API (parity)            | ✅ Complete |
-| 4. React parity                 | 🚧 M5 of 6  |
+| 4. React parity                 | ✅ Complete |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
@@ -181,7 +181,7 @@ Verification (local; Windows; PostgreSQL 16.16):
 - **Live run:** `uvicorn` against the development database (migrated and seeded) served the
   golden SOH (86.0894…) and RUL (112.73, 111.46–114.03) values.
 
-## Phase 4 — React parity frontend (in progress)
+## Phase 4 — React parity frontend (complete)
 
 Plan approved 2026-11-13 (decisions D1–D10 and U1–U8; see the Phase 4 plan review). Six
 milestones, each on its own branch and PR, each reviewed live before the next starts:
@@ -341,7 +341,71 @@ Deviations from the prototype: full lane names on the timeline (the prototype cu
 letters); chart legends name the channel with its unit, in the line's colour; event tooltips add
 the severity.
 
+### Milestone 6 — About, light theme, responsive and accessibility pass (2026-11-15)
+
+Branch: `feat/frontend-about-polish`. M5 merged as PR #10 (`3f6c5ca`) with all 10 checks green.
+The light-theme design was previewed on the running app and approved before it was built.
+
+Delivered:
+
+- **About** from the API (battery record and fit range): the prototype's Data, Method,
+  "Simulation vs a real EV" and Definitions cards, word for word, plus the known limitations
+  F1–F8 in plain language with links to the pages that show them. This is the only page with the
+  codes (D4); a unit test keeps the list consistent with the API's `known_issues`. The
+  prototype's "Not included" list named a Python backend, which now exists; it lists the later
+  phases instead. No page is a placeholder any more, so the placeholder component is removed.
+- **Light theme (D2):** dark on a first visit; a sun/moon toggle in the header switches theme and
+  the choice is remembered (localStorage), applied before the first paint by a script in
+  `index.html`. Text accents meet WCAG AA (4.5:1) on every surface; graphics (chart series, gauge,
+  twin, bars, dots, slider thumbs) use the prototype's brighter light accents (3:1, WCAG 1.4.11)
+  through `-fill` tokens and a `.graphic` scope. The twin's modules have lighter faces, each
+  outlined in the darker shade of its own colour, and keep the strong selection outline. Charts,
+  gauge and twin recolour live when the theme changes.
+- **Dark theme unchanged,** with one approved exception: the sidebar group labels go from 3.6:1
+  to 4.6:1 (`#5d6c82` → `#6e7d93`). A test pins the dark palette to the prototype's values and
+  checks that its graphic accents equal its text accents.
+- **Gauge caption:** "inner ring: life used to …" crossed both rings in the prototype (and in
+  M2); it is now a caption under the dial, readable at every width, in both themes.
+- **Contrast checks:** `styles/contrast.test.ts` parses `tokens.css` and checks, in both themes,
+  text and accents on every surface (4.5:1), graphic accents (3:1), text on buttons, the badge
+  and the chart marker (4.5:1) and the twin module outlines against the plate (3:1).
+
+Verification (local; Windows; Node 24.22.3; API on the seeded development database):
+
+- **Unit and component tests:** 225 passed. Coverage: 99.17% statements, 93.3% branches.
+- **E2E (Playwright, installed Edge):** 92 passed against the dev server and 92 against the
+  production build: axe (WCAG 2.1 A/AA) on all six pages in both themes, no horizontal or
+  document scroll at 1440/1180/980/860/390 px in both themes, the theme suite (first visit,
+  toggle, navigation and reload, no flash, rendered text/graphic colours, twin outlines, gauge
+  caption position), About parity with the prototype, and every M1–M5 suite.
+- **Static checks:** ESLint and `tsc -b` clean; prettier clean; API types match the contract;
+  production build clean.
+- **Unchanged:** backend (405 passed, 8 strict xfail; mypy clean), golden fixtures, legacy files
+  and `openapi.json`.
+
+### Phase 4 Definition of Done
+
+Exit criteria (ARCHITECTURE_PLAN.md §10): the §1.2 checklist passes, Playwright E2E for each page,
+the light theme works, no `innerHTML`.
+
+| §1.2 feature                                                                                                           | React                      | Verified by                                         |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------- | --------------------------------------------------- |
+| Overview: SOH gauge with ticks and life-used ring, condition, RUL with interval, fade, backtest MAE                    | ✅                         | parity (every number, both chart series), unit, E2E |
+| Overview: six KPI cards with sparklines, degradation timeline (zoom, Full/Last 120), four insights, telemetry explorer | ✅                         | parity, unit, E2E                                   |
+| Digital Twin: 24-module isometric pack, cycle slider, Health/Temperature, module lift, pack panel, mini chart          | ✅                         | parity (cycles 0/160/170/319, both modes), E2E      |
+| What-If Simulator: six sliders, trajectory vs baseline, cycles to EOL, Δ, fade, four saved scenarios                   | ✅ (scenarios now persist) | parity (6 parameter sets), scenario lifecycle E2E   |
+| Anomaly Detection: counts by severity, three-lane timeline, temperature and voltage charts, event table                | ✅                         | parity (every value), E2E                           |
+| Charging Advisor: baseline and six sensitivity rows with diverging bars                                                | ✅                         | parity (5 parameter sets), E2E                      |
+| About: data, method, limits, definitions, "not included"                                                               | ✅ (list corrected)        | parity, unit, E2E                                   |
+| Run analysis with toast                                                                                                | ✅ (a real reload, D6)     | unit, E2E                                           |
+| Notification bell with anomaly count                                                                                   | ✅                         | unit, E2E                                           |
+| Collapsible sidebar and mobile drawer                                                                                  | ✅                         | E2E at all widths                                   |
+| Tooltips reachable by keyboard and touch (prototype: `title` only)                                                     | ✅                         | unit, E2E                                           |
+| `prefers-reduced-motion`                                                                                               | ✅                         | global styles                                       |
+| Light theme works                                                                                                      | ✅                         | theme E2E, axe in light, contrast test              |
+| No `innerHTML`                                                                                                         | ✅                         | lint-enforced                                       |
+
 ## Next
 
-Phase 4 Milestone 6 (About, light theme, responsive and accessibility pass, Definition of Done
-checklist), after the M5 review and merge.
+Phase 5 (correctness fixes F1–F8 as separate v2 methods), after the M6 review and merge and only
+with approval.

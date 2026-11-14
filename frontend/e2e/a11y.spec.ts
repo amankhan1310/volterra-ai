@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { PAGES, settled } from "./support";
+import { PAGES, settled, startInTheme, type Theme } from "./support";
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
@@ -17,15 +17,19 @@ async function seriousViolations(page: Page) {
 }
 
 test.describe("accessibility (axe, WCAG 2.1 A/AA)", () => {
-  for (const target of PAGES) {
-    test(`${target.label} has no serious or critical violations`, async ({
-      page,
-    }) => {
-      await page.goto(target.path);
-      await settled(page);
-      expect(await seriousViolations(page)).toEqual([]);
-    });
-  }
+  // Every page in both themes; axe's colour-contrast rule checks all rendered text.
+  for (const theme of ["dark", "light"] as Theme[])
+    for (const target of PAGES) {
+      test(`${target.label} (${theme}) has no serious or critical violations`, async ({
+        page,
+      }) => {
+        await startInTheme(page, theme);
+        await page.goto(target.path);
+        await settled(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        expect(await seriousViolations(page)).toEqual([]);
+      });
+    }
 
   test("404 page", async ({ page }) => {
     await page.goto("/nowhere");

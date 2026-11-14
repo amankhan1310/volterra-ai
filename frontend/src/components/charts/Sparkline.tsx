@@ -1,4 +1,5 @@
 import styles from "./Sparkline.module.css";
+import { cx } from "../../lib/cx";
 
 /** SVG path of the prototype's sparkline (`spk`): every 4th value, scaled into 120 × 40. */
 export function sparklinePath(values: readonly number[]): string {
@@ -26,7 +27,7 @@ export function Sparkline({
 }) {
   return (
     <svg
-      className={styles.spark}
+      className={cx(styles.spark, "graphic")}
       viewBox="0 0 120 40"
       preserveAspectRatio="none"
       aria-hidden="true"

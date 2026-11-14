@@ -1,6 +1,7 @@
 /**
  * Number parity with the frozen prototype (Phase 4 Definition of Done): every value the legacy
- * Overview and Digital Twin show must appear identically in React. The prototype computes in the
+ * Overview, Digital Twin, Simulator, Anomaly Detection and Charging Advisor show must appear
+ * identically in React. The prototype computes in the
  * browser; React shows what the API returns, so this checks the whole chain (Python port → API →
  * UI).
  *
@@ -334,6 +335,236 @@ for (const preset of PRESETS) {
       baseline: rows.map((r) => r[1] ?? ""),
     };
     expect(legacy.stats).toHaveLength(4);
+    expect(react).toEqual(legacy);
+  });
+}
+
+interface AnomValues {
+  total: string;
+  counts: string;
+  rule: string;
+  /** [lane index, cycle, severity] of every timeline dot, in drawing order. */
+  timeline: [number, number, string][];
+  lastCycle: string;
+  table: string[][];
+  footnote: string;
+  charts: { values: string[]; flagged: number[] }[];
+}
+
+test("every Anomaly Detection value matches the legacy prototype", async ({
+  page,
+}) => {
+  await page.goto(`${LEGACY_URL}#anom`);
+  await page.locator("#c1 canvas").first().waitFor();
+  await page.locator("#c2 canvas").first().waitFor();
+  const legacy: AnomValues = await page.evaluate(() => {
+    const text = (e: Element | null | undefined) =>
+      (e?.textContent ?? "").replace(/\s+/g, " ").trim();
+    const summary = document.querySelector(".k12 .card.s4");
+    const svg = document.querySelector('svg[aria-label="Anomaly timeline"]');
+    const lanes = [24, 54, 84];
+    const ec = (
+      window as unknown as {
+        echarts: {
+          getInstanceByDom(el: Element | null): {
+            getOption(): { series: { data: [number, number][] }[] };
+          };
+        };
+      }
+    ).echarts;
+    const chart = (id: string, dp: number) => {
+      const series = ec
+        .getInstanceByDom(document.getElementById(id))
+        .getOption().series;
+      return {
+        values: (series[0]?.data ?? []).map(([, y]) => y.toFixed(dp)),
+        flagged: (series[1]?.data ?? []).map(([c]) => c),
+      };
+    };
+    return {
+      total: text(summary?.querySelector(".big")),
+      counts: text(summary?.querySelectorAll("p.mu")[0]),
+      rule: text(summary?.querySelectorAll("p.mu")[1]),
+      timeline: [...(svg?.querySelectorAll("circle") ?? [])].map(
+        (c): [number, number, string] => [
+          lanes.indexOf(Number(c.getAttribute("cy"))),
+          Number(/^Cycle (\d+):/.exec(text(c.querySelector("title")))?.[1]),
+          c.getAttribute("fill") === "#FF7185" ? "high" : "medium",
+        ],
+      ),
+      lastCycle: text([...(svg?.querySelectorAll("text") ?? [])].at(-1)),
+      table: [...document.querySelectorAll(".card.wrap table tr")]
+        .slice(1)
+        .map((tr) => [...tr.querySelectorAll("td")].map(text)),
+      footnote: text(document.querySelector(".card.wrap > p.mu")),
+      charts: [chart("c1", 2), chart("c2", 3)],
+    };
+  });
+
+  await page.goto("/anomalies");
+  await settled(page);
+  const timeline = page.getByRole("group", { name: "Anomaly timeline" });
+  const cellsOf = (rows: Element[]) =>
+    rows.map((r) =>
+      [...r.querySelectorAll("td")].map((td) =>
+        td.textContent.replace(/\s+/g, " ").trim(),
+      ),
+    );
+  const charts = await Promise.all(
+    [
+      "Temperature per cycle with flagged events (°C)",
+      "Voltage per cycle with flagged events (V)",
+    ].map(async (name) => {
+      const rows = await page
+        .getByRole("table", { name, includeHidden: true })
+        .locator("tbody tr")
+        .evaluateAll(cellsOf);
+      return {
+        values: rows.map((r) => r[1] ?? ""),
+        flagged: rows.filter((r) => r[2] === "Yes").map((r) => Number(r[0])),
+      };
+    }),
+  );
+  const react: AnomValues = {
+    total: clean(await page.getByTestId("events-total").textContent()),
+    counts: clean(await page.getByTestId("severity-counts").textContent()),
+    rule: clean(await page.getByText(/^High = \|z\| above/).textContent()),
+    timeline: await timeline
+      .getByTestId("timeline-event")
+      .evaluateAll(
+        (dots, lanes) =>
+          dots.map((d): [number, number, string] => [
+            lanes.indexOf(d.getAttribute("data-channel") ?? ""),
+            Number(d.getAttribute("data-cycle")),
+            d.getAttribute("fill") === "var(--rd)" ? "high" : "medium",
+          ]),
+        ["temp", "volt", "soh"],
+      ),
+    lastCycle: clean(await timeline.locator("text").last().textContent()),
+    table: await page
+      .getByTestId("events-table")
+      .locator("tbody tr")
+      .evaluateAll(cellsOf),
+    footnote: clean(
+      await page.getByText(/^Flagged when a value sits/).textContent(),
+    ),
+    charts,
+  };
+  expect(legacy.table.length).toBeGreaterThan(0);
+  expect(legacy.charts[0]?.values.length).toBeGreaterThan(0);
+  expect(react).toEqual(legacy);
+});
+
+interface AdvisorValues {
+  label: string;
+  baseline: string;
+  /** Per row: change, why, cycles, Δ%, Δ colour, bar left, bar width, bar colour. */
+  rows: string[][];
+}
+
+/**
+ * Advisor presets (initial SOH S and EOL E reach the Advisor through the shared draft). The
+ * Advisor fixes temperature, C-rate and DoD to its baseline, so the second preset also moves
+ * those sliders to prove they are ignored. The last preset starts below the threshold, where
+ * every change is reported as 0%.
+ */
+const ADVISOR_PRESETS: Partial<Record<keyof typeof SIM_SLIDERS, number>>[] = [
+  {},
+  { T: 40, C: 2.5, D: 30, N: 1500, S: 90, E: 70 },
+  { S: 100, E: 60 },
+  { S: 70, E: 60 },
+  { S: 85, E: 90 },
+];
+
+for (const preset of ADVISOR_PRESETS) {
+  test(`Charging Advisor ${JSON.stringify(preset)} matches the legacy prototype`, async ({
+    page,
+  }) => {
+    await page.goto(`${LEGACY_URL}#sim`);
+    await page.locator("#schart canvas").first().waitFor();
+    const legacy: AdvisorValues = await page.evaluate((p) => {
+      for (const [k, v] of Object.entries(p)) {
+        const input = document.getElementById(`i${k}`) as HTMLInputElement;
+        input.value = String(v);
+        input.dispatchEvent(new Event("input"));
+      }
+      (window as unknown as { go(k: string): void }).go("advisor");
+      const text = (e: Element | null | undefined) =>
+        (e?.textContent ?? "").replace(/\s+/g, " ").trim();
+      const cards = document.querySelectorAll("#main .card");
+      const base = cards[0];
+      return {
+        label: text(base?.querySelector(".lb")),
+        baseline: text(base?.querySelector(".big")),
+        rows: [...(cards[1]?.children ?? [])].map((row) => {
+          const [info, bar, value] = [...row.children];
+          const i = bar?.querySelector("i");
+          const delta = value?.querySelector("span");
+          return [
+            text(info?.querySelector("b")),
+            text(info?.querySelector("div")),
+            text(value?.querySelector("b")),
+            text(delta),
+            delta?.style.color ?? "",
+            i?.style.left ?? "",
+            i?.style.width ?? "",
+            i?.style.background ?? "",
+          ];
+        }),
+      };
+    }, preset);
+
+    await page.goto("/simulator");
+    await settled(page);
+    for (const [k, v] of Object.entries(preset))
+      await page
+        .getByRole("slider", {
+          name: SIM_SLIDERS[k as keyof typeof SIM_SLIDERS],
+        })
+        .fill(String(v));
+    const expected = { S: 86.1, E: 80, ...preset };
+    await expect(page.getByTestId("value-eol_pct")).toHaveText(
+      `${String(expected.E)} %`,
+    );
+    await page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: "Charging Advisor" })
+      .click();
+    await settled(page);
+    // Wait for the Advisor of exactly these parameters.
+    await expect(page.getByTestId("advisor-baseline-label")).toHaveText(
+      `Baseline · 25 °C · 1C · 80% DoD from ${String(expected.S)}% SOH`,
+    );
+    await expect(page.getByTestId("advisor-baseline")).toContainText(
+      `cycles to ${String(expected.E)}% SOH`,
+    );
+    const react: AdvisorValues = {
+      label: clean(
+        await page.getByTestId("advisor-baseline-label").textContent(),
+      ),
+      baseline: clean(await page.getByTestId("advisor-baseline").textContent()),
+      rows: await page.getByTestId("advisor-row").evaluateAll((rows) =>
+        rows.map((row) => {
+          const text = (e: Element | null | undefined) =>
+            (e?.textContent ?? "").replace(/\s+/g, " ").trim();
+          const pick = (id: string) =>
+            row.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+          const i = pick("advisor-bar");
+          const delta = pick("advisor-delta");
+          return [
+            text(row.querySelector("b")),
+            text(row.querySelector("b + div")),
+            text(pick("advisor-cycles")),
+            text(delta),
+            delta?.style.color ?? "",
+            i?.style.left ?? "",
+            i?.style.width ?? "",
+            i?.style.background ?? "",
+          ];
+        }),
+      ),
+    };
+    expect(legacy.rows).toHaveLength(6);
     expect(react).toEqual(legacy);
   });
 }

@@ -8,7 +8,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 1. Golden fixtures              | ✅ Complete |
 | 2. Analytics parity in Python   | ✅ Complete |
 | 3. DB + API (parity)            | ✅ Complete |
-| 4. React parity                 | 🚧 M4 of 6  |
+| 4. React parity                 | 🚧 M5 of 6  |
 | 5. Correctness fixes (F1–F8)    | Not started |
 | 6. Real data                    | Not started |
 | 7. ML models                    | Not started |
@@ -289,6 +289,59 @@ presets (including ">5000" and the already-at-EOL case); axe and responsive chec
 Deviations: when both sides start at EOL the prototype printed "(NaN%)"; this shows "(n/a)".
 Saved scenarios persist instead of resetting on reload (plan item B10).
 
+### Milestone 5 — Anomaly Detection and Charging Advisor (2026-11-14)
+
+Branch: `feat/frontend-anomalies-advisor`. M4 merged as PR #9 (`88834f6`) with all checks green.
+
+Delivered:
+
+- **Anomaly Detection** from `GET /anomalies` and `GET /cycles`: events-flagged summary with the
+  severity rule taken from the detector settings and a provenance tag; three-lane timeline whose
+  event dots are focusable, with a tooltip on hover or keyboard focus (the prototype had a native
+  title only); temperature and voltage charts with flagged points, each with a per-cycle
+  screen-reader table; the detected-events table (prototype formatting, scrolls inside its card
+  on a phone) and the prototype's empty state.
+- **Charging Advisor** from `GET /advisor?eol_pct&start_soh_pct`: baseline card and six diverging
+  bars with the prototype's geometry, numbers and colours. EOL and initial SOH follow the shared
+  simulator state, with a chip for each when it differs from the default (D1, U1). When cycles
+  to end of life cannot be compared, v1 reports 0%; a plain-language chip says so (D4), once on
+  the baseline when the initial SOH is already at or below the threshold, otherwise on the row.
+- **"About these results"** is now a shared component (`ResultNotes`), used by Overview,
+  Anomalies and Advisor: plain-language limits, collapsed, no defect codes (U3, D4).
+- Fixtures: the Advisor at the defaults, at EOL 70% from 90% SOH, and at EOL 90% from 85% SOH
+  (the real at-end-of-life case), recorded from the API.
+
+Fixed across the app (found during the responsive review):
+
+- Visually hidden chart tables laid out at full height (a table treats `height` as a minimum), so
+  the document scrolled thousands of pixels into empty space on the Overview (since M2) and on
+  Anomalies. The hiding now sits on a wrapper, and `<main>` is the containing block. The
+  responsive suite now checks, on every page at every width, that no hidden element takes up
+  space and that the document itself never scrolls vertically.
+- The timeline is drawn at its measured width, so its labels stay readable on a phone (the
+  prototype's fixed drawing shrank them to about 5 px).
+- Unit tests: under the full parallel run with coverage, the first test of a file can wait for a
+  cold page import beyond the 3 s wait; `asyncUtilTimeout` is now 10 s and `testTimeout` 15 s.
+  Only the waiting changed, not what the tests check.
+
+Verification (local; Windows; Node 24.22.3; API on the seeded development database):
+
+- **Unit and component tests:** 193 passed. Coverage: 99.14% statements, 93.14% branches.
+- **E2E (Playwright, installed Edge):** 71 passed against the dev server and 71 against the
+  production build (`vite preview`), including parity with the prototype for every Anomaly
+  Detection value (counts, rule, timeline lanes and severities, events table, both chart series)
+  and for the Advisor on five parameter sets (defaults; EOL 70% from 90% with moved T/C/D to show
+  they are ignored; 60% from 100%; 60% from 70%; 90% from 85%), comparing every row's text,
+  colour and bar geometry; axe (WCAG 2.1 A/AA) and the responsive checks at 1440/1180/980/860/390.
+- **Static checks:** ESLint and `tsc -b` clean; prettier clean; API types match the contract.
+- **Unchanged:** backend (405 passed, 8 strict xfail; mypy clean), golden fixtures, legacy files
+  and `openapi.json`.
+
+Deviations from the prototype: full lane names on the timeline (the prototype cut them to five
+letters); chart legends name the channel with its unit, in the line's colour; event tooltips add
+the severity.
+
 ## Next
 
-Phase 4 Milestone 5 (Anomaly Detection and Charging Advisor), after the M4 review and merge.
+Phase 4 Milestone 6 (About, light theme, responsive and accessibility pass, Definition of Done
+checklist), after the M5 review and merge.

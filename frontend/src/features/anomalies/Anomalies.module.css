@@ -1,0 +1,98 @@
+/* Anomaly Detection, ported from legacy/style.css (.k12/.s4/.s6/.s8, table, .wrap, .sev). */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.grid > * {
+  min-width: 0;
+}
+
+.summary {
+  grid-column: span 4;
+}
+
+.timeline {
+  grid-column: span 8;
+}
+
+.half {
+  grid-column: span 6;
+}
+
+.rule {
+  font-size: 12px;
+}
+
+.tags {
+  margin-top: 10px;
+}
+
+.tableCard {
+  min-width: 0;
+}
+
+.tableTitle {
+  margin-bottom: 8px;
+}
+
+/* The table scrolls inside its card on narrow screens; the page itself never does. */
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--bd);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.table th {
+  color: var(--mu);
+  font-weight: 600;
+}
+
+.high,
+.medium {
+  font-weight: 700;
+}
+
+.high {
+  color: var(--rd);
+}
+
+.medium {
+  color: var(--am);
+}
+
+.footnote {
+  margin-top: 10px;
+}
+
+@media (max-width: 980px) {
+  .summary,
+  .timeline,
+  .half {
+    grid-column: span 12;
+  }
+}
+
+/* The timeline draws at the card's width; on very narrow screens it scrolls inside the card. */
+.track {
+  overflow-x: auto;
+}
+
+.track svg {
+  display: block;
+}

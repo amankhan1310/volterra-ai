@@ -1,0 +1,68 @@
+/* Charging Advisor, ported from legacy ui.js pages.advisor and legacy/style.css (.bar). */
+
+.baseline {
+  margin-bottom: 16px;
+}
+
+.tags {
+  margin-top: 10px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) 2fr 100px;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--bd);
+}
+
+.why {
+  font-size: 12px;
+}
+
+.bar {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--el);
+}
+
+.bar i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+}
+
+/* Centre line marking "no change". */
+.bar::after {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 50%;
+  width: 1px;
+  background: var(--mu);
+  content: "";
+}
+
+.value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Below 760 px each row stacks: label, bar, value (plan §3.5). */
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .value {
+    text-align: left;
+  }
+}
+
+.notice {
+  margin-top: 6px;
+}

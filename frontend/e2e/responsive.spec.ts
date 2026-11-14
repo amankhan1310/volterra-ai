@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { PAGES, horizontalOverflow, settled } from "./support";
+import {
+  PAGES,
+  horizontalOverflow,
+  oversizedHidden,
+  settled,
+  verticalOverflow,
+} from "./support";
 
 // The approved review widths: desktop, the legacy breakpoints (1180, 980, 860) and a phone.
 const WIDTHS = [1440, 1180, 980, 860, 390];
@@ -15,6 +21,14 @@ for (const width of WIDTHS) {
         expect(
           await horizontalOverflow(page),
           `${target.path} @${width}px`,
+        ).toBe(0);
+        expect(
+          await oversizedHidden(page),
+          `hidden content laid out on ${target.path} @${width}px`,
+        ).toEqual([]);
+        expect(
+          await verticalOverflow(page),
+          `document scrolls on ${target.path} @${width}px`,
         ).toBe(0);
       }
     });

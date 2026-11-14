@@ -33,6 +33,16 @@ export const BUILT: Partial<Record<PageKey, ComponentType>> = {
       default: m.SimulatorPage,
     })),
   ),
+  anom: lazy(() =>
+    import("../features/anomalies/AnomaliesPage").then((m) => ({
+      default: m.AnomaliesPage,
+    })),
+  ),
+  advisor: lazy(() =>
+    import("../features/advisor/AdvisorPage").then((m) => ({
+      default: m.AdvisorPage,
+    })),
+  ),
 };
 
 function PageRoute({ pageKey }: { pageKey: PageKey }) {

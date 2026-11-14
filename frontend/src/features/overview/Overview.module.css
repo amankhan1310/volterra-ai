@@ -148,26 +148,6 @@
   margin: 2px 0 0;
 }
 
-/* "About these results" (U3): collapsed by default, below the telemetry explorer. */
-.about {
-  margin-top: 16px;
-}
-
-.about summary {
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.about ul {
-  margin: 10px 0 0;
-  padding-left: 18px;
-  color: var(--mu);
-}
-
-.about li + li {
-  margin-top: 6px;
-}
-
 @media (max-width: 980px) {
   .hero {
     grid-template-columns: 1fr;

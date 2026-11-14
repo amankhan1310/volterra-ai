@@ -1,0 +1,79 @@
+{
+  "context": {
+    "battery_id": "5b0f37f1-3383-4495-a70d-bd0ff24be316",
+    "dataset": "synthetic-v1",
+    "is_synthetic": true,
+    "data_provenance": "simulated",
+    "algorithm_version": "v1",
+    "eol_pct": 70
+  },
+  "start_soh_pct": 90,
+  "eol_pct": 70,
+  "baseline_conditions": {
+    "temp_c": 25,
+    "c_rate": 1,
+    "dod_pct": 80
+  },
+  "baseline_cycles_to_eol": 308,
+  "rows": [
+    {
+      "change": "Cooler: 15 °C",
+      "why": "Lower temperature slows modelled fade",
+      "override": {
+        "temp_c": 15
+      },
+      "cycles_to_eol": 505,
+      "delta_pct": 63.961038961038966
+    },
+    {
+      "change": "Warmer: 35 °C",
+      "why": "Heat accelerates modelled fade",
+      "override": {
+        "temp_c": 35
+      },
+      "cycles_to_eol": 182,
+      "delta_pct": -40.909090909090914
+    },
+    {
+      "change": "Gentler charge: 0.5C",
+      "why": "Slower charging reduces modelled stress",
+      "override": {
+        "c_rate": 0.5
+      },
+      "cycles_to_eol": 372,
+      "delta_pct": 20.77922077922078
+    },
+    {
+      "change": "Fast charge: 2C",
+      "why": "Faster charging increases modelled stress",
+      "override": {
+        "c_rate": 2
+      },
+      "cycles_to_eol": 230,
+      "delta_pct": -25.324675324675322
+    },
+    {
+      "change": "Shallower cycles: 60% DoD",
+      "why": "Less depth per cycle is gentler",
+      "override": {
+        "dod_pct": 60
+      },
+      "cycles_to_eol": 383,
+      "delta_pct": 24.350649350649352
+    },
+    {
+      "change": "Full-depth cycles: 100% DoD",
+      "why": "Deeper cycles wear faster in the model",
+      "override": {
+        "dod_pct": 100
+      },
+      "cycles_to_eol": 259,
+      "delta_pct": -15.909090909090908
+    }
+  ],
+  "note": "Modelled direction and relative size under the simulator's assumed coefficients; not guaranteed battery-life gains.",
+  "known_issues": [
+    "F8"
+  ],
+  "provenance": "simulated"
+}

@@ -71,6 +71,18 @@ fixtures["simulate-t35"] = await simulate({
   temp_c: 35,
 });
 
+// Charging Advisor at the defaults and with EOL 70% from 90% SOH (the D1 tests move both).
+fixtures["advisor"] = await get(
+  `/api/v1/batteries/${id}/advisor?eol_pct=80&start_soh_pct=86.1`,
+);
+fixtures["advisor-eol70-soh90"] = await get(
+  `/api/v1/batteries/${id}/advisor?eol_pct=70&start_soh_pct=90`,
+);
+// Initial SOH below the threshold: every count is 0 and v1 reports 0% for each change (F8).
+fixtures["advisor-eol90-soh85"] = await get(
+  `/api/v1/batteries/${id}/advisor?eol_pct=90&start_soh_pct=85`,
+);
+
 // One saved scenario, for its exact response shape. It is created and deleted straight away so
 // the database is left as it was; ids and timestamps are normalised so re-recording is stable.
 const created = await send("POST", `/api/v1/batteries/${id}/scenarios`, {

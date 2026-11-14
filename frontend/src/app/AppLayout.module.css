@@ -12,6 +12,9 @@
 }
 
 .main {
+  /* Containing block for absolutely positioned content (e.g. visually hidden chart tables), so
+     it scrolls with the page instead of stretching the document past the viewport. */
+  position: relative;
   flex: 1;
   min-width: 0;
   padding: 30px 32px 64px;

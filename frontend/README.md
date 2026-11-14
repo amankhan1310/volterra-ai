@@ -4,9 +4,9 @@ React 19 + TypeScript single-page app (Vite 8, React Router 7, TanStack Query 5)
 the prototype in [`../legacy/`](../legacy/) while keeping its design system. It reads everything
 from the FastAPI backend; it never re-implements analytics and has no runtime mock data.
 
-**Status:** Phase 4, Milestone 5. Overview, Digital Twin, What-If Simulator, Anomaly Detection
-and Charging Advisor are rebuilt from the API; About is a labelled placeholder until M6 (with the
-light theme and the final responsive and accessibility pass). See
+**Status:** Phase 4 complete (Milestone 6 in review). All six pages are rebuilt from the API, in
+a dark theme (default) and a light theme switched from the header and remembered in the browser.
+See
 [`../ARCHITECTURE_PLAN.md`](../ARCHITECTURE_PLAN.md) §10 and
 [`../PROJECT_STATUS.md`](../PROJECT_STATUS.md).
 
@@ -69,17 +69,18 @@ src/
   main.tsx            entry: fonts, tokens, providers, router
   app/                router, layout, page metadata, query client, 404, error boundary
   api/                generated types, typed client (openapi-fetch), error mapping, query hooks
-  state/              shared simulator parameters (decision D1)
-  styles/             design tokens (legacy redesign values) and global styles
+  state/              shared simulator parameters (decision D1), colour theme (decision D2)
+  styles/             design tokens (dark and light; text and graphic accents), global styles,
+                      WCAG contrast test of the tokens
   components/layout/  sidebar, header, status card, page header, context bar, data gate
   components/ui/      Card, Button, Segmented, ProvenanceTag, Note, Stat, InfoTip, Dialog, Toast,
                       ResultNotes ("About these results"), states
   components/charts/  ECharts registry and wrapper (own lazy chunk), theme from CSS tokens, sparkline
   features/           pages: overview (M2), digital-twin (M3), simulator (M4), anomalies and
-                      advisor (M5); About is a placeholder until M6
+                      advisor (M5), about (M6)
   test/               Vitest setup, MSW server, recorded fixtures, render helpers
-e2e/                  Playwright: shell, overview, twin, simulator, anomalies, advisor, legacy parity,
-                      responsive, accessibility
+e2e/                  Playwright: shell, overview, twin, simulator, anomalies, advisor, about,
+                      theme, legacy parity, responsive and accessibility (both themes)
 scripts/              type drift check, fixture recorder, review screenshots
 ```
 
@@ -89,4 +90,8 @@ scripts/              type drift check, fixture recorder, review screenshots
 assumed`); every page shows the dataset and algorithm version.
 - No `innerHTML`, `dangerouslySetInnerHTML`, `prompt()`, `alert()` or `confirm()` (lint-enforced).
 - No hard-coded colours in components or charts: use the CSS variables in `styles/tokens.css`.
+- Accents have two roles. Text uses `--cy`, `--gr`, … (4.5:1); drawings (chart series, gauge,
+  twin, bars, dots, slider thumbs) sit in a `.graphic` scope, where the same names resolve to the
+  `-fill` tokens (3:1). Charts read the fills directly. Both themes are checked by
+  `styles/contrast.test.ts`, and the dark palette is pinned to the prototype's values.
 - MSW fixtures are real API responses and are used by tests only.

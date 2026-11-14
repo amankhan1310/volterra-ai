@@ -4,9 +4,9 @@ Intelligent battery health and predictive analytics: state-of-health (SOH) estim
 degradation analysis, remaining-useful-life (RUL) prediction, anomaly detection and
 scenario simulation.
 
-> **Status:** Phase 4 in progress: the React frontend is being rebuilt against the FastAPI +
-> PostgreSQL backend (Phase 3), one milestone at a time. Milestone 1 (application shell) is done;
-> the six pages follow. See [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
+> **Status:** Phase 4 complete (pending the M6 review): all six pages are rebuilt in React
+> against the FastAPI + PostgreSQL backend, in dark and light themes, with number parity against
+> the prototype. See [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
 > [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for progress.
 
 ## Repository layout
@@ -14,7 +14,7 @@ scenario simulation.
 | Path        | Contents                                                                  |
 | ----------- | ------------------------------------------------------------------------- |
 | `legacy/`   | The original static browser prototype (reference implementation).         |
-| `frontend/` | React + TypeScript single-page app (see its README; Phase 4 in progress). |
+| `frontend/` | React + TypeScript single-page app (see its README).                      |
 | `backend/`  | FastAPI API, PostgreSQL models/migrations, v1 analytics (see its README). |
 | `ml/`       | `volterra_ml` package: data loaders, features, models _(scaffold only)_.  |
 | `infra/`    | `docker-compose.yml` for an optional local PostgreSQL 16.                 |

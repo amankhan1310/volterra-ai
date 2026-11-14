@@ -42,8 +42,9 @@ CI (`.github/workflows/golden.yml`) runs the tests and `--check` on Node 18, 20 
 **When to regenerate:** only when the prototype or the exporter changes on purpose. In that
 case, bump `EXPORTER_VERSION` and explain the change in the commit message. During Phase 2 the
 fixtures are the specification: if the Python port disagrees, fix the port, not the fixtures.
-Known defects F1–F8 are fixed in Phase 5. Each fix updates the affected fixtures in its own
-commit with a changelog entry.
+Known defects F1–F8 stay in v1 and in these fixtures permanently: the fixtures describe the
+prototype and are never modified. Phase 5 fixed the defects as separate **v2** implementations
+with their own expected values in `tests/v2/` (see `CHANGELOG.md`).
 
 ## Files
 

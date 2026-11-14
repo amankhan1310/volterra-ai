@@ -4,7 +4,9 @@ import {
   horizontalOverflow,
   oversizedHidden,
   settled,
+  startInTheme,
   verticalOverflow,
+  type Theme,
 } from "./support";
 
 // The approved review widths: desktop, the legacy breakpoints (1180, 980, 860) and a phone.
@@ -14,24 +16,26 @@ for (const width of WIDTHS) {
   test.describe(`${width}px`, () => {
     test.use({ viewport: { width, height: 900 } });
 
-    test("no page scrolls horizontally", async ({ page }) => {
-      for (const target of PAGES) {
-        await page.goto(target.path);
-        await settled(page);
-        expect(
-          await horizontalOverflow(page),
-          `${target.path} @${width}px`,
-        ).toBe(0);
-        expect(
-          await oversizedHidden(page),
-          `hidden content laid out on ${target.path} @${width}px`,
-        ).toEqual([]);
-        expect(
-          await verticalOverflow(page),
-          `document scrolls on ${target.path} @${width}px`,
-        ).toBe(0);
-      }
-    });
+    for (const theme of ["dark", "light"] as Theme[])
+      test(`no page scrolls horizontally (${theme})`, async ({ page }) => {
+        await startInTheme(page, theme);
+        for (const target of PAGES) {
+          await page.goto(target.path);
+          await settled(page);
+          expect(
+            await horizontalOverflow(page),
+            `${target.path} @${width}px`,
+          ).toBe(0);
+          expect(
+            await oversizedHidden(page),
+            `hidden content laid out on ${target.path} @${width}px`,
+          ).toEqual([]);
+          expect(
+            await verticalOverflow(page),
+            `document scrolls on ${target.path} @${width}px`,
+          ).toBe(0);
+        }
+      });
 
     if (width <= 860) {
       test("the sidebar is an off-canvas drawer", async ({ page }) => {

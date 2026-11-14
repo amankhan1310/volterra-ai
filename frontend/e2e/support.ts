@@ -67,3 +67,13 @@ export async function oversizedHidden(page: Page): Promise<string[]> {
       .map((el) => el.textContent.slice(0, 60)),
   );
 }
+
+export type Theme = "dark" | "light";
+
+/** Opens the app as a returning user who chose this theme (dark needs nothing: first-visit default). */
+export async function startInTheme(page: Page, theme: Theme): Promise<void> {
+  if (theme === "light")
+    await page.addInitScript(() => {
+      localStorage.setItem("volterra-theme", "light");
+    });
+}

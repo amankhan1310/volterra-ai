@@ -57,3 +57,14 @@ in `backend/tests/golden/` describe v1 and are never modified.
 - API (with `?algorithm=v2`): `change_pct` and `comparison` are new fields; the existing
   `delta_pct` keeps its v1 meaning and type (a number, 0 when not comparable) for compatibility.
 - Regression test: `backend/tests/v2/test_f8_advisor.py`.
+
+### F1 — Temperature spikes on the cool part of the cycle are detected
+
+- **v1 (unchanged):** robust z of the raw values against the whole series. The ±3 °C temperature
+  wave inflates the spread, so only one of the three injected spikes (cycle 170) is flagged.
+- **v2:** `app/analytics/anomalies_v2.py` removes the slow baseline first (residual from a centred
+  15-cycle rolling median), then applies the same robust z (|z| > 3.5, high above 6). Event ranges
+  follow the local baseline. Cycles whose window would be truncated at the series edges are not
+  evaluated. Result on `synthetic-v1`: temperature 90, 170, 251 and voltage 130, 271, i.e.
+  precision and recall 1.0 on the labelled injections (v1 temperature recall 1/3).
+- Regression test: `backend/tests/v2/test_f1_anomalies.py`.

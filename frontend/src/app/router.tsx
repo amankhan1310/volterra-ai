@@ -1,7 +1,6 @@
 import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, useLocation, type RouteObject } from "react-router";
 import { Skeleton } from "../components/ui/States";
-import { PlaceholderPage } from "../features/placeholder/PlaceholderPage";
 import { AppLayout } from "./AppLayout";
 import { NotFoundPage } from "./NotFoundPage";
 import { PAGES, pathForLegacyHash, type PageKey } from "./pages";
@@ -14,10 +13,11 @@ function RootRedirect() {
 }
 
 /**
- * Rebuilt pages, each lazy-loaded so the charting library is fetched with the first page that
- * draws a chart, not with the shell. Pages not listed here show their labelled placeholder.
+ * Every page, each lazy-loaded so the charting library is fetched with the first page that draws
+ * a chart, not with the shell. Typed as a complete record: a page without a component does not
+ * compile.
  */
-export const BUILT: Partial<Record<PageKey, ComponentType>> = {
+export const PAGE_COMPONENTS: Record<PageKey, ComponentType> = {
   overview: lazy(() =>
     import("../features/overview/OverviewPage").then((m) => ({
       default: m.OverviewPage,
@@ -43,11 +43,15 @@ export const BUILT: Partial<Record<PageKey, ComponentType>> = {
       default: m.AdvisorPage,
     })),
   ),
+  about: lazy(() =>
+    import("../features/about/AboutPage").then((m) => ({
+      default: m.AboutPage,
+    })),
+  ),
 };
 
 function PageRoute({ pageKey }: { pageKey: PageKey }) {
-  const Page = BUILT[pageKey];
-  if (!Page) return <PlaceholderPage pageKey={pageKey} />;
+  const Page = PAGE_COMPONENTS[pageKey];
   return (
     <Suspense fallback={<Skeleton label="Loading page" height={340} />}>
       <Page />

@@ -5,7 +5,7 @@ import { queryKeys } from "../api/hooks";
 import { apiError, fixtures, server } from "../test/msw";
 import { renderApp } from "../test/render";
 import { PAGES } from "./pages";
-import { BUILT } from "./router";
+import { PAGE_COMPONENTS } from "./router";
 
 const mainNav = () => screen.getByRole("navigation", { name: "Main" });
 const breadcrumb = () => screen.getByRole("navigation", { name: "Breadcrumb" });
@@ -32,8 +32,8 @@ describe("routing", () => {
     expect(router.state.location.pathname).toBe(path);
   });
 
-  it.each(PAGES.filter((p) => !p.built).map((p) => [p.path, p] as const))(
-    "renders %s with the legacy title and a labelled placeholder",
+  it.each(PAGES.map((p) => [p.path, p] as const))(
+    "renders %s with the legacy title and its content",
     async (path, page) => {
       renderApp(path);
       expect(
@@ -43,18 +43,14 @@ describe("routing", () => {
       expect(within(breadcrumb()).getByText(page.label)).toBeTruthy();
       const link = within(mainNav()).getByRole("link", { name: page.label });
       expect(link.getAttribute("aria-current")).toBe("page");
-      const placeholder = await screen.findByTestId("page-placeholder");
-      expect(placeholder.textContent).toContain(`Milestone ${page.milestone}`);
-      expect(placeholder.textContent).toContain("shows no data yet");
+      expect(await screen.findByTestId("page-content")).toBeTruthy();
       expect(document.title).toBe(`${page.label} · VOLTERRA AI`);
     },
   );
 
-  it("routes exactly the pages marked as built to their rebuilt component", () => {
-    expect(Object.keys(BUILT).sort()).toEqual(
-      PAGES.filter((p) => p.built)
-        .map((p) => p.key)
-        .sort(),
+  it("routes every page to its rebuilt component (no placeholders remain)", () => {
+    expect(Object.keys(PAGE_COMPONENTS).sort()).toEqual(
+      PAGES.map((p) => p.key).sort(),
     );
   });
 
@@ -201,12 +197,12 @@ describe("header and status (real API fixtures)", () => {
 });
 
 describe("data states", () => {
-  it("shows the loading state, then the placeholder", async () => {
+  it("shows the loading state, then the page", async () => {
     renderApp("/about");
     expect(
       screen.getByRole("status", { name: "Loading battery data" }),
     ).toBeTruthy();
-    expect(await screen.findByTestId("page-placeholder")).toBeTruthy();
+    expect(await screen.findByTestId("page-content")).toBeTruthy();
   });
 
   it("explains an unreachable API, with a working retry", async () => {
@@ -218,7 +214,7 @@ describe("data states", () => {
     expect(alert.textContent).toContain("Error code: api_unreachable");
     server.resetHandlers();
     await user.click(within(alert).getByRole("button", { name: "Retry" }));
-    expect(await screen.findByTestId("page-placeholder")).toBeTruthy();
+    expect(await screen.findByTestId("page-content")).toBeTruthy();
   });
 
   it("explains an unavailable database", async () => {

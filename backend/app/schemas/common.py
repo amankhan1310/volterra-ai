@@ -12,7 +12,7 @@ Contract notes (stable for the Phase 4 frontend):
 from __future__ import annotations
 
 import uuid
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -47,6 +47,18 @@ class ApiRequestModel(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
 
+def _unset(value: object) -> bool:
+    return value is None
+
+
+def v2_only(description: str) -> Any:
+    """An optional field that only ``?algorithm=v2`` responses carry.
+
+    Omitted from the JSON when unset, so v1 responses stay exactly as they were (additive).
+    """
+    return Field(default=None, exclude_if=_unset, description=f"v2 only: {description}")
+
+
 class Quantity(ApiModel):
     value: float | None
     unit: str
@@ -58,9 +70,16 @@ class Interval(ApiModel):
     lower: float | None
     upper: float | None
     level: float = Field(description="Nominal coverage, e.g. 0.95.")
-    method: str = Field(description="How the interval was computed (v1: 'slope_se', see F3).")
+    method: str = Field(
+        description="How the interval was computed (v1: 'slope_se', see F3; "
+        "v2: 'rolling_origin_backtest_quantiles')."
+    )
     unit: str
     provenance: Provenance
+    label: str | None = v2_only("display label, e.g. '90% prediction interval'.")
+    max_calibrated_horizon_cycles: int | None = v2_only(
+        "bounds beyond this many cycles ahead are not calibrated and are null."
+    )
 
 
 class AnalysisContext(ApiModel):
@@ -72,7 +91,11 @@ class AnalysisContext(ApiModel):
     data_provenance: DataProvenance = Field(
         description="'simulated' for synthetic datasets, 'measured' for real ones."
     )
-    algorithm_version: Literal["v1"] = "v1"
+    algorithm_version: Literal["v1", "v2"] = Field(
+        default="v1",
+        description="v1 (default) reproduces the prototype, including defects F1-F8; "
+        "v2 (?algorithm=v2) has the corrected methods (see CHANGELOG.md).",
+    )
     eol_pct: float | None = Field(default=None, description="End-of-life SOH threshold used.")
 
 

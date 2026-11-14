@@ -7,6 +7,21 @@ in `backend/tests/golden/` describe v1 and are never modified.
 
 ## [Unreleased] — Phase 5: corrected v2 analytics (opt-in)
 
+### API: opt-in `?algorithm=v2`
+
+- New optional query parameter `algorithm` (`v1` default, or `v2`) on `summary`, `forecast`,
+  `backtest`, `insights`, `anomalies`, `simulator`, `simulate` and `advisor`; `anomalies` also
+  takes `mode` (`retrospective` default, or `causal`, v2 only: `mode=causal` with v1 returns 422
+  `unsupported_mode`). v2 responses say `context.algorithm_version: "v2"` and `known_issues: []`.
+- **Additive and backward compatible.** v1 responses are unchanged byte for byte (all frontend
+  fixtures re-recorded from the API are identical). New response fields are optional and appear
+  only in v2 responses: `Interval.label` / `max_calibrated_horizon_cycles`,
+  `LinearFitOut.curvature` / `origin_cycle`, `BacktestResponse.mean_signed_error`,
+  `AnomalyMethodOut.step_window` / `min_step_soh_pct` / `causal_fit_window` /
+  `causal_min_history`, `ChannelStatsOut.cycles`, `AdvisorRowOut.change_pct` / `comparison`.
+  The one widened type is `AnalysisContext.algorithm_version` (`"v1"` → `"v1" | "v2"`).
+- The frontend keeps using v1; only its generated types changed.
+
 ### F6 — The forecast is no longer biased on accelerating fade
 
 - **v1 (unchanged):** a straight line over the last 120 cycles. Fade on `synthetic-v1` is

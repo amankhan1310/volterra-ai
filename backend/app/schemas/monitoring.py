@@ -10,13 +10,16 @@ from app.analytics.anomalies import ChannelKey, Severity
 from app.analytics.display import HealthLevel
 from app.analytics.twin import TemperatureBand
 from app.schemas.analysis import AnomalyCounts
-from app.schemas.common import AnalysisContext, ApiModel, Quantity
+from app.schemas.common import AnalysisContext, ApiModel, Quantity, v2_only
 
 
 class DetectorOut(ApiModel):
     name: str
     version: str
-    mode: str = Field(description="'retrospective': uses past and future cycles (see F7).")
+    mode: str = Field(
+        description="'retrospective': uses past and future cycles (see F7); "
+        "'causal' (v2 only, ?mode=causal): uses past cycles only."
+    )
 
 
 class AnomalyMethodOut(ApiModel):
@@ -25,6 +28,10 @@ class AnomalyMethodOut(ApiModel):
     high_severity_abs_z: float
     mad_floor: float
     residual_half_window: int
+    step_window: int | None = v2_only("cycles on each side of a candidate capacity step.")
+    min_step_soh_pct: float | None = v2_only("smallest capacity step reported (SOH points).")
+    causal_fit_window: int | None = v2_only("causal mode: previous cycles used per prediction.")
+    causal_min_history: int | None = v2_only("causal mode: earlier statistics needed to judge.")
 
 
 class AnomalyEventOut(ApiModel):
@@ -49,6 +56,9 @@ class ChannelStatsOut(ApiModel):
     expected_high: float
     values: list[float] = Field(description="Detector input (soh: residual vs rolling median).")
     z: list[float]
+    cycles: list[int] | None = v2_only(
+        "cycles the detector evaluated; values and z align with them."
+    )
 
 
 class AnomaliesResponse(ApiModel):

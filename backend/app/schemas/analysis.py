@@ -8,7 +8,14 @@ from pydantic import Field
 
 from app.analytics.display import HealthLevel
 from app.analytics.insights import InsightKind
-from app.schemas.common import AnalysisContext, ApiModel, DataProvenance, Interval, Quantity
+from app.schemas.common import (
+    AnalysisContext,
+    ApiModel,
+    DataProvenance,
+    Interval,
+    Quantity,
+    v2_only,
+)
 
 #: Allowed end-of-life thresholds (the prototype's EOL slider range).
 EOL_MIN_PCT = 60.0
@@ -20,6 +27,11 @@ class LinearFitOut(ApiModel):
     intercept: float
     residual_sd: float
     slope_se: float
+    curvature: float | None = v2_only(
+        "quadratic coefficient (SOH points per cycle²); slope and intercept are then the "
+        "slope and value at origin_cycle (interim model, see F6)."
+    )
+    origin_cycle: int | None = v2_only("cycle at which slope and intercept are given.")
 
 
 class TrendOut(LinearFitOut):
@@ -98,6 +110,7 @@ class BacktestResponse(ApiModel):
     fit: LinearFitOut
     points: list[BacktestPointOut]
     mae: Quantity
+    mean_signed_error: Quantity | None = v2_only("mean of predicted - observed (bias).")
     provenance: Literal["fitted"] = "fitted"
 
 

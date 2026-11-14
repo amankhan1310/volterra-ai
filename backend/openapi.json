@@ -300,6 +300,22 @@
               "title": "Eol Pct"
             },
             "description": "End-of-life SOH threshold in percent (60-90, as in the prototype)."
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
           }
         ],
         "responses": {
@@ -341,7 +357,7 @@
         "tags": [
           "analytics"
         ],
-        "summary": "Observed SOH and the v1 linear forecast",
+        "summary": "Observed SOH and the forecast (v1 linear; v2 interim quadratic)",
         "operationId": "get_forecast_api_v1_batteries__battery_id__forecast_get",
         "parameters": [
           {
@@ -367,6 +383,22 @@
               "title": "Eol Pct"
             },
             "description": "End-of-life SOH threshold in percent (60-90, as in the prototype)."
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
           }
         ],
         "responses": {
@@ -408,7 +440,7 @@
         "tags": [
           "analytics"
         ],
-        "summary": "Time-ordered hold-out backtest of the linear forecast",
+        "summary": "Time-ordered hold-out backtest of the forecast",
         "operationId": "get_backtest_api_v1_batteries__battery_id__backtest_get",
         "parameters": [
           {
@@ -420,6 +452,22 @@
               "format": "uuid",
               "title": "Battery Id"
             }
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
           }
         ],
         "responses": {
@@ -461,7 +509,7 @@
         "tags": [
           "analytics"
         ],
-        "summary": "Rule-based insights (v1, includes known defect F5)",
+        "summary": "Rule-based insights (v1 includes known defect F5; fixed in v2)",
         "operationId": "get_insights_api_v1_batteries__battery_id__insights_get",
         "parameters": [
           {
@@ -473,6 +521,22 @@
               "format": "uuid",
               "title": "Battery Id"
             }
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
           }
         ],
         "responses": {
@@ -514,7 +578,7 @@
         "tags": [
           "monitoring"
         ],
-        "summary": "Robust z-score anomaly events (v1; see known_issues)",
+        "summary": "Robust z-score anomaly events (v1 default, see known_issues; v2 opt-in)",
         "operationId": "get_anomalies_api_v1_batteries__battery_id__anomalies_get",
         "parameters": [
           {
@@ -538,6 +602,38 @@
               "title": "Include Scores"
             },
             "description": "Include per-cycle detector inputs and z-scores."
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "retrospective",
+                "causal"
+              ],
+              "type": "string",
+              "description": "Anomaly detection mode (v2 only). 'retrospective' (default) looks back over the history using windows centred on each cycle; 'causal' is the live mode and uses only cycles up to each judged cycle.",
+              "default": "retrospective",
+              "title": "Mode"
+            },
+            "description": "Anomaly detection mode (v2 only). 'retrospective' (default) looks back over the history using windows centred on each cycle; 'causal' is the live mode and uses only cycles up to each judged cycle."
           }
         ],
         "responses": {
@@ -663,6 +759,22 @@
               "format": "uuid",
               "title": "Battery Id"
             }
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
           }
         ],
         "responses": {
@@ -716,6 +828,22 @@
               "format": "uuid",
               "title": "Battery Id"
             }
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
           }
         ],
         "requestBody": {
@@ -767,7 +895,7 @@
         "tags": [
           "simulator"
         ],
-        "summary": "Charging Advisor: one-factor sensitivity (v1, includes known defect F8)",
+        "summary": "Charging Advisor: one-factor sensitivity (v1 includes known defect F8; fixed in v2)",
         "operationId": "get_advisor_api_v1_batteries__battery_id__advisor_get",
         "parameters": [
           {
@@ -807,10 +935,26 @@
                   "type": "null"
                 }
               ],
-              "description": "Initial SOH; default is the simulator default (current SOH, rounded).",
+              "description": "Initial SOH; default is the simulator default (current SOH; rounded in v1, unrounded in v2).",
               "title": "Start Soh Pct"
             },
-            "description": "Initial SOH; default is the simulator default (current SOH, rounded)."
+            "description": "Initial SOH; default is the simulator default (current SOH; rounded in v1, unrounded in v2)."
+          },
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "v1",
+                "v2"
+              ],
+              "type": "string",
+              "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model.",
+              "default": "v1",
+              "title": "Algorithm"
+            },
+            "description": "Analytics version. 'v1' (default) reproduces the original prototype exactly, including its documented defects F1-F8. 'v2' (opt-in) uses the corrected methods (see CHANGELOG.md); its forecast is an interim quadratic, not a production-validated model."
           }
         ],
         "responses": {
@@ -1246,7 +1390,36 @@
           "delta_pct": {
             "type": "number",
             "title": "Delta Pct",
-            "description": "v1: 0 when either cycle count is missing or 0 (F8)."
+            "description": "v1 meaning in every version: 0 when either cycle count is missing or 0 (F8). With ?algorithm=v2 use change_pct and comparison."
+          },
+          "change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Pct",
+            "description": "v2 only: % change in cycles to EOL vs the baseline; null when not comparable (see comparison)."
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "comparable",
+                  "at_or_below_eol",
+                  "beyond_horizon"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison",
+            "description": "v2 only: whether the change can be compared, and if not why."
           }
         },
         "additionalProperties": false,
@@ -1286,8 +1459,12 @@
           },
           "algorithm_version": {
             "type": "string",
-            "const": "v1",
+            "enum": [
+              "v1",
+              "v2"
+            ],
             "title": "Algorithm Version",
+            "description": "v1 (default) reproduces the prototype, including defects F1-F8; v2 (?algorithm=v2) has the corrected methods (see CHANGELOG.md).",
             "default": "v1"
           },
           "eol_pct": {
@@ -1485,6 +1662,54 @@
           "residual_half_window": {
             "type": "integer",
             "title": "Residual Half Window"
+          },
+          "step_window": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Window",
+            "description": "v2 only: cycles on each side of a candidate capacity step."
+          },
+          "min_step_soh_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Step Soh Pct",
+            "description": "v2 only: smallest capacity step reported (SOH points)."
+          },
+          "causal_fit_window": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Causal Fit Window",
+            "description": "v2 only: causal mode: previous cycles used per prediction."
+          },
+          "causal_min_history": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Causal Min History",
+            "description": "v2 only: causal mode: earlier statistics needed to judge."
           }
         },
         "additionalProperties": false,
@@ -1550,6 +1775,17 @@
           },
           "mae": {
             "$ref": "#/components/schemas/Quantity"
+          },
+          "mean_signed_error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quantity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "v2 only: mean of predicted - observed (bias)."
           },
           "provenance": {
             "type": "string",
@@ -1755,6 +1991,21 @@
             },
             "type": "array",
             "title": "Z"
+          },
+          "cycles": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycles",
+            "description": "v2 only: cycles the detector evaluated; values and z align with them."
           }
         },
         "additionalProperties": false,
@@ -2060,7 +2311,7 @@
           "mode": {
             "type": "string",
             "title": "Mode",
-            "description": "'retrospective': uses past and future cycles (see F7)."
+            "description": "'retrospective': uses past and future cycles (see F7); 'causal' (v2 only, ?mode=causal): uses past cycles only."
           }
         },
         "additionalProperties": false,
@@ -2322,7 +2573,7 @@
           "method": {
             "type": "string",
             "title": "Method",
-            "description": "How the interval was computed (v1: 'slope_se', see F3)."
+            "description": "How the interval was computed (v1: 'slope_se', see F3; v2: 'rolling_origin_backtest_quantiles')."
           },
           "unit": {
             "type": "string",
@@ -2338,6 +2589,30 @@
               "assumed"
             ],
             "title": "Provenance"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "description": "v2 only: display label, e.g. '90% prediction interval'."
+          },
+          "max_calibrated_horizon_cycles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Calibrated Horizon Cycles",
+            "description": "v2 only: bounds beyond this many cycles ahead are not calibrated and are null."
           }
         },
         "additionalProperties": false,
@@ -2396,6 +2671,30 @@
           "slope_se": {
             "type": "number",
             "title": "Slope Se"
+          },
+          "curvature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Curvature",
+            "description": "v2 only: quadratic coefficient (SOH points per cycle²); slope and intercept are then the slope and value at origin_cycle (interim model, see F6)."
+          },
+          "origin_cycle": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Cycle",
+            "description": "v2 only: cycle at which slope and intercept are given."
           }
         },
         "additionalProperties": false,
@@ -3013,6 +3312,30 @@
           "slope_se": {
             "type": "number",
             "title": "Slope Se"
+          },
+          "curvature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Curvature",
+            "description": "v2 only: quadratic coefficient (SOH points per cycle²); slope and intercept are then the slope and value at origin_cycle (interim model, see F6)."
+          },
+          "origin_cycle": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Cycle",
+            "description": "v2 only: cycle at which slope and intercept are given."
           },
           "fit_from_cycle": {
             "type": "integer",

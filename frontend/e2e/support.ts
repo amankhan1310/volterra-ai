@@ -38,10 +38,34 @@ export async function settled(page: Page): Promise<void> {
     .waitFor({ state: "detached" });
 }
 
+/** The app shell scrolls inside `<main>`; the document itself should never scroll vertically. */
+export async function verticalOverflow(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      document.documentElement.scrollHeight -
+      document.documentElement.clientHeight,
+  );
+}
+
 export async function horizontalOverflow(page: Page): Promise<number> {
   return page.evaluate(
     () =>
       document.documentElement.scrollWidth -
       document.documentElement.clientWidth,
+  );
+}
+
+/**
+ * Visually hidden elements that still take up layout space (e.g. a hidden table, which treats
+ * `height` as a minimum), and so can make the document scroll into empty space.
+ */
+export async function oversizedHidden(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll(".visually-hidden")]
+      .filter((el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 1 || r.height > 1;
+      })
+      .map((el) => el.textContent.slice(0, 60)),
   );
 }

@@ -32,3 +32,16 @@ in `backend/tests/golden/` describe v1 and are never modified.
   on later ones, coverage is 85.9–88.3% (target 85–95%). This does **not** establish coverage
   across batteries; that needs held-out cells (Phase 6–7).
 - Regression test: `backend/tests/v2/test_f3_interval.py`.
+
+### F4 — Overview and Simulator agree on the same conditions
+
+- **v1 (unchanged):** the Overview says 112.7 cycles to 80% and the simulator baseline (same
+  25 °C / 1C / 80% DoD) says 106, because the simulator adds its own `(1 + n/1500)` acceleration
+  term and starts from a rounded SOH.
+- **v2:** one source of truth (`app/analytics/simulator_v2.py`). The baseline curve is the shared
+  v2 forecast started at the scenario's initial SOH; a scenario runs that curve at its stress
+  factor, so its cycles to EOL = baseline cycles × (baseline fade / scenario fade). No separate
+  acceleration term, no rounding of the starting SOH. Baseline: 97 cycles = the rounded Overview
+  RUL (96.5). Δ% is `null` instead of `NaN` when it cannot be computed.
+- The temperature, C-rate and DoD factors stay **assumed**; fitting them is Phase 8.
+- Regression test: `backend/tests/v2/test_f4_simulator.py`.

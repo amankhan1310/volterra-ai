@@ -45,3 +45,15 @@ in `backend/tests/golden/` describe v1 and are never modified.
   RUL (96.5). Δ% is `null` instead of `NaN` when it cannot be computed.
 - The temperature, C-rate and DoD factors stay **assumed**; fitting them is Phase 8.
 - Regression test: `backend/tests/v2/test_f4_simulator.py`.
+
+### F8 — The Charging Advisor says when a change cannot be compared
+
+- **v1 (unchanged):** the live prototype rule `n && b ? ((n − b) / b) · 100 : 0`, so a change
+  whose cycle count is unknown (beyond 5000 cycles) or whose baseline is already at end of life
+  shows **0%**, which reads as "no effect".
+- **v2:** `app/analytics/advisor_v2.py` runs the six one-factor changes on the v2 simulator and
+  gives each row a `change_pct` that is `null` unless comparable, plus an explicit `comparison`
+  state: `comparable`, `at_or_below_eol` or `beyond_horizon`.
+- API (with `?algorithm=v2`): `change_pct` and `comparison` are new fields; the existing
+  `delta_pct` keeps its v1 meaning and type (a number, 0 when not comparable) for compatibility.
+- Regression test: `backend/tests/v2/test_f8_advisor.py`.

@@ -4,9 +4,9 @@ React 19 + TypeScript single-page app (Vite 8, React Router 7, TanStack Query 5)
 the prototype in [`../legacy/`](../legacy/) while keeping its design system. It reads everything
 from the FastAPI backend; it never re-implements analytics and has no runtime mock data.
 
-**Status:** Phase 4, Milestone 1: application shell, navigation, dark theme, API client and
-API/database status. The six pages are labelled placeholders until their milestones
-(Overview M2, Digital Twin M3, Simulator M4, Anomalies + Advisor M5, About M6). See
+**Status:** Phase 4, Milestone 5. Overview, Digital Twin, What-If Simulator, Anomaly Detection
+and Charging Advisor are rebuilt from the API; About is a labelled placeholder until M6 (with the
+light theme and the final responsive and accessibility pass). See
 [`../ARCHITECTURE_PLAN.md`](../ARCHITECTURE_PLAN.md) §10 and
 [`../PROJECT_STATUS.md`](../PROJECT_STATUS.md).
 
@@ -48,7 +48,8 @@ use an installed browser instead of downloading one:
 PW_CHANNEL=msedge npm run e2e            # reuses `npm run dev` if it is running
 ```
 
-`e2e/parity.spec.ts` compares the Overview, Digital Twin and Simulator values with the legacy prototype, so it needs
+`e2e/parity.spec.ts` compares the Overview, Digital Twin, Simulator, Anomaly Detection and
+Charging Advisor values with the legacy prototype, so it needs
 `legacy/` served on port 8080 (`LEGACY_URL` overrides the address); CI serves it.
 
 ### Test fixtures and review screenshots
@@ -71,11 +72,14 @@ src/
   state/              shared simulator parameters (decision D1)
   styles/             design tokens (legacy redesign values) and global styles
   components/layout/  sidebar, header, status card, page header, context bar, data gate
-  components/ui/      Card, Button, Segmented, ProvenanceTag, Note, Stat, InfoTip, Dialog, Toast, states
+  components/ui/      Card, Button, Segmented, ProvenanceTag, Note, Stat, InfoTip, Dialog, Toast,
+                      ResultNotes ("About these results"), states
   components/charts/  ECharts registry and wrapper (own lazy chunk), theme from CSS tokens, sparkline
-  features/           pages: overview (M2), digital-twin (M3), simulator (M4); the rest are placeholders
+  features/           pages: overview (M2), digital-twin (M3), simulator (M4), anomalies and
+                      advisor (M5); About is a placeholder until M6
   test/               Vitest setup, MSW server, recorded fixtures, render helpers
-e2e/                  Playwright: shell, overview, twin, simulator, legacy parity, responsive, accessibility
+e2e/                  Playwright: shell, overview, twin, simulator, anomalies, advisor, legacy parity,
+                      responsive, accessibility
 scripts/              type drift check, fixture recorder, review screenshots
 ```
 

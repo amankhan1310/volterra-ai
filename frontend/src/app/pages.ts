@@ -66,7 +66,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "Robust z-score (median/MAD, threshold 3.5). Events are patterns to investigate, not confirmed faults.",
     milestone: 5,
-    built: false,
+    built: true,
   },
   {
     key: "advisor",
@@ -76,7 +76,7 @@ export const PAGES: readonly PageMeta[] = [
     subtitle:
       "How each change would move cycles to end-of-life, under this simulator’s assumed coefficients.",
     milestone: 5,
-    built: false,
+    built: true,
   },
   {
     key: "about",

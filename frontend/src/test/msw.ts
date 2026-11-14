@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import type {
+  Advisor,
   Anomalies,
   Backtest,
   Battery,
@@ -15,6 +16,9 @@ import type {
   Summary,
   Twin,
 } from "../api/types";
+import advisorEol70Soh90Json from "./fixtures/advisor-eol70-soh90.json";
+import advisorEol90Soh85Json from "./fixtures/advisor-eol90-soh85.json";
+import advisorJson from "./fixtures/advisor.json";
 import anomaliesJson from "./fixtures/anomalies.json";
 import backtestJson from "./fixtures/backtest.json";
 import batteriesJson from "./fixtures/batteries.json";
@@ -63,6 +67,16 @@ export const fixtures = {
   simulateT35: simulateT35Json as Simulation,
   /** A real `ScenarioOut` (ids and timestamps normalised). */
   scenario: scenarioFixture,
+  /** Charging Advisor at the defaults, at EOL 70% from 90% SOH and at EOL 90% from 85% SOH. */
+  advisor: advisorJson as Advisor,
+  advisorEol70Soh90: advisorEol70Soh90Json as Advisor,
+  advisorEol90Soh85: advisorEol90Soh85Json as Advisor,
+};
+
+const ADVISOR: Record<string, Advisor> = {
+  "80|86.1": fixtures.advisor,
+  "70|90": fixtures.advisorEol70Soh90,
+  "90|85": fixtures.advisorEol90Soh85,
 };
 
 const paramsKey = (p: ScenarioParams) =>
@@ -180,6 +194,14 @@ export const handlers = [
           },
           { status: 500 },
         );
+  }),
+  http.get("*/api/v1/batteries/:id/advisor", ({ request }) => {
+    const q = new URL(request.url).searchParams;
+    const key = `${q.get("eol_pct") ?? ""}|${q.get("start_soh_pct") ?? ""}`;
+    const body = ADVISOR[key];
+    return body
+      ? HttpResponse.json(body)
+      : apiError(500, "test_fixture_missing", `No fixture for advisor ${key}`);
   }),
   http.get("*/api/v1/batteries/:id/scenarios", () =>
     HttpResponse.json({ items: scenarioStore }),

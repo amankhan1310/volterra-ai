@@ -31,6 +31,11 @@ export const queryKeys = {
     ["batteries", batteryId, "simulate", params] as const,
   scenarios: (batteryId: string) =>
     ["batteries", batteryId, "scenarios"] as const,
+  advisor: (
+    batteryId: string,
+    eolPct: number | undefined,
+    startSohPct: number | undefined,
+  ) => ["batteries", batteryId, "advisor", { eolPct, startSohPct }] as const,
 };
 
 const batteryPath = (batteryId: string | undefined) => ({
@@ -292,4 +297,32 @@ export function useScenarioMutations(batteryId: string) {
     onSuccess,
   });
   return { create, rename, remove };
+}
+
+/**
+ * Charging Advisor rows for the shared EOL threshold and initial SOH (D1). Waits until both are
+ * known; the previous rows stay on screen while new parameters load.
+ */
+export function useAdvisor(
+  batteryId: string,
+  eolPct: number | undefined,
+  startSohPct: number | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.advisor(batteryId, eolPct, startSohPct),
+    queryFn: () =>
+      request(() =>
+        api.GET("/api/v1/batteries/{battery_id}/advisor", {
+          params: {
+            ...batteryPath(batteryId),
+            query:
+              eolPct === undefined || startSohPct === undefined
+                ? {}
+                : { eol_pct: eolPct, start_soh_pct: startSohPct },
+          },
+        }),
+      ),
+    enabled: eolPct !== undefined && startSohPct !== undefined,
+    placeholderData: keepPreviousData,
+  });
 }

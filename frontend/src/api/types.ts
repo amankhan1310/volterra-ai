@@ -26,3 +26,5 @@ export type TemperatureBand = Twin["temperature_band"];
 export type Simulation = Schemas["SimulateResponse"];
 export type Scenario = Schemas["ScenarioOut"];
 export type Slider = Schemas["SliderOut"];
+export type Advisor = Schemas["AdvisorResponse"];
+export type AdvisorRow = Schemas["AdvisorRowOut"];

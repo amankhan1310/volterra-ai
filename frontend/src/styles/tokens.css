@@ -29,7 +29,7 @@
 
   /* Literal colours the legacy redesign used outside its token block */
   --bd-strong: #2a3b57;
-  --group-label: #5d6c82;
+  --group-label: #6e7d93; /* legacy #5d6c82 was 3.6:1 on the sidebar; now 4.6:1 (AA) */
   --side-glass: rgba(10, 14, 21, 0.95);
   --on-accent: #04141a;
   --on-danger: #1a0509;

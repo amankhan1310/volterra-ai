@@ -100,3 +100,14 @@ in `backend/tests/golden/` describe v1 and are never modified.
   reported within 10 cycles after it happens.
 - Limitation: causal mode needs about 80 cycles of history before it can judge a cycle.
 - Regression test: `backend/tests/v2/test_f7_causal.py`.
+
+### F5 — The fade insight follows the numbers
+
+- **v1 (unchanged):** the second insight always says "Fade is accelerating", whatever the slopes.
+  (Dormant on `synthetic-v1`, where fade really did accelerate, but wrong for slowing fade.)
+- **v2:** `app/analytics/insights_v2.py` classifies the current fade against the first-half fade
+  with one explicit rule: ratio above 1.2 → **accelerating** (kind `watch`), below 1/1.2 →
+  **slowing**, otherwise **steady**. The Overview acceleration note uses the same rule, so the two
+  cannot disagree. The model insight describes the interim quadratic forecast and its bias.
+- Regression test: `backend/tests/v2/test_f5_insights.py` (one test per rule, including the
+  boundaries).

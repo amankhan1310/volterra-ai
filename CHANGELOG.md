@@ -68,3 +68,18 @@ in `backend/tests/golden/` describe v1 and are never modified.
   evaluated. Result on `synthetic-v1`: temperature 90, 170, 251 and voltage 130, 271, i.e.
   precision and recall 1.0 on the labelled injections (v1 temperature recall 1/3).
 - Regression test: `backend/tests/v2/test_f1_anomalies.py`.
+
+### F2 — No false capacity steps, and real steps are still detected
+
+- **v1 (unchanged):** robust z of the SOH residual from a centred rolling median. No steps are
+  injected in `synthetic-v1`, yet cycles 125, 127, 254, 315 and 319 are flagged (|residual|
+  0.32–0.36 SOH points vs noise of about 0.11; 315 and 319 are truncated-window edge effects).
+- **v2:** a capacity-step detector: the median of the next 10 cycles minus the level a robust
+  (Theil–Sen) line through the previous 10 cycles predicts. A step must be at least **0.5 SOH
+  points** (about 4.6× the noise) and have robust |z| > 3.5; one event per step. Cycles without
+  10 cycles on each side are not evaluated. Result: nothing flagged on `synthetic-v1`; an
+  injected sustained 1.0-point step is found once, within 4 cycles of its onset, wherever it is
+  placed (tested at cycles 60–300); a 0.3-point step is not reported.
+- Note: a rolling-median residual (v1) cannot see a sustained step at all, so the v2 channel
+  measures level changes ("Capacity step", unit SOH pts).
+- Regression test: `backend/tests/v2/test_f2_capacity_steps.py`.

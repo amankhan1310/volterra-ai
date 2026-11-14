@@ -9,9 +9,10 @@ vi.mock("../components/charts/echarts", () => import("./echartsMock"));
 
 installMatchMedia();
 
-// Pages are lazy-loaded routes; under a parallel test run the first import can exceed the
-// 1 s default for findBy*/waitFor.
-configure({ asyncUtilTimeout: 3000 });
+// Pages are lazy-loaded routes. Under the full parallel run with v8 coverage, the first test of a
+// file waits for that page's cold transform, which can exceed the 1 s default for findBy*/waitFor
+// (and, from M5's 19 files, 3 s). Only the wait is longer; a missing element still fails.
+configure({ asyncUtilTimeout: 10000 });
 
 beforeAll(() => {
   // Any request without a handler is a test bug: fail loudly instead of hitting the network.

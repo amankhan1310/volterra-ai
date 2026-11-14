@@ -13,13 +13,22 @@ by construction; on real cells, extrapolating a quadratic far ahead can bend too
 upwards. It is a stop-gap until Phase 7 compares properly validated degradation models on
 held-out cells (ARCHITECTURE_PLAN.md §9.2-9.3). v1 stays unchanged and is the API default.
 
+**F3 (prediction interval).** v1's "95% fit interval" re-runs RUL with slope ± 1.96·SE: it
+ignores intercept error, residual noise and model-form error, so it is about 2.6 cycles wide
+while the backtest error implies about ±11. v2 calibrates a **90% prediction interval** from
+repeated historical backtests of this battery: the quadratic is refitted at every past origin,
+its actual errors are collected per forecast horizon, and the 5% and 95% error quantiles bound
+the forecast path. The interval is only claimed up to horizons with at least
+``MIN_ORIGINS_PER_HORIZON`` backtests. **Calibration uses this battery's own history; it does not
+establish coverage across batteries** (that needs held-out cells, Phase 6-7).
+
 Standard library only; sums use ``jsmath`` (source-hygiene rule).
 """
 
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import ClassVar
 
@@ -210,3 +219,115 @@ def run_backtest_v2(
         mean_signed_error=sum_from_zero(p.predicted_soh_pct - p.observed_soh_pct for p in points)
         / len(points),
     )
+
+
+# --- F3: calibrated prediction interval -------------------------------------------------------
+
+INTERVAL_LEVEL_V2 = 0.90
+INTERVAL_METHOD_V2 = "rolling_origin_backtest_quantiles"
+INTERVAL_LABEL_V2 = "90% prediction interval"
+#: A horizon is calibrated only if at least this many historical backtests reach it.
+MIN_ORIGINS_PER_HORIZON = 30
+
+
+@dataclass(frozen=True)
+class ForecastErrors:
+    """Errors (observed - predicted) of repeated historical backtests, by horizon in cycles.
+
+    Each entry is ``(origin_cycle, error)``. Horizons count positions in the record sequence.
+    """
+
+    by_horizon: Mapping[int, tuple[tuple[int, float], ...]]
+    window: int
+
+    def calibrated_horizon(self, min_origins: int = MIN_ORIGINS_PER_HORIZON) -> int:
+        """Largest horizon with at least ``min_origins`` backtests (0 if none)."""
+        ok = [h for h, errs in self.by_horizon.items() if len(errs) >= min_origins]
+        return max(ok) if ok else 0
+
+
+def rolling_origin_errors(
+    records: Sequence[CycleRecord], window: int = RECENT_WINDOW_CYCLES
+) -> ForecastErrors:
+    """Refit the v2 quadratic at every past origin and record its errors at every horizon."""
+    cycles = [r.cycle for r in records]
+    soh = [r.soh_pct for r in records]
+    acc: dict[int, list[tuple[int, float]]] = {}
+    for k in range(window - 1, len(records) - 1):
+        lo = k - window + 1
+        fit = quad_fit(cycles[lo : k + 1], soh[lo : k + 1], origin=cycles[k])
+        for j in range(k + 1, len(records)):
+            acc.setdefault(j - k, []).append((cycles[k], soh[j] - fit.ahead(j - k)))
+    return ForecastErrors({h: tuple(v) for h, v in acc.items()}, window)
+
+
+def empirical_quantile(values: Sequence[float], p: float) -> float:
+    """Conformal-rank quantile: the ``ceil(p·(m+1))``-th smallest value, clamped to the sample."""
+    if not values:
+        raise ValueError("no values")
+    s = sorted(values)
+    idx = math.ceil(p * (len(s) + 1)) - 1
+    return s[min(len(s) - 1, max(0, idx))]
+
+
+@dataclass(frozen=True)
+class PredictionIntervalV2:
+    """RUL bounds; ``None`` when the bound lies beyond the calibrated horizon."""
+
+    lower: float | None
+    upper: float | None
+    max_calibrated_horizon: int
+    level: float = INTERVAL_LEVEL_V2
+    method: str = INTERVAL_METHOD_V2
+    label: str = INTERVAL_LABEL_V2
+
+    provenance: ClassVar[Provenance] = "predicted"
+
+
+def rul_interval_v2(
+    trend: TrendSummaryV2,
+    errors: ForecastErrors,
+    eol_pct: float,
+    level: float = INTERVAL_LEVEL_V2,
+) -> PredictionIntervalV2:
+    """First cycle at which the lower (upper) error band of the forecast reaches ``eol_pct``."""
+    hmax = errors.calibrated_horizon()
+    if trend.soh_now_pct <= eol_pct:
+        return PredictionIntervalV2(lower=0.0, upper=0.0, max_calibrated_horizon=hmax)
+    tail = (1 - level) / 2
+    lower: float | None = None
+    upper: float | None = None
+    for t in range(1, hmax + 1):
+        errs = [e for _, e in errors.by_horizon[t]]
+        path = trend.fit.ahead(t)
+        if lower is None and path + empirical_quantile(errs, tail) <= eol_pct:
+            lower = float(t)
+        if path + empirical_quantile(errs, 1 - tail) <= eol_pct:
+            upper = float(t)
+            break
+    return PredictionIntervalV2(lower=lower, upper=upper, max_calibrated_horizon=hmax)
+
+
+def held_out_coverage(
+    errors: ForecastErrors, split_origin: int, level: float = INTERVAL_LEVEL_V2
+) -> tuple[float, int]:
+    """Calibrate on origins <= ``split_origin``, score backtests from later origins.
+
+    Returns ``(coverage, n_scored)``: the share of later errors inside the earlier quantiles, for
+    horizons with at least ``MIN_ORIGINS_PER_HORIZON`` calibration backtests.
+    """
+    tail = (1 - level) / 2
+    inside = 0
+    scored = 0
+    for errs in errors.by_horizon.values():
+        cal = [e for k, e in errs if k <= split_origin]
+        if len(cal) < MIN_ORIGINS_PER_HORIZON:
+            continue
+        lo, hi = empirical_quantile(cal, tail), empirical_quantile(cal, 1 - tail)
+        for k, e in errs:
+            if k > split_origin:
+                scored += 1
+                inside += 1 if lo <= e <= hi else 0
+    if scored == 0:
+        raise ValueError("no backtests to score after split_origin")
+    return inside / scored, scored

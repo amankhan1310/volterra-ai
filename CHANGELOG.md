@@ -5,6 +5,17 @@ original prototype exactly (including the known defects F1–F8 in `ARCHITECTURE
 is permanent, and stays the API default. **v2** holds the corrected methods. The golden fixtures
 in `backend/tests/golden/` describe v1 and are never modified.
 
+## [Unreleased] — Phase 6 M4: CALCE and Severson loaders, canonical schema v2
+
+No analytics, API or frontend change; the development database is unchanged.
+
+- Canonical schema v2: nullable cycle columns `internal_resistance_ohm`, `charge_time_s`,
+  `source_ref_json`; migration `0003` adds `cycles.source_ref` (JSONB) and the importer persists it.
+- `python -m volterra_ml.loaders build calce-cs2-cx2` (12 cells, 15,971 cycles) and
+  `build severson-2019` (135 cells: 5 continuations joined, 11 paper-excluded flagged; 114,738
+  cycles). The NASA bundle is rebuilt under v2.
+- The importer refuses over-long text fields before writing (database column limits).
+
 ## [Unreleased] — Phase 6 M2 + M3: canonical schema, NASA loader, database and importer
 
 No analytics, API or frontend change; the development database is unchanged.

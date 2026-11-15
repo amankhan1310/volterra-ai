@@ -12,16 +12,16 @@ The API contract is committed as [`openapi.json`](openapi.json).
 
 ## Layout
 
-| Path             | Contents                                                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `app/analytics/` | v1 algorithms (Phase 2, unchanged), `twin.py` (Phase 3), `*_v2.py` (Phase 5)                                              |
-| `app/db/`        | SQLAlchemy models, async session, repositories, `synthetic-v1` seed, real-dataset importer (`import_dataset.py`, Phase 6) |
-| `app/schemas/`   | Pydantic request/response models (the public contract)                                                                    |
-| `app/services/`  | `analysis` (cached `analyze()` / `analyze_v2()`), `simulation`, mappers                                                   |
-| `app/api/v1/`    | Routers: health, datasets, analysis, monitoring, simulator, scenarios                                                     |
-| `app/core/`      | Settings (secrets as `SecretStr`) and the error envelope                                                                  |
-| `alembic/`       | Async migration environment; `versions/0001_initial_schema.py`, `0002_real_dataset_provenance.py`                         |
-| `tests/`         | parity, unit, api, db (PostgreSQL) and `v2` (Phase 5 fixes) suites                                                        |
+| Path             | Contents                                                                                                                      |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `app/analytics/` | v1 algorithms (Phase 2, unchanged), `twin.py` (Phase 3), `*_v2.py` (Phase 5)                                                  |
+| `app/db/`        | SQLAlchemy models, async session, repositories, `synthetic-v1` seed, real-dataset importer (`import_dataset.py`, Phase 6)     |
+| `app/schemas/`   | Pydantic request/response models (the public contract)                                                                        |
+| `app/services/`  | `analysis` (cached `analyze()` / `analyze_v2()`), `simulation`, mappers                                                       |
+| `app/api/v1/`    | Routers: health, datasets, analysis, monitoring, simulator, scenarios                                                         |
+| `app/core/`      | Settings (secrets as `SecretStr`) and the error envelope                                                                      |
+| `alembic/`       | Async migration environment; `versions/0001_initial_schema.py`, `0002_real_dataset_provenance.py`, `0003_cycle_source_ref.py` |
+| `tests/`         | parity, unit, api, db (PostgreSQL) and `v2` (Phase 5 fixes) suites                                                            |
 
 v1 reproduces the prototype exactly, including known defects F1–F8 (strict expected-failure tests
 in `tests/parity/test_known_defects.py`, which keep failing for v1). Phase 5 added the fixes as

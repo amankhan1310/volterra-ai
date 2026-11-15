@@ -558,6 +558,33 @@ Branch: `feat/phase-6-m2-m3-schema-nasa-import` (M2 and M3 combined, as approved
   will get data views only (D4).
 - Dependencies: `numpy`, `scipy`, `pyarrow` in `ml/`; `pyarrow` in `backend/` (D6).
 
+### Milestone 4 — CALCE and Severson loaders, canonical schema v2 (2026-11-16)
+
+Branch: `feat/phase-6-m4-m5-m6-real-datasets` (M4, M5 and M6 combined, as approved; decisions
+A–E).
+
+- **Canonical schema v2:** cycles gain `internal_resistance_ohm`, `charge_time_s` and
+  `source_ref_json` (where each cycle comes from: archive member, worksheet rows or batch entry).
+  The NASA bundle was rebuilt as v2 (34 batteries, 2,794 cycles; values unchanged).
+- **CALCE loader** (`build calce-cs2-cx2`, about 100 s): 12 cells, 414 Arbin workbooks ordered
+  by first sample time, **15,971 discharge cycles**, 4,873,533 sample rows. Two duplicated
+  workbooks are recorded and skipped; one empty source cell is null and flagged; CX2_33's three
+  `.txt` exports are recorded but not converted (decision C). No temperature channel exists, so
+  temperature stays null (D3). A rebuild is byte-identical; every sample and capacity matches the
+  workbooks (local real-data tests).
+- **Severson loader** (`build severson-2019`, about 11 min): **135 cells** from the three batch
+  files, the five batch-2 continuations joined onto batch 1 and the paper's 11 excluded cells
+  flagged, not dropped (decision A); **114,738 cycles**, 111,868,738 sample rows (4.0 GB).
+  Internal resistance, charge time and temperatures come from the per-cycle summaries.
+- **Migration `0003` (additive):** nullable JSONB `cycles.source_ref`. The importer checks text
+  lengths before writing and persists `source_ref`, resistance and charge time.
+- **End to end (disposable database):** NASA 34 batteries / 2,769 cycles, Severson 135 / 114,692
+  cycles, CALCE 12 batteries / 0 cycles (temperature is still required by the database; relaxing
+  that is M5), `source_ref` on every imported cycle, re-imports unchanged.
+- Dependencies (ml only): `h5py` (Severson MATLAB v7.3 files) and `python-calamine` (xlsx).
+- The development database is unchanged (migration 0002, synthetic only); upgrading it and
+  importing real data need separate approval.
+
 ## Next
 
-Phase 6 M4 (CALCE and Severson loaders), only after the M2+M3 review and with approval.
+Phase 6 M5 (real-data backend integration), then M6 (real-data frontend), on the same branch.

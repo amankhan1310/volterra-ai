@@ -69,8 +69,30 @@ Energy 4, 383–391 (2019), doi:10.1038/s41560-019-0356-8; data from <https://da
 example into per-cycle summaries). The same attribution is recorded in the registry and in
 `MANIFEST.json`.
 
-## Notes for M2 (parsing; not done in M1)
+## Conversion (Phase 6 M4)
 
-- The paper and the authors' processing notebooks (`BuildPkl_Batch1-3.ipynb`) describe cells
-  that are excluded or combined across batches. Check the exact list against those sources in
-  M2; import all cells and flag exclusions rather than dropping them (decision D10).
+`python -m volterra_ml.loaders build severson-2019` (about 10 min, one cell at a time, ~150 MB
+peak) writes `processed/severson-2019/2019-03-11/`: **135 batteries**, 114,738 canonical cycles,
+111,868,738 sample rows (4.0 GB). Verified structure: a `batch` struct per file (46 + 48 + 46 =
+140 entries); per-cycle `summary` (`QDischarge`, `QCharge`, `IR`, `Tavg`, `Tmin`, `Tmax`,
+`chargetime` in minutes, `cycle`); per-sample `cycles` (`t` in minutes, `V`, `I`, `T`, `Qc`,
+`Qd`).
+
+- **Decision A**, following the authors' `Load Data.ipynb`: batch-2 entries b2c7, b2c8, b2c9,
+  b2c15 and b2c16 continue b1c0..b1c4 and are joined to them (flag `joined_segments`; each cycle's
+  `source_ref_json` names its segment), so 140 entries become 135 batteries with no cycle
+  dropped. The 11 cells the authors exclude (b1c8, b1c10, b1c12, b1c13, b1c22: "do not reach
+  80% capacity"; b3c2, b3c23, b3c32, b3c37, b3c42, b3c43: "noisy channels") are kept and flagged
+  `paper_excluded`.
+- Per-cycle capacity, temperatures, internal resistance and charge time (× 60) are the source's
+  summary values; voltage and current statistics come from the discharge samples (current < 0).
+  The files carry no absolute timestamps (`start_time_local` null). Chemistry is stored as
+  `LiFePO4/graphite` with the cell model (A123 APR18650M1A) in the test conditions.
+- Every batch-1 cell's first cycle reports 0 Ah and no samples (46 `capacity_zero` +
+  `empty_samples`); `first_capacity_ah` is the first positive capacity. Other flags: 95
+  `time_not_increasing`, 21 `capacity_jump_up`, 4 `capacity_above_rated` (incl. one 1.539 Ah
+  outlier), 1 `voltage_above_4_5v`. `barcode`/`channel_id` are opaque MATLAB objects and are not
+  decoded; the authors' interpolated `Qdlin`/`Tdlin`/`dQdV` stay in the raw files.
+- 114,692 cycles have every value the database currently requires; the 46 empty first cycles
+  stay in Parquet. The local `test_severson_realdata.py` compares every cycle's summary values
+  for all 135 cells and every sample of three cells (joined, excluded, regular) with the source.

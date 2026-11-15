@@ -4,9 +4,9 @@ The `volterra_ml` package: dataset acquisition, the canonical battery-data schem
 loaders; feature engineering, models, anomaly detectors, simulator calibration and evaluation
 follow in later phases ([`../ARCHITECTURE_PLAN.md`](../ARCHITECTURE_PLAN.md) §9).
 
-**Status:** Phase 6 M1–M3. `volterra_ml.acquisition` downloads and verifies the raw datasets;
-`volterra_ml.canonical` defines the schema, validation rules and Parquet bundles;
-`volterra_ml.loaders` converts NASA PCoE (CALCE and Severson follow in M4). Datasets, processed
+**Status:** Phase 6 M1–M4. `volterra_ml.acquisition` downloads and verifies the raw datasets;
+`volterra_ml.canonical` defines the schema (version 2), validation rules and Parquet bundles;
+`volterra_ml.loaders` converts NASA PCoE, CALCE CS2/CX2 and Severson 2019. Datasets, processed
 bundles and trained models are never committed.
 
 ## Dataset acquisition
@@ -30,6 +30,8 @@ atomically, and refuses any destination Git could track.
 
 ```sh
 uv run python -m volterra_ml.loaders build nasa-pcoe-battery   # raw -> processed/<slug>/<version>
+uv run python -m volterra_ml.loaders build calce-cs2-cx2       # ~100 s
+uv run python -m volterra_ml.loaders build severson-2019       # ~10 min, cell by cell
 uv run python -m volterra_ml.loaders verify nasa-pcoe-battery  # re-hash the bundle
 ```
 

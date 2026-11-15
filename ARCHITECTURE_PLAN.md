@@ -392,7 +392,7 @@ erDiagram
 
 All tables have `id` (UUID, or BIGINT identity for `cycles`) and `created_at` / `updated_at` `timestamptz`.
 
-**Implementation status:** this is the target schema. Phase 3 implemented four tables (`datasets`, `batteries`, `cycles`, `scenarios`) in Alembic migration `0001`; the other tables are added by the phase that first needs them, each through a new migration. Numeric measurements are `DOUBLE PRECISION` (IEEE-754 binary64) so values round-trip bit-exactly between Python, PostgreSQL and the v1 analytics; `NUMERIC` would alter the binary value. Where the tables below differ from the implemented ones, migration `0001` and `backend/app/db/models.py` are authoritative.
+**Implementation status:** this is the target schema. Phase 3 implemented four tables (`datasets`, `batteries`, `cycles`, `scenarios`) in Alembic migration `0001`; the other tables are added by the phase that first needs them, each through a new migration. Numeric measurements are `DOUBLE PRECISION` (IEEE-754 binary64) so values round-trip bit-exactly between Python, PostgreSQL and the v1 analytics; `NUMERIC` would alter the binary value. Phase 6 M3 added `dataset_files` and provenance columns in migration `0002` (additive; see `docs/datasets/canonical-schema.md`). Where the tables below differ from the implemented ones, the migrations and `backend/app/db/models.py` are authoritative.
 
 **`datasets`** — a source collection.
 `name`, `source` (`nasa_pcoe|calce|severson|upload|synthetic`), `version`, `licence`, `citation`, `description`, `status` (`registered|importing|ready|failed`), `checksum`, `meta JSONB`.

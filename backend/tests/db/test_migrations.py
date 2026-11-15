@@ -21,6 +21,18 @@ from tests.support.migrations import alembic_config
 pytestmark = pytest.mark.db
 
 PHASE_3_TABLES = {"alembic_version", "batteries", "cycles", "datasets", "scenarios"}
+HEAD_TABLES = PHASE_3_TABLES | {"dataset_files"}  # 0002 (Phase 6 M3)
+PHASE_6_COLUMNS = {
+    "datasets": {"publisher", "landing_url", "doi"},
+    "batteries": {
+        "chemistry_basis",
+        "soh_reference",
+        "soh_reference_capacity_ah",
+        "first_capacity_ah",
+        "first_capacity_cycle_index",
+    },
+    "cycles": {"source_cycle_index"},
+}
 T = TypeVar("T")
 
 
@@ -50,11 +62,34 @@ def test_upgrade_downgrade_upgrade_round_trip(empty_database_url: str) -> None:
     assert_disposable(empty_database_url)
     config = alembic_config(empty_database_url)
     command.upgrade(config, "head")
-    assert run(empty_database_url, table_names) == PHASE_3_TABLES
+    assert run(empty_database_url, table_names) == HEAD_TABLES
     command.downgrade(config, "base")
     assert run(empty_database_url, table_names) == {"alembic_version"}
     command.upgrade(config, "head")
+    assert run(empty_database_url, table_names) == HEAD_TABLES
+
+
+def columns(conn: Connection) -> dict[str, set[str]]:
+    insp = inspect(conn)
+    return {
+        t: {c["name"] for c in insp.get_columns(t)} for t in ("datasets", "batteries", "cycles")
+    }
+
+
+def test_0002_is_additive_and_downgrades_to_the_exact_phase_3_schema(
+    empty_database_url: str,
+) -> None:
+    assert_disposable(empty_database_url)
+    config = alembic_config(empty_database_url)
+    command.upgrade(config, "0001")
+    phase_3 = run(empty_database_url, columns)
+    command.upgrade(config, "0002")
+    head = run(empty_database_url, columns)
+    for table, added in PHASE_6_COLUMNS.items():
+        assert head[table] == phase_3[table] | added, table
+    command.downgrade(config, "0001")
     assert run(empty_database_url, table_names) == PHASE_3_TABLES
+    assert run(empty_database_url, columns) == phase_3
 
 
 def test_migrated_schema_matches_the_models(migrated_database_url: str) -> None:

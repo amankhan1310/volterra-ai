@@ -22,7 +22,8 @@ for architecture, phases and conventions; **`PROJECT_STATUS.md`** records progre
 - `frontend/`: React 19 + TypeScript app (Vite 8, React Router 7, TanStack Query 5); unit tests
   in `src/**/*.test.tsx`, Playwright suites in `frontend/e2e/`.
 - `data/`, `artifacts/`: git-ignored. Never commit datasets, model binaries or `.env`. Real
-  datasets live in `$VOLTERRA_DATA_DIR/raw/<slug>/<version>/` with a `MANIFEST.json`; raw files
+  datasets live in `$VOLTERRA_DATA_DIR/raw/<slug>/<version>/` with a `MANIFEST.json` (canonical
+  Parquet bundles in `processed/`, contract in `docs/datasets/canonical-schema.md`); raw files
   are read-only and are never modified, redistributed or committed.
 
 ## Working rules
@@ -69,6 +70,8 @@ cd backend && uv run alembic upgrade head && uv run python -m app.db.seed   # de
 cd backend && uv run uvicorn --factory app.main:create_app --reload      # API on :8000
 cd ml && uv sync --locked && uv run mypy && uv run pytest   # ml package (coverage gate 85%)
 cd ml && uv run python -m volterra_ml.acquisition verify --all   # raw datasets vs MANIFEST + pins
+cd ml && uv run python -m volterra_ml.loaders build nasa-pcoe-battery   # raw -> canonical Parquet bundle
+cd backend && uv run python -m app.db.import_dataset <bundle-dir>   # bundle -> PostgreSQL (one transaction)
 cd frontend && npm ci && npm run dev       # React app on :5173 (proxies /api to :8000)
 cd frontend && npm run api:types:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build
 cd frontend && PW_CHANNEL=msedge npm run e2e   # E2E + axe + legacy parity (API :8000, legacy :8080)

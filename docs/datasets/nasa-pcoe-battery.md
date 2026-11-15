@@ -53,10 +53,41 @@ Data acquisition rate is about 10 Hz (publisher). Discharges ran at different cu
 preset voltage thresholds, some below the 2.7 V OEM recommendation; experiments stopped at 30%
 fade in rated capacity.
 
-## Notes for M2 (parsing; not done in M1)
+## Verified structure (Phase 6 M2, from the files themselves)
 
-- B0025–B0028 exist in two groups: compare the two copies and record which one is used.
-- Capacity regeneration after rest periods is widely reported for this data set (ARCHITECTURE_PLAN
-  §9.1); detect and flag it in M2, never remove it.
-- The v1/v2 analytics need at least 221 cycles. Cells with fewer discharge cycles (to be counted
-  in M2) get the data views only (decision D4).
+Where the files differ from the published description above, the files win:
+
+- All 38 files are **MATLAB 5.0** MAT-files. B0025–B0028 in groups 2 and 3 are
+  **byte-identical** (same SHA-256): one copy is converted, both locations are recorded.
+- Discharge data uses `Current_load` / `Voltage_load` (not `Current_charge` / `Voltage_charge`);
+  impedance data uses `Rectified_Impedance`. `ambient_temperature` is given **per cycle** and
+  varies within some cells (B0042–B0044: 4, 22 and 24 °C).
+- The group READMEs state each cell's charge protocol, discharge current or profile, cut-off
+  voltage, ambient temperature and stop criterion; they are stored verbatim with each battery.
+- 2,794 discharge cycles, 2,815 charge cycles and 1,956 impedance records across 34 cells.
+  Discharge cycles per cell range from 25 (B0049–B0052) to 197 (B0033, B0034, B0036), so **no
+  NASA cell reaches the 221 cycles the v1/v2 analytics need**: all get data views only (D4).
+
+Quality findings, flagged and kept (`quality_report.json`, see the
+[canonical schema](canonical-schema.md)):
+
+| Finding                                                                                | Cycles |
+| -------------------------------------------------------------------------------------- | ------ |
+| `Capacity` field empty (B0050: 4, B0052: 21); capacity and SOH stay null, not imported | 25     |
+| Capacity exactly 0 Ah (NASA: "several discharge runs where the capacity was very low") | 19     |
+| Capacity above the rated 2.0 Ah                                                        | 11     |
+| Capacity more than 0.05 Ah above the previous measured cycle (e.g. after rest periods) | 100    |
+| Discharge going below 1.5 V (failed runs) / above 4.5 V                                | 36 / 3 |
+| Charge cycles with non-finite samples (stored as null)                                 | 25     |
+| Impedance fits where `Re` and `Rct` are complex conjugates (both parts kept)           | 9      |
+
+The source `time` vectors carry no timezone, so start times are kept as local text and the
+database `start_time` stays null.
+
+## Converted bundle (M2) and import (M3)
+
+`python -m volterra_ml.loaders build nasa-pcoe-battery` converts the verified archive in about
+20 s into `processed/nasa-pcoe-battery/2022-09-18/` (105 files, 226 MB): 34 batteries, 2,794
+canonical discharge cycles (2,769 with every analysis input), all charge and discharge samples
+(bit for bit) and all impedance records. `python -m app.db.import_dataset` imports the 34
+batteries and 2,769 cycles; the 25 cycles without capacity remain in Parquet only.

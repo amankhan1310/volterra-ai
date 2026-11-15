@@ -24,10 +24,28 @@ def offline_sql(revision: str, *, downgrade: bool = False) -> str:
     return buffer.getvalue()
 
 
-def test_single_linear_history_with_head_0001() -> None:
+def test_single_linear_history_with_head_0002() -> None:
     script = ScriptDirectory.from_config(alembic_config(OFFLINE_URL))
-    assert script.get_heads() == ["0001"]
-    assert [r.revision for r in script.walk_revisions()] == ["0001"]
+    assert script.get_heads() == ["0002"]
+    assert [r.revision for r in script.walk_revisions()] == ["0002", "0001"]
+
+
+def test_offline_0002_is_additive_only() -> None:
+    sql = offline_sql("0001:0002")
+    assert "CREATE TABLE dataset_files" in sql
+    assert sql.count("ALTER TABLE") >= 9 and "ADD COLUMN" in sql
+    # Only Alembic's own version bookkeeping may update a row; no existing data is touched.
+    lines = [s.strip() for s in sql.splitlines()]
+    data_changes = [
+        s
+        for s in lines
+        if s.startswith(("UPDATE ", "DELETE FROM", "DROP ", "TRUNCATE"))
+        and not s.startswith("UPDATE alembic_version ")
+    ]
+    assert data_changes == []
+    assert "ALTER COLUMN" not in sql and "SET NOT NULL" not in sql
+    down = offline_sql("0002:0001", downgrade=True)
+    assert "DROP TABLE dataset_files" in down and "CREATE TABLE" not in down
 
 
 def test_offline_upgrade_emits_the_phase_3_schema() -> None:

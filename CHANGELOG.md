@@ -5,6 +5,20 @@ original prototype exactly (including the known defects F1–F8 in `ARCHITECTURE
 is permanent, and stays the API default. **v2** holds the corrected methods. The golden fixtures
 in `backend/tests/golden/` describe v1 and are never modified.
 
+## [Unreleased] — Phase 6 M2 + M3: canonical schema, NASA loader, database and importer
+
+No analytics, API or frontend change; the development database is unchanged.
+
+- Canonical battery-data schema v1 (`docs/datasets/canonical-schema.md`) with deterministic
+  validation flags; missing measurements stay null.
+- `python -m volterra_ml.loaders build nasa-pcoe-battery`: verified NASA archive → deterministic
+  Parquet bundle (34 cells, 2,794 discharge cycles, all samples and impedance records).
+- Migration `0002` (additive): `dataset_files` table; provenance columns on `datasets`
+  (`publisher`, `landing_url`, `doi`), `batteries` (`chemistry_basis`, `soh_reference`,
+  `soh_reference_capacity_ah`, `first_capacity_ah`, `first_capacity_cycle_index`) and `cycles`
+  (`source_cycle_index`).
+- `python -m app.db.import_dataset`: verified, transactional, idempotent bundle import.
+
 ## [Unreleased] — Phase 6 M1: dataset acquisition and provenance
 
 No analytics, API, database or frontend change. New tooling only:

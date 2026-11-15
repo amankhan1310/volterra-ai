@@ -12,16 +12,16 @@ The API contract is committed as [`openapi.json`](openapi.json).
 
 ## Layout
 
-| Path             | Contents                                                                     |
-| ---------------- | ---------------------------------------------------------------------------- |
-| `app/analytics/` | v1 algorithms (Phase 2, unchanged), `twin.py` (Phase 3), `*_v2.py` (Phase 5) |
-| `app/db/`        | SQLAlchemy models, async session, repositories, `synthetic-v1` seed          |
-| `app/schemas/`   | Pydantic request/response models (the public contract)                       |
-| `app/services/`  | `analysis` (cached `analyze()` / `analyze_v2()`), `simulation`, mappers      |
-| `app/api/v1/`    | Routers: health, datasets, analysis, monitoring, simulator, scenarios        |
-| `app/core/`      | Settings (secrets as `SecretStr`) and the error envelope                     |
-| `alembic/`       | Async migration environment and `versions/0001_initial_schema.py`            |
-| `tests/`         | parity, unit, api, db (PostgreSQL) and `v2` (Phase 5 fixes) suites           |
+| Path             | Contents                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `app/analytics/` | v1 algorithms (Phase 2, unchanged), `twin.py` (Phase 3), `*_v2.py` (Phase 5)                                              |
+| `app/db/`        | SQLAlchemy models, async session, repositories, `synthetic-v1` seed, real-dataset importer (`import_dataset.py`, Phase 6) |
+| `app/schemas/`   | Pydantic request/response models (the public contract)                                                                    |
+| `app/services/`  | `analysis` (cached `analyze()` / `analyze_v2()`), `simulation`, mappers                                                   |
+| `app/api/v1/`    | Routers: health, datasets, analysis, monitoring, simulator, scenarios                                                     |
+| `app/core/`      | Settings (secrets as `SecretStr`) and the error envelope                                                                  |
+| `alembic/`       | Async migration environment; `versions/0001_initial_schema.py`, `0002_real_dataset_provenance.py`                         |
+| `tests/`         | parity, unit, api, db (PostgreSQL) and `v2` (Phase 5 fixes) suites                                                        |
 
 v1 reproduces the prototype exactly, including known defects F1–F8 (strict expected-failure tests
 in `tests/parity/test_known_defects.py`, which keep failing for v1). Phase 5 added the fixes as
@@ -47,6 +47,30 @@ uv run uvicorn --factory app.main:create_app --reload
 
 `backend/.env` is git-ignored. Settings hold the database URL as a secret, so it never appears
 in logs or error messages.
+
+## Importing real datasets (Phase 6)
+
+Real datasets arrive as canonical Parquet bundles built by `volterra_ml`
+(see [`../docs/datasets/canonical-schema.md`](../docs/datasets/canonical-schema.md)):
+
+```sh
+uv run alembic upgrade head    # migration 0002 adds dataset_files and provenance columns
+uv run python -m app.db.import_dataset "$VOLTERRA_DATA_DIR/processed/nasa-pcoe-battery/2022-09-18"
+```
+
+The importer re-hashes the bundle, checks every column against the contract and every row
+against the database rules, then imports in **one transaction**: the dataset with its
+publisher, licence, citation and DOI; batteries with their source identifiers, SOH reference and
+first measured capacity; the cycles that have every analysis input (with source position and
+quality flags); and every raw and processed file (path relative to the data directory, size,
+SHA-256). Re-importing the same bundle is a no-op; a changed bundle updates batteries in place
+(scenarios stay attached). Invalid bundles, a dataset with another source under the same slug,
+or batteries that would disappear are refused before anything is written. The synthetic dataset
+can never be overwritten. Dataset paths are stored relative to `VOLTERRA_DATA_DIR`.
+
+Real batteries are listed by the API like any other battery, so importing into the development
+database changes which battery the frontend opens first; until the API and UI become real-data
+aware (Phase 6 M5/M6), imports are exercised on disposable test databases.
 
 ## API overview (`/api/v1`)
 

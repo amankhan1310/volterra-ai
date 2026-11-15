@@ -12,14 +12,14 @@ scenario simulation.
 
 ## Repository layout
 
-| Path        | Contents                                                                  |
-| ----------- | ------------------------------------------------------------------------- |
-| `legacy/`   | The original static browser prototype (reference implementation).         |
-| `frontend/` | React + TypeScript single-page app (see its README).                      |
-| `backend/`  | FastAPI API, PostgreSQL models/migrations, v1 analytics (see its README). |
-| `ml/`       | `volterra_ml` package: data loaders, features, models _(scaffold only)_.  |
-| `infra/`    | `docker-compose.yml` for an optional local PostgreSQL 16.                 |
-| `.github/`  | CI workflows.                                                             |
+| Path        | Contents                                                                            |
+| ----------- | ----------------------------------------------------------------------------------- |
+| `legacy/`   | The original static browser prototype (reference implementation).                   |
+| `frontend/` | React + TypeScript single-page app (see its README).                                |
+| `backend/`  | FastAPI API, PostgreSQL models/migrations, v1 analytics (see its README).           |
+| `ml/`       | `volterra_ml` package: dataset acquisition (Phase 6 M1); loaders and models follow. |
+| `infra/`    | `docker-compose.yml` for an optional local PostgreSQL 16.                           |
+| `.github/`  | CI workflows.                                                                       |
 
 ## Running the legacy prototype
 

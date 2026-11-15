@@ -10,7 +10,7 @@ Progress against the phases in [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) §
 | 3. DB + API (parity)            | ✅ Complete |
 | 4. React parity                 | ✅ Complete |
 | 5. Correctness fixes (F1–F8)    | ✅ Complete |
-| 6. Real data                    | Not started |
+| 6. Real data                    | In progress |
 | 7. ML models                    | Not started |
 | 8. Calibrated simulator         | Not started |
 | 9. Reports, notifications, auth | Not started |
@@ -441,7 +441,13 @@ Limitations (documented in the code, the changelog and the API descriptions):
   must replace it after validated model comparison on held-out cells.
 - The F3 interval is calibrated from this battery's own history; it does not establish coverage
   across batteries (needs held-out cells, Phase 6–7). Bounds beyond the calibrated horizon (171
-  cycles here) are reported as unknown.
+  cycles here) are reported as unknown. **Accepted limitation (reviewed 2026-11-15):** coverage
+  falls short of 90% because forecast errors grow over a cell's life (calibration on earlier
+  origins understates later errors), mostly at 11–50-cycle horizons (81–85%); short horizons are
+  92–95%. Later split points, not covered by the test, give 84.5% (origin 210) and 85.4% (230),
+  just under the 85% target. The calibrated horizon is the cycle count − 149 (120-cycle window,
+  at least 30 backtests per horizon). Phase 7 replaces this with conformal calibration across
+  held-out cells.
 - Causal anomaly detection needs about 80 cycles of history before it judges a cycle.
 - The simulator's stress coefficients stay assumed (fitting them is Phase 8).
 - The frontend still shows v1; switching the UI to v2 is a separate, later decision.
@@ -459,7 +465,60 @@ Verification (local; Windows; Python 3.10.11; PostgreSQL 16):
   (including prototype parity, axe in both themes and responsive checks) pass against the
   Phase 5 API; production build clean.
 
+Merged as PR #12 (`4499411`, 2026-11-15). Post-merge verification on `main` passed: backend 542
+passed + 8 strict xfail (99.96% coverage), 225 frontend unit and 93 Playwright tests, build,
+golden fixtures; all GitHub Actions workflows green for the PR and the merge commit.
+
+## Phase 6 — Real battery datasets (in progress)
+
+Decisions (approved 2026-11-15; `ARCHITECTURE_PLAN.md` §9–10 still apply):
+
+| #   | Decision                                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | SOH = measured capacity / **rated** capacity (NASA 2.0 Ah, CALCE CS2 1.1 Ah and CX2 1.35 Ah, Severson 1.1 Ah); the basis is stored per battery.   |
+| D2  | `cycles` holds one row per capacity-bearing cycle (discharge for NASA/CALCE, full cycle for Severson); charge and impedance data stay in Parquet. |
+| D3  | Missing measurements stay null (migration `0002` relaxes NOT NULL); analytics return 422 `missing_measurement` instead of imputing.               |
+| D4  | v1/v2 run unchanged on real cells where the data suffices (≥ 221 cycles), labelled "not validated on real cells"; otherwise 422 and data views.   |
+| D5  | User upload, column mapping and the job runner are deferred to a later "6b"; curated datasets are imported by CLI.                                |
+| D6  | `volterra_ml` parses into Parquet bundles; the backend only adds `pyarrow`; no uv workspace yet.                                                  |
+| D7  | Own validation rules plus pyarrow schemas instead of pandera.                                                                                     |
+| D8  | Raw and processed data are never committed or redistributed; CI uses generated fixtures only.                                                     |
+| D9  | Datasets are downloaded to the developer machine (Severson only after explicit approval).                                                         |
+| D10 | Severson: import all 124 cells and flag the paper's exclusions.                                                                                   |
+| D11 | Battery selection by URL parameter, synthetic battery as the default.                                                                             |
+| D12 | F3 stays an acknowledged limitation (see Phase 5) until Phase 7.                                                                                  |
+
+Milestones: **M1** acquisition and provenance · M2 canonical schema and NASA loader · M3 database
+and importer · M4 CALCE and Severson loaders · M5 API · M6 React.
+
+### Milestone 1 — Dataset acquisition and provenance (2026-11-15)
+
+Branch: `feat/phase-6-m1-dataset-acquisition`.
+
+- **Sources verified** against the publishers' own pages, with cards in
+  [`docs/datasets/`](docs/datasets/README.md): NASA PCoE (licence "not specified"), CALCE CS2/CX2
+  ("All Rights Reserved" plus a citation requirement), Severson et al. 2019 (CC BY 4.0, declared
+  by data.matr.io). Chemistry is recorded only where the publisher states it (not for NASA).
+- **Acquisition tool** `python -m volterra_ml.acquisition` (`ml/volterra_ml/acquisition/`,
+  standard library only): `list`, `download` (resume, retries, verification before a file is
+  kept, read-only raw files, `--from-dir` for hand-downloaded files) and `verify` (re-hashes
+  every file against `MANIFEST.json` and the registry pins). It refuses to write anywhere Git
+  could track.
+- **Downloaded and pinned** (16 files, 9.17 GB, in `D:\volterra\data` = `VOLTERRA_DATA_DIR`, each
+  dataset with a `MANIFEST.json`): NASA (1 archive, 209.7 MB, 34 cells) and CALCE (12 archives,
+  695.1 MB), every zip passing its CRC check; Severson (3 MATLAB 7.3/HDF5 files, 8.27 GB,
+  downloaded with approval under CC BY 4.0, sizes equal to the host's metadata). `verify --all`
+  re-hashes all 16 files against the manifests and the pinned SHA-256 values.
+- **CI:** new `ml` workflow (Python 3.10 and 3.12: ruff, strict mypy, pytest with an 85% coverage
+  gate); `test_repository_hygiene.py` fails if any dataset file is tracked. No test downloads
+  data.
+- Nothing in `backend/`, `frontend/` or the database changed.
+
+Development environment: since 2026-11-15 the project lives in `D:\volterra\project` and the data
+in `D:\volterra\data` (copy-first migration, verified file by file; the earlier copy is kept as a
+backup).
+
 ## Next
 
-Phase 6 (real data: NASA → CALCE → Severson loaders, upload and job runner), only after the
-Phase 5 review and merge and with approval.
+Phase 6 M2 (canonical schema, validation and the NASA loader), only after the M1 review and with
+approval.

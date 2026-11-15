@@ -1,11 +1,16 @@
 [project]
 name = "volterra-ml"
 version = "0.1.0"
-description = "VOLTERRA AI ML package: dataset acquisition (Phase 6 M1); loaders, features and models follow."
+description = "VOLTERRA AI ML package: dataset acquisition (Phase 6 M1) and loaders (M2); features and models follow."
 readme = "README.md"
 requires-python = ">=3.10"
-# Phase 6 M1 (acquisition) is standard-library only. Parsers (M2+) add their own dependencies.
-dependencies = []
+# Acquisition (M1) and the canonical column contract stay standard-library only; the loaders
+# (M2+) read MATLAB files with scipy/numpy and write Parquet bundles with pyarrow.
+dependencies = [
+    "numpy>=1.26",
+    "pyarrow>=17",
+    "scipy>=1.13",
+]
 
 [dependency-groups]
 dev = [
@@ -25,6 +30,11 @@ minversion = "8.0"
 testpaths = ["tests"]
 pythonpath = ["."]
 xfail_strict = true
+# A warning (e.g. numpy's ComplexWarning) can mean silently altered data: fail instead.
+filterwarnings = ["error"]
+markers = [
+  "realdata: needs the downloaded datasets in VOLTERRA_DATA_DIR; skipped when they are absent (always in CI)",
+]
 addopts = [
   "-ra",
   "--strict-markers",
@@ -47,6 +57,11 @@ python_version = "3.10"
 strict = true
 files = ["volterra_ml", "tests"]
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# Neither library ships type information; their objects are typed as Any at the boundary.
+module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "tests.*"

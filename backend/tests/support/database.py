@@ -85,10 +85,14 @@ async def drop_database(admin_url: str, name: str) -> None:
     engine = create_async_engine(admin_url, isolation_level="AUTOCOMMIT", hide_parameters=True)
     try:
         async with engine.connect() as conn:
+            # Only our own client connections: autovacuum workers on the database run as the
+            # bootstrap superuser, which a non-superuser role may not terminate, and DROP
+            # DATABASE tells them to exit by itself.
             await conn.execute(
                 text(
                     "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-                    "WHERE datname = :name AND pid <> pg_backend_pid()"
+                    "WHERE datname = :name AND pid <> pg_backend_pid() "
+                    "AND backend_type = 'client backend' AND usename = current_user"
                 ),
                 {"name": name},
             )

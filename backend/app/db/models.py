@@ -1,8 +1,10 @@
-"""ORM models for the Phase 3 schema: datasets, batteries, cycles and scenarios.
+"""ORM models: datasets, batteries, cycles and scenarios (Phase 3), dataset files (Phase 6).
 
 Numeric measurements use ``DOUBLE PRECISION`` (IEEE-754 binary64) so values round-trip exactly
 between Python, PostgreSQL and the v1 analytics; ``NUMERIC`` would alter the binary value.
 ``soh_pct`` is stored as produced by the data source rather than computed by the database.
+Phase 6 (migration 0002) adds provenance columns and ``dataset_files``; every new column is
+nullable, so rows that predate it (the synthetic dataset) are unchanged.
 Further tables (models, predictions, jobs, ...) arrive in the phases that need them.
 """
 
@@ -36,6 +38,10 @@ from app.db.base import Base, CreatedAtMixin, TimestampMixin
 DATASET_SOURCES = ("nasa_pcoe", "calce", "severson", "upload", "synthetic")
 DATASET_STATUSES = ("registered", "importing", "ready", "failed")
 CYCLE_TYPES = ("charge", "discharge", "impedance", "full")
+CHEMISTRY_BASES = ("stated_by_source", "not_stated")
+SOH_REFERENCES = ("rated_capacity",)
+FILE_KINDS = ("raw", "bundle_manifest", "batteries", "cycles", "samples", "impedance", "report")
+FILE_FORMATS = ("zip", "parquet", "json", "mat", "xlsx")
 
 
 def _in(column: str, values: tuple[str, ...]) -> str:
@@ -73,8 +79,15 @@ class Dataset(TimestampMixin, Base):
     checksum: Mapped[str | None] = mapped_column(String(64))
     #: Internal metadata (e.g. synthetic ground truth). Not exposed by public dataset endpoints.
     meta: Mapped[dict[str, Any]] = _jsonb_object()
+    # Provenance of real datasets (Phase 6); null for the synthetic dataset.
+    publisher: Mapped[str | None] = mapped_column(Text)
+    landing_url: Mapped[str | None] = mapped_column(Text)
+    doi: Mapped[str | None] = mapped_column(String(128))
 
     batteries: Mapped[list[Battery]] = relationship(
+        back_populates="dataset", cascade="all, delete-orphan", passive_deletes=True
+    )
+    files: Mapped[list[DatasetFile]] = relationship(
         back_populates="dataset", cascade="all, delete-orphan", passive_deletes=True
     )
 
@@ -85,6 +98,16 @@ class Battery(TimestampMixin, Base):
         UniqueConstraint("dataset_id", "external_id"),
         CheckConstraint("nominal_capacity_ah > 0", name="nominal_capacity_positive"),
         CheckConstraint("eol_threshold_pct > 0 AND eol_threshold_pct < 100", name="eol_range"),
+        CheckConstraint(_in("chemistry_basis", CHEMISTRY_BASES), name="chemistry_basis"),
+        CheckConstraint(_in("soh_reference", SOH_REFERENCES), name="soh_reference"),
+        CheckConstraint(
+            "soh_reference_capacity_ah IS NULL OR soh_reference_capacity_ah > 0",
+            name="soh_reference_capacity_positive",
+        ),
+        CheckConstraint(
+            "first_capacity_ah IS NULL OR first_capacity_ah >= 0",
+            name="first_capacity_non_negative",
+        ),
     )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
@@ -105,6 +128,13 @@ class Battery(TimestampMixin, Base):
     )
     #: SHA-256 of the cycle data (see app.db.seed.cycles_checksum); identifies a data version.
     cycles_checksum: Mapped[str | None] = mapped_column(String(64))
+    # Phase 6: how SOH is referenced (decision D1) and what the chemistry claim rests on.
+    chemistry_basis: Mapped[str | None] = mapped_column(String(32))
+    soh_reference: Mapped[str | None] = mapped_column(String(32))
+    soh_reference_capacity_ah: Mapped[float | None] = mapped_column(Double)
+    #: First measured discharge capacity and the cycle it comes from (null if none measured).
+    first_capacity_ah: Mapped[float | None] = mapped_column(Double)
+    first_capacity_cycle_index: Mapped[int | None] = mapped_column(Integer)
 
     dataset: Mapped[Dataset] = relationship(back_populates="batteries")
     cycles: Mapped[list[Cycle]] = relationship(
@@ -153,8 +183,44 @@ class Cycle(CreatedAtMixin, Base):
     c_rate: Mapped[float | None] = mapped_column(Double)
     dod_pct: Mapped[float | None] = mapped_column(Double)
     quality_flags: Mapped[dict[str, Any]] = _jsonb_object()
+    #: Position of this cycle in the source file's cycle array (Phase 6; null for synthetic).
+    source_cycle_index: Mapped[int | None] = mapped_column(Integer)
 
     battery: Mapped[Battery] = relationship(back_populates="cycles")
+
+
+class DatasetFile(CreatedAtMixin, Base):
+    """A raw or processed file behind a dataset, identified by path and SHA-256 (Phase 6).
+
+    ``path`` is relative to the data directory (``VOLTERRA_DATA_DIR``) with forward slashes, so
+    the database never stores machine-specific absolute paths.
+    """
+
+    __tablename__ = "dataset_files"
+    __table_args__ = (
+        UniqueConstraint("dataset_id", "path"),
+        CheckConstraint(_in("kind", FILE_KINDS), name="kind"),
+        CheckConstraint(_in("format", FILE_FORMATS), name="format"),
+        CheckConstraint("bytes >= 0", name="bytes_non_negative"),
+        CheckConstraint("sha256 ~ '^[0-9a-f]{64}$'", name="sha256_hex"),
+        CheckConstraint("path NOT LIKE '/%' AND path NOT LIKE '%..%'", name="path_relative"),
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    dataset_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("datasets.id", ondelete="CASCADE"), nullable=False
+    )
+    battery_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("batteries.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    path: Mapped[str] = mapped_column(Text, nullable=False)
+    format: Mapped[str] = mapped_column(String(16), nullable=False)
+    bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    rows: Mapped[int | None] = mapped_column(BigInteger)
+
+    dataset: Mapped[Dataset] = relationship(back_populates="files")
 
 
 class Scenario(TimestampMixin, Base):

@@ -8,7 +8,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateIndex, CreateTable
 
 from app.db.base import Base
-from app.db.models import Battery, Cycle, Dataset, Scenario
+from app.db.models import Battery, Cycle, Dataset, DatasetFile, Scenario
 
 TABLES = Base.metadata.tables
 PG = postgresql.dialect()  # type: ignore[no-untyped-call]  # SQLAlchemy dialect factory is untyped
@@ -18,9 +18,28 @@ def ddl(table: Table) -> str:
     return str(CreateTable(table).compile(dialect=PG))
 
 
-def test_exactly_the_four_phase_3_tables() -> None:
-    assert sorted(TABLES) == ["batteries", "cycles", "datasets", "scenarios"]
-    assert {m.__tablename__ for m in (Dataset, Battery, Cycle, Scenario)} == set(TABLES)
+def test_exactly_the_phase_3_tables_plus_dataset_files() -> None:
+    assert sorted(TABLES) == ["batteries", "cycles", "dataset_files", "datasets", "scenarios"]
+    models = (Dataset, Battery, Cycle, Scenario, DatasetFile)
+    assert {m.__tablename__ for m in models} == set(TABLES)
+
+
+def test_phase_6_columns_are_nullable() -> None:
+    added = {
+        "datasets": ("publisher", "landing_url", "doi"),
+        "batteries": (
+            "chemistry_basis",
+            "soh_reference",
+            "soh_reference_capacity_ah",
+            "first_capacity_ah",
+            "first_capacity_cycle_index",
+        ),
+        "cycles": ("source_cycle_index",),
+    }
+    for table, columns in added.items():
+        for column in columns:
+            col = TABLES[table].c[column]
+            assert col.nullable and col.server_default is None, (table, column)
 
 
 @pytest.mark.parametrize(
@@ -75,7 +94,7 @@ def test_constraint_names_follow_the_naming_convention() -> None:
 
 def test_foreign_keys_cascade_on_delete() -> None:
     fks = [c for t in TABLES.values() for c in t.constraints if isinstance(c, ForeignKeyConstraint)]
-    assert len(fks) == 3
+    assert len(fks) == 5  # Phase 3: 3; dataset_files -> datasets and -> batteries (Phase 6)
     assert all(fk.ondelete == "CASCADE" for fk in fks)
 
 

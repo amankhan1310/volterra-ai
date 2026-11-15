@@ -69,6 +69,19 @@ def test_selected_files():
     assert SEVERSON.doi == "10.1038/s41560-019-0356-8"
 
 
+def test_every_registered_file_is_pinned():
+    # All three datasets were downloaded and verified on 2026-11-15; their exact bytes are pinned
+    # so that any later change at a source is caught instead of silently accepted.
+    for spec in REGISTRY.values():
+        assert all(f.bytes and f.sha256 for f in spec.files), spec.slug
+    assert NASA_PCOE.files[0].bytes == 209_708_670
+    assert sum(f.bytes or 0 for f in CALCE.files) == 695_088_031
+    # Severson sizes equal the ones data.matr.io's file metadata reported before download.
+    assert [f.bytes for f in SEVERSON.files] == [3_025_320_241, 2_007_331_155, 3_236_690_412]
+    assert sum(f.bytes or 0 for f in SEVERSON.files) == 8_269_341_808
+    assert len({f.sha256 for s in REGISTRY.values() for f in s.files}) == 16
+
+
 def test_pins_when_present_are_well_formed():
     for spec in REGISTRY.values():
         for f in spec.files:

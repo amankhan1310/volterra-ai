@@ -142,6 +142,9 @@ NASA_PCOE = DatasetSpec(
                 'Complete archive as published as "5. Battery Data Set.zip" (all battery '
                 "groups); stored under a name without spaces, content byte-identical."
             ),
+            # Pinned from the verified download of 2026-11-15 (Last-Modified 2022-09-18).
+            bytes=209_708_670,
+            sha256="82302a7db4fc1b34e0b6676326610438d43b816bdf11a69d1d012a464ef2f92e",
         ),
     ),
 )
@@ -150,20 +153,33 @@ _CALCE_BASE = "https://web.calce.umd.edu/batteries/data/"
 _CS2 = "CS2 cell cycled at constant current of {}."
 _CX2 = "CX2 cell cycled at a constant current discharge of {}."
 _CALCE_CELLS = (
-    # (cell, description from the CALCE data page)
-    ("CS2_33", _CS2.format("0.5C")),
-    ("CS2_34", _CS2.format("0.5C")),
-    ("CS2_35", _CS2.format("1C")),
-    ("CS2_36", _CS2.format("1C")),
-    ("CS2_37", _CS2.format("1C")),
-    ("CS2_38", _CS2.format("1C")),
-    ("CX2_33", _CX2.format("0.5C")),
-    ("CX2_34", _CX2.format("1C")),
-    ("CX2_35", _CX2.format("0.5C")),
-    ("CX2_36", _CX2.format("1C")),
-    ("CX2_37", _CX2.format("1C")),
-    ("CX2_38", _CX2.format("1C")),
-)
+    # (cell, description from the CALCE data page, size and SHA-256 pinned from the verified
+    # download of 2026-11-15; the server's Last-Modified dates are all 2015-08-10)
+    ("CS2_33", _CS2.format("0.5C"), 45_345_047,
+     "ce375e3826e840ff0986ceade0d324ba6515f0446697c947353aca097f232505"),
+    ("CS2_34", _CS2.format("0.5C"), 43_836_986,
+     "229dcdc836f140f746c26316569c357b346994fddd3be1223b1e457805c484b4"),
+    ("CS2_35", _CS2.format("1C"), 37_056_519,
+     "84d88cb98a43c02049f16c78806a78ec19084776ea5df8a4b7c2f8f7ba4589e5"),
+    ("CS2_36", _CS2.format("1C"), 37_881_685,
+     "2e674f58bb6dc005c73bef10e87edbbd97afd041dde77a1d461a3c4ecac1b027"),
+    ("CS2_37", _CS2.format("1C"), 41_513_048,
+     "8ed8aecbcbea2bcb17f455923a974be01ea21d7389210e1912d177de5b6af4a5"),
+    ("CS2_38", _CS2.format("1C"), 42_811_100,
+     "98787427c10478425efd4f54d823805724daff1d2fcbd822b3a2d7006a1051d8"),
+    ("CX2_33", _CX2.format("0.5C"), 86_700_450,
+     "f4dbca063a3731045b8a631f69532f7f43f0b3ada9736c0cfe3e07302d10b5da"),
+    ("CX2_34", _CX2.format("1C"), 65_932_032,
+     "6e4be14140071843891b6a7395c9561754b45036b17e840bae33d253f615939d"),
+    ("CX2_35", _CX2.format("0.5C"), 96_794_651,
+     "043e84ccd518f5e00fcee94ae8d2765ffe25fd11a87e028ad6903a8c61a8f15e"),
+    ("CX2_36", _CX2.format("1C"), 73_909_895,
+     "45b9249cd0353ea0285484868e5a74c54d43c8ed153bf2d40e9376e9a1daf6ad"),
+    ("CX2_37", _CX2.format("1C"), 53_311_138,
+     "d7989beff30881e1d0d50bc2d7c028e8237ca402004ffcefe693bbce35b9776d"),
+    ("CX2_38", _CX2.format("1C"), 69_995_480,
+     "2bd64c8cc9ffe4f63664caf9ec51889ca32245c321151a361147755ad6f00e3f"),
+)  # fmt: skip
 
 CALCE = DatasetSpec(
     slug="calce-cs2-cx2",
@@ -204,8 +220,10 @@ CALCE = DatasetSpec(
             name=f"{cell}.zip",
             url=f"{_CALCE_BASE}{cell}.zip",
             description=desc,
+            bytes=size,
+            sha256=digest,
         )
-        for cell, desc in _CALCE_CELLS
+        for cell, desc, size, digest in _CALCE_CELLS
     ),
 )
 
@@ -245,23 +263,32 @@ SEVERSON = DatasetSpec(
     description=(
         "124 commercial LFP/graphite 18650 cells cycled to failure under 72 fast-charging "
         "policies in a 30 C chamber, in three batches (as described in the paper). One MATLAB "
-        ".mat file per batch; the internal structure is examined in M2, after download."
+        "7.3 (HDF5) .mat file per batch; the internal structure is examined in M2."
     ),
+    # Sizes and SHA-256 pinned from the verified download of 2026-11-15; the sizes equal those
+    # data.matr.io's file metadata reported before download. Each file is a MATLAB 7.3 MAT-file
+    # (HDF5 signature at offset 512).
     files=(
         RemoteFile(
             name="2017-05-12_batchdata_updated_struct_errorcorrect.mat",
             url=_MATR.format("5c86c0b5fa2ede00015ddf66"),
             description="Batch 1 (2017-05-12).",
+            bytes=3_025_320_241,
+            sha256="9d928ab978f0e3c70b31cb833a749fedd35094d01af76475d69b40aa3497f5ba",
         ),
         RemoteFile(
             name="2017-06-30_batchdata_updated_struct_errorcorrect.mat",
             url=_MATR.format("5c86bf13fa2ede00015ddd82"),
             description="Batch 2 (2017-06-30).",
+            bytes=2_007_331_155,
+            sha256="63ab200d09ecb237fee5ef3a5c5db76e3212e3206a0bd92f769e1427fed338b8",
         ),
         RemoteFile(
             name="2018-04-12_batchdata_updated_struct_errorcorrect.mat",
             url=_MATR.format("5c86bd64fa2ede00015ddbb2"),
             description="Batch 3 (2018-04-12).",
+            bytes=3_236_690_412,
+            sha256="62c30e413b63e6144720e016deed3661fac8468641794a5807b123fe84717998",
         ),
     ),
 )

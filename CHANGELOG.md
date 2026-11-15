@@ -5,6 +5,15 @@ original prototype exactly (including the known defects F1–F8 in `ARCHITECTURE
 is permanent, and stays the API default. **v2** holds the corrected methods. The golden fixtures
 in `backend/tests/golden/` describe v1 and are never modified.
 
+## [Unreleased] — Phase 6 M1: dataset acquisition and provenance
+
+No analytics, API, database or frontend change. New tooling only:
+
+- `python -m volterra_ml.acquisition` downloads, verifies and records the real datasets (NASA
+  PCoE, CALCE CS2/CX2, Severson 2019) with a `MANIFEST.json` per dataset and pinned SHA-256
+  checksums; see `docs/datasets/`.
+- New CI workflow `ml`; a repository-hygiene test fails if a dataset file is ever tracked.
+
 ## [Unreleased] — Phase 5: corrected v2 analytics (opt-in)
 
 ### API: opt-in `?algorithm=v2`
@@ -46,6 +55,10 @@ in `backend/tests/golden/` describe v1 and are never modified.
 - **Calibration uses this battery's own history only.** Calibrated on earlier origins and scored
   on later ones, coverage is 85.9–88.3% (target 85–95%). This does **not** establish coverage
   across batteries; that needs held-out cells (Phase 6–7).
+- **Accepted limitation (reviewed after merge).** Coverage is below 90% because forecast errors
+  grow over the cell's life, so quantiles from earlier origins understate later errors (mostly
+  at 11–50-cycle horizons). Later split points give 84.5% (origin 210) and 85.4% (230). Phase 7
+  replaces this with conformal calibration on held-out cells.
 - Regression test: `backend/tests/v2/test_f3_interval.py`.
 
 ### F4 — Overview and Simulator agree on the same conditions

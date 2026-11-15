@@ -346,9 +346,9 @@ volterra-ai/
 │   ├── configs/                    # YAML experiment configs
 │   ├── notebooks/                  # exploration only; never imported
 │   └── tests/
-├── data/          (gitignored)     # raw/  processed/  — populated by scripts/download_datasets.py
+├── data/          (gitignored)     # raw/  processed/  — populated by `python -m volterra_ml.acquisition` (or $VOLTERRA_DATA_DIR)
 ├── artifacts/     (gitignored)     # trained models, evaluation reports
-├── scripts/                        # download_datasets.py, seed_db.py, dev helpers
+├── scripts/                        # dev helpers (dataset download lives in ml/volterra_ml/acquisition)
 ├── infra/
 │   ├── docker-compose.yml          # postgres (+ optional api/worker/frontend)
 │   └── Dockerfile.backend  Dockerfile.frontend
@@ -451,12 +451,12 @@ All tables have `id` (UUID, or BIGINT identity for `cycles`) and `created_at` / 
 
 | Dataset | Cells | Chemistry | Why | Notes |
 |---|---|---|---|---|
-| **NASA PCoE Battery** (B0005, B0006, B0007, B0018 + others) | ~34 | LCO 18650, 2.0 Ah | Classic benchmark. Same 2.0 Ah profile as the prototype. Several ambient temperatures (4/24/43 °C). | Capacity regeneration after rest periods. `.mat` format. |
-| **CALCE CS2 / CX2** | ~12 | LCO prismatic | Long-life cycling, different form factor | Excel files per test. |
-| **Severson et al. 2019 (Nature Energy)** | 124 | LFP/graphite A123, 1.1 Ah | Varied fast-charge policies, lives of 150–2,300 cycles. Well suited to RUL and to calibrating the C-rate effect. | Large (~3 GB raw). Use the processed per-cycle variant. |
+| **NASA PCoE Battery** (B0005, B0006, B0007, B0018 + others) | 34 | Li-ion 18650, 2.0 Ah; chemistry **not stated** by NASA | Classic benchmark. Same 2.0 Ah profile as the prototype. Several ambient temperatures (4/24/43 °C). | Capacity regeneration after rest periods. `.mat` format. |
+| **CALCE CS2 / CX2** | 12 | LiCoO2 prismatic, 1.1 / 1.35 Ah | Long-life cycling, different form factor | Excel (Arbin) files per test; no temperature channel. |
+| **Severson et al. 2019 (Nature Energy)** | 124 | LFP/graphite A123, 1.1 Ah | Varied fast-charge policies, lives of 150–2,300 cycles. Well suited to RUL and to calibrating the C-rate effect. | Large: three batch `.mat` files, 8.27 GB. CC BY 4.0. |
 | **Synthetic v1** | 1 | — | Legacy parity and UI demo; anomalies are labelled by construction. | Reproduced exactly in Python. |
 
-`scripts/download_datasets.py` downloads each one with SHA-256 verification, and records licence and citation in `datasets`. Raw data never goes into git. **Each licence must be confirmed before any redistribution.**
+`python -m volterra_ml.acquisition` (Phase 6 M1) downloads each one with SHA-256 verification against pinned checksums and writes a `MANIFEST.json` with source URL, retrieval time, licence and citation; the importer (M3) records them in `datasets`. Raw data never goes into git and is never redistributed (decision D8). Sources, licences and citations are verified in the dataset cards in `docs/datasets/`.
 
 ### 9.2 Pipeline stages
 
@@ -548,7 +548,7 @@ These are evaluated on **synthetic data with known injections** (precision, reca
 | **3. DB + API (parity)** | Postgres schema v1, Alembic, `seed_db` with synthetic-v1, read endpoints (`summary`, `cycles`, `forecast`, `anomalies`, `simulate`, `advisor`, `insights`, `twin`) | API integration tests against real Postgres; OpenAPI published. |
 | **4. React parity** | Rebuild all 6 pages against the API with the same design system | Feature-by-feature checklist from §1.2 passes. Playwright e2e for each page. Light theme works. No `innerHTML`. |
 | **5. Correctness fixes** | Resolve F1–F8 as deliberate, tested behaviour changes | v1 algorithms stay permanent and keep matching the goldens (strict `xfail` defect tests keep failing for v1); each fix is a separate v2 implementation with its own expected-value tests and a changelog entry; golden fixtures are never modified; anomaly precision/recall on synthetic injections ≥ target; the RUL interval comes from proper calibration. |
-| **6. Real data** | Loaders for NASA → CALCE → Severson; upload + column-mapping UI; job runner | All loaders validated; multi-battery selector in the UI; import progress via jobs. |
+| **6. Real data** | Loaders for NASA → CALCE → Severson; upload + column-mapping UI; job runner (upload, mapping and jobs deferred to a later "6b", decision D5) | All loaders validated; multi-battery selector in the UI; import progress via jobs (6b). Milestones M1–M6 and decisions D1–D12 in `PROJECT_STATUS.md`. |
 | **7. ML models** | Feature sets, baselines, LightGBM/quantile, GP, conformal; registry; model comparison page | Leaderboard on held-out cells; a production model chosen on evidence; model cards written. |
 | **8. Calibrated simulator + advisor** | Fitted stress coefficients with per-coefficient provenance | Simulator and Overview agree on the baseline (F4); coefficient CIs shown in the UI. |
 | **9. Reports, notifications, auth** | PDF/CSV reports, alerts, optional login | Report job e2e test; notifications persisted. |

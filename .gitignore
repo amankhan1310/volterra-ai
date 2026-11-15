@@ -28,7 +28,7 @@ test-results/
 *.tsbuildinfo
 npm-debug.log*
 
-# --- Data & ML artefacts (never committed; see scripts/download_datasets.py) ---
+# --- Data & ML artefacts (never committed; see docs/datasets/ and ml/volterra_ml/acquisition) ---
 data/
 artifacts/
 mlruns/

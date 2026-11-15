@@ -43,12 +43,12 @@ def test_failures_exit_1(registered: NasaEnv):
 
 
 def test_unknown_dataset_exits_2():
-    code, _, err = run(["build", "calce-cs2-cx2"])
-    assert code == 2 and "no loader for 'calce-cs2-cx2'" in err
+    code, _, err = run(["build", "no-such-dataset"])
+    assert code == 2 and "no loader for 'no-such-dataset'" in err
 
 
-def test_real_registry_has_the_nasa_loader():
-    assert list(cli.LOADERS) == ["nasa-pcoe-battery"]
+def test_real_registry_has_the_three_loaders():
+    assert list(cli.LOADERS) == ["nasa-pcoe-battery", "calce-cs2-cx2", "severson-2019"]
 
 
 def test_module_entry_point(monkeypatch: pytest.MonkeyPatch, capsys):

@@ -14,6 +14,9 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from typing import Any
+
+import numpy as np
 
 VOLTAGE_LOW_V = 1.5
 VOLTAGE_HIGH_V = 4.5
@@ -24,45 +27,60 @@ Flags = dict[str, str]
 
 
 def _fmt(x: float) -> str:
-    return format(x, ".6g")
+    return format(float(x), ".6g")
+
+
+def _finite(a: Any) -> Any:
+    arr = np.asarray(a, dtype=float).ravel()
+    return arr[np.isfinite(arr)]
 
 
 def check_samples(
-    time_s: Sequence[float],
-    voltage_v: Sequence[float],
-    current_a: Sequence[float],
-    temp_c: Sequence[float],
+    time_s: Sequence[float] | Any,
+    voltage_v: Sequence[float] | Any,
+    current_a: Sequence[float] | Any,
+    temp_c: Sequence[float] | Any | None,
 ) -> Flags:
-    """Flags about the per-sample traces of one charge or discharge."""
+    """Flags about the per-sample traces of one charge or discharge.
+
+    ``temp_c=None`` means the source has no temperature channel (e.g. CALCE): temperature is
+    then neither compared in length nor checked, and is never treated as zero.
+    """
     flags: Flags = {}
-    lengths = {len(time_s), len(voltage_v), len(current_a), len(temp_c)}
+    series = [time_s, voltage_v, current_a] + ([] if temp_c is None else [temp_c])
+    lengths = {len(s) for s in series}
     if len(lengths) != 1:
         flags["unequal_array_lengths"] = "lengths " + ",".join(str(n) for n in sorted(lengths))
     if min(lengths) == 0:
         flags["empty_samples"] = "no samples"
         return flags
-    bad = sum(
-        1
-        for series in (time_s, voltage_v, current_a, temp_c)
-        for x in series
-        if not math.isfinite(x)
-    )
+    bad = sum(int((~np.isfinite(np.asarray(s, dtype=float))).sum()) for s in series)
     if bad:
         flags["non_finite_values"] = f"{bad} non-finite sample values"
-    finite_t = [x for x in time_s if math.isfinite(x)]
-    if any(b <= a for a, b in zip(finite_t, finite_t[1:], strict=False)):
+    finite_t = _finite(time_s)
+    if finite_t.size > 1 and bool(np.any(np.diff(finite_t) <= 0)):
         flags["time_not_increasing"] = "time vector is not strictly increasing"
-    finite_v = [x for x in voltage_v if math.isfinite(x)]
-    if finite_v and min(finite_v) < VOLTAGE_LOW_V:
-        flags["voltage_below_1_5v"] = f"min {_fmt(min(finite_v))} V"
-    if finite_v and max(finite_v) > VOLTAGE_HIGH_V:
-        flags["voltage_above_4_5v"] = f"max {_fmt(max(finite_v))} V"
-    finite_temp = [x for x in temp_c if math.isfinite(x)]
-    if finite_temp and (min(finite_temp) < TEMP_LOW_C or max(finite_temp) > TEMP_HIGH_C):
-        flags["temperature_out_of_range"] = (
-            f"range {_fmt(min(finite_temp))}..{_fmt(max(finite_temp))} C"
-        )
+    finite_v = _finite(voltage_v)
+    if finite_v.size and finite_v.min() < VOLTAGE_LOW_V:
+        flags["voltage_below_1_5v"] = f"min {_fmt(finite_v.min())} V"
+    if finite_v.size and finite_v.max() > VOLTAGE_HIGH_V:
+        flags["voltage_above_4_5v"] = f"max {_fmt(finite_v.max())} V"
+    if temp_c is not None:
+        finite_temp = _finite(temp_c)
+        if finite_temp.size and (finite_temp.min() < TEMP_LOW_C or finite_temp.max() > TEMP_HIGH_C):
+            flags["temperature_out_of_range"] = (
+                f"range {_fmt(finite_temp.min())}..{_fmt(finite_temp.max())} C"
+            )
     return flags
+
+
+def first_positive_capacity(rows: Sequence[dict[str, Any]]) -> dict[str, Any] | None:
+    """The first canonical cycle whose measured capacity is positive (``first_capacity_ah``).
+
+    Zero and missing capacities are skipped: e.g. every Severson batch-1 cell reports 0 Ah for
+    its first cycle, which is not a capacity measurement of the cell.
+    """
+    return next((r for r in rows if r["capacity_ah"] is not None and r["capacity_ah"] > 0), None)
 
 
 #: A capacity rise above this share of the rated capacity between consecutive measured cycles

@@ -34,7 +34,7 @@ def test_phase_6_columns_are_nullable() -> None:
             "first_capacity_ah",
             "first_capacity_cycle_index",
         ),
-        "cycles": ("source_cycle_index",),
+        "cycles": ("source_cycle_index", "source_ref"),
     }
     for table, columns in added.items():
         for column in columns:

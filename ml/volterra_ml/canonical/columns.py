@@ -15,7 +15,7 @@ Rules:
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 #: Column -> Arrow type name (``string``, ``int32``, ``int64``, ``float64``, ``bool``) and
 #: whether nulls are allowed. Order is the column order written to Parquet.
@@ -54,6 +54,9 @@ CYCLE_COLUMNS: dict[str, tuple[str, bool]] = {
     "current_mean_a": ("float64", True),
     "discharge_time_s": ("float64", True),
     "ambient_temp_c": ("float64", True),
+    "internal_resistance_ohm": ("float64", True),  # as reported by the source (v2)
+    "charge_time_s": ("float64", True),  # charge duration as reported or measured (v2)
+    "source_ref_json": ("string", True),  # JSON: where the cycle comes from (v2)
     "n_samples": ("int32", False),
     "quality_flags_json": ("string", False),  # JSON object {flag: detail}
     "db_eligible": ("bool", False),  # has every value the cycles table requires

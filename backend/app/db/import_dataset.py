@@ -47,7 +47,7 @@ from app.analytics.synthetic import CycleRecord
 from app.db.models import DATASET_SOURCES, Battery, Cycle, Dataset, DatasetFile
 from app.db.seed import cycles_checksum
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 MANIFEST_NAME = "bundle_manifest.json"
 IMPORTABLE_SOURCES = tuple(s for s in DATASET_SOURCES if s not in ("synthetic", "upload"))
 
@@ -87,6 +87,9 @@ CYCLE_COLUMNS: dict[str, tuple[str, bool]] = {
     "current_mean_a": ("float64", True),
     "discharge_time_s": ("float64", True),
     "ambient_temp_c": ("float64", True),
+    "internal_resistance_ohm": ("float64", True),
+    "charge_time_s": ("float64", True),
+    "source_ref_json": ("string", True),
     "n_samples": ("int32", False),
     "quality_flags_json": ("string", False),
     "db_eligible": ("bool", False),
@@ -101,7 +104,11 @@ OPTIONAL_CYCLE_COLUMNS = {
     "current_mean_a": "current_mean_a",
     "discharge_time_s": "discharge_time_s",
     "ambient_temp_c": "ambient_temp_c",
+    "internal_resistance_ohm": "internal_resistance_ohm",
+    "charge_time_s": "charge_time_s",
 }
+#: Database column lengths (app/db/models.py) checked before anything is written.
+TEXT_LIMITS = {"external_id": 64, "chemistry": 32, "form_factor": 32}
 _ARROW = {"string": pa.string(), "int32": pa.int32(), "float64": pa.float64(), "bool": pa.bool_()}
 
 
@@ -201,6 +208,13 @@ def _check(
             raise BundleImportError(f"{b['external_id']}: SOH must reference the rated capacity")
         json.loads(b["test_conditions_json"])
         json.loads(b["source_files_json"])
+    for b in batteries:
+        for column, limit in TEXT_LIMITS.items():
+            value = b[column]
+            if value is not None and len(value) > limit:
+                raise BundleImportError(
+                    f"{b['external_id']}: {column} longer than {limit} characters"
+                )
     reference = {b["external_id"]: b["soh_reference_capacity_ah"] for b in batteries}
     seen: set[tuple[str, int]] = set()
     for c in cycles:
@@ -214,6 +228,10 @@ def _check(
         if c["cycle_index"] < 0 or c["source_cycle_index"] < 0 or c["cycle_type"] != "discharge":
             raise BundleImportError(f"{where}: invalid index or cycle type")
         json.loads(c["quality_flags_json"])
+        if c["source_ref_json"] is not None and not isinstance(
+            json.loads(c["source_ref_json"]), dict
+        ):
+            raise BundleImportError(f"{where}: source_ref_json must be a JSON object")
         complete = all(_finite(c[k]) for k in DB_REQUIRED)
         if c["db_eligible"] != complete:
             raise BundleImportError(f"{where}: db_eligible does not match its measurements")
@@ -426,6 +444,11 @@ async def import_bundle(session: AsyncSession, bundle_dir: Path, data_dir: Path)
                             "voltage_mean_v": c["voltage_mean_v"],
                             **{col: c[k] for k, col in OPTIONAL_CYCLE_COLUMNS.items()},
                             "quality_flags": json.loads(c["quality_flags_json"]),
+                            "source_ref": (
+                                None
+                                if c["source_ref_json"] is None
+                                else json.loads(c["source_ref_json"])
+                            ),
                         }
                         for c in rows
                     ],

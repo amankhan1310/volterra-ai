@@ -68,6 +68,9 @@ def cycle(
         "current_mean_a": None,  # deliberately missing: must stay null in the database
         "discharge_time_s": 3690.0,
         "ambient_temp_c": 24.0,
+        "internal_resistance_ohm": 0.0185,
+        "charge_time_s": None,  # deliberately missing: must stay null
+        "source_ref_json": json.dumps({"member": "G/B0005.mat"}),
         "n_samples": 197,
         "quality_flags_json": json.dumps({} if capacity else {"capacity_missing": "empty"}),
         "db_eligible": capacity is not None,

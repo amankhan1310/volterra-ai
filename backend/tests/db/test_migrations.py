@@ -21,7 +21,7 @@ from tests.support.migrations import alembic_config
 pytestmark = pytest.mark.db
 
 PHASE_3_TABLES = {"alembic_version", "batteries", "cycles", "datasets", "scenarios"}
-HEAD_TABLES = PHASE_3_TABLES | {"dataset_files"}  # 0002 (Phase 6 M3)
+HEAD_TABLES = PHASE_3_TABLES | {"dataset_files"}  # 0002 (Phase 6 M3); 0003 adds a column
 PHASE_6_COLUMNS = {
     "datasets": {"publisher", "landing_url", "doi"},
     "batteries": {
@@ -84,9 +84,18 @@ def test_0002_is_additive_and_downgrades_to_the_exact_phase_3_schema(
     command.upgrade(config, "0001")
     phase_3 = run(empty_database_url, columns)
     command.upgrade(config, "0002")
+    phase_6_m3 = run(empty_database_url, columns)
+    command.upgrade(config, "0003")
     head = run(empty_database_url, columns)
     for table, added in PHASE_6_COLUMNS.items():
-        assert head[table] == phase_3[table] | added, table
+        assert phase_6_m3[table] == phase_3[table] | added, table
+    # 0003 (schema v2) adds exactly cycles.source_ref
+    assert head["cycles"] == phase_6_m3["cycles"] | {"source_ref"}
+    assert {t: head[t] for t in ("datasets", "batteries")} == {
+        t: phase_6_m3[t] for t in ("datasets", "batteries")
+    }
+    command.downgrade(config, "0002")
+    assert run(empty_database_url, columns) == phase_6_m3
     command.downgrade(config, "0001")
     assert run(empty_database_url, table_names) == PHASE_3_TABLES
     assert run(empty_database_url, columns) == phase_3

@@ -185,6 +185,8 @@ class Cycle(CreatedAtMixin, Base):
     quality_flags: Mapped[dict[str, Any]] = _jsonb_object()
     #: Position of this cycle in the source file's cycle array (Phase 6; null for synthetic).
     source_cycle_index: Mapped[int | None] = mapped_column(Integer)
+    #: Where the cycle comes from (canonical schema v2 ``source_ref_json``; migration 0003).
+    source_ref: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     battery: Mapped[Battery] = relationship(back_populates="cycles")
 

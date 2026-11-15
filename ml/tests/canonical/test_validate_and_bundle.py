@@ -179,7 +179,7 @@ def test_finalize_replaces_an_existing_bundle_and_leftovers(tmp_path: Path):
     work.mkdir()
     (work / "only.json").write_text("{}\n")
     bdl.finalize(work, final, dataset={}, loader={}, inputs=[], row_counts={})
-    assert [p.name for p in final.iterdir()] == ["bundle_manifest.json", "only.json"]
+    assert sorted(p.name for p in final.iterdir()) == ["bundle_manifest.json", "only.json"]
     assert not old.exists()
 
 

@@ -38,7 +38,12 @@ repository's git-ignored `data/` folder):
 <VOLTERRA_DATA_DIR>/raw/<slug>/<version>/
     MANIFEST.json      provenance record (see below)
     <raw files>        exactly as published, read-only
+<VOLTERRA_DATA_DIR>/processed/<slug>/<version>/
+    bundle_manifest.json, *.parquet, quality_report.json   canonical bundle (Phase 6 M2)
 ```
+
+Processed bundles follow the [canonical schema](canonical-schema.md); they are derived,
+deterministic and re-creatable from the raw files, and are never committed either.
 
 `MANIFEST.json` copies the registry metadata (publisher, citation, licence, chemistry) and adds
 one entry per file: source URL, the URL finally served, retrieval time (UTC), retrieval method

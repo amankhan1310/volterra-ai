@@ -514,11 +514,50 @@ Branch: `feat/phase-6-m1-dataset-acquisition`.
   data.
 - Nothing in `backend/`, `frontend/` or the database changed.
 
+Merged as PR #13 (`b88c2c2`).
+
 Development environment: since 2026-11-15 the project lives in `D:\volterra\project` and the data
 in `D:\volterra\data` (copy-first migration, verified file by file; the earlier copy is kept as a
 backup).
 
+### Milestones 2 + 3 — Canonical schema, NASA loader, database and importer (2026-11-15)
+
+Branch: `feat/phase-6-m2-m3-schema-nasa-import` (M2 and M3 combined, as approved).
+
+- **Canonical schema v1** ([`docs/datasets/canonical-schema.md`](docs/datasets/canonical-schema.md)),
+  defined once in `ml/volterra_ml/canonical/columns.py` and checked against the backend importer
+  by a contract test. Every measurement is nullable and never zero-filled; source identifiers
+  (cell id, position in the source file, archive members with SHA-256) are kept; SOH references
+  the rated capacity (D1) and each battery records its first measured capacity; one canonical
+  cycle per discharge (D2). Deterministic validation flags (capacity missing/zero/above rated,
+  capacity jumps, voltage or temperature out of range, non-finite or unordered samples, unequal
+  arrays, complex impedance fits) mark data without changing or removing it.
+- **NASA loader** (`python -m volterra_ml.loaders build nasa-pcoe-battery`), written after
+  inspecting the real files: MATLAB 5.0, B0025–B0028 duplicated byte for byte (one copy
+  converted, both recorded), field names that differ from the published description, per-cycle
+  ambient temperature, 25 empty capacities, 19 zero capacities and 9 complex `Re`/`Rct` fits.
+  It verifies the raw archive first and writes a deterministic Parquet bundle (34 batteries,
+  2,794 discharge cycles, every charge/discharge sample and impedance record) in about 20 s;
+  a rebuild is byte-identical. Every capacity and every sample of all six channels matches the
+  source bit for bit (local real-data tests).
+- **Database (migration `0002`, additive):** `dataset_files` plus provenance columns on
+  `datasets`, `batteries` and `cycles`; all nullable, so the synthetic data is untouched and a
+  downgrade restores the Phase 3 schema exactly. The NOT NULL relaxation of the analysis inputs
+  waits for CALCE (M4), which needs it; NASA discharges always have them.
+- **Importer** (`python -m app.db.import_dataset`): verifies the bundle, checks columns and rows,
+  imports in one transaction, is idempotent, updates batteries in place (scenarios kept), refuses
+  to delete batteries or overwrite another source, and records every raw and processed file with
+  a relative path and SHA-256. Only cycles with every analysis input are inserted (2,769 of
+  2,794); the rest stay in Parquet with their flags.
+- **End to end on real data:** raw NASA archive → loader → bundle → disposable PostgreSQL
+  database: 34 batteries and 2,769 cycles imported, every value equal to the bundle, flags
+  preserved, re-import a no-op. The development database was not changed: real batteries would
+  reorder the API's battery list (the frontend opens the first one), so importing into it waits
+  until the API and UI are real-data aware (M5/M6).
+- No NASA cell reaches the 221 cycles the v1/v2 analytics need (maximum 197), so all NASA cells
+  will get data views only (D4).
+- Dependencies: `numpy`, `scipy`, `pyarrow` in `ml/`; `pyarrow` in `backend/` (D6).
+
 ## Next
 
-Phase 6 M2 (canonical schema, validation and the NASA loader), only after the M1 review and with
-approval.
+Phase 6 M4 (CALCE and Severson loaders), only after the M2+M3 review and with approval.

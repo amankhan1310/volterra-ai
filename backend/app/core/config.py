@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     analysis_cache_size: int = Field(
         default=32, ge=1, le=1024, validation_alias="VOLTERRA_ANALYSIS_CACHE_SIZE"
     )
+    #: Root of the local dataset store (raw/ and processed/); sample-level data of imported real
+    #: datasets is read from there. Unset: sample endpoints answer 503 ``samples_unavailable``.
+    data_dir: Path | None = Field(default=None, validation_alias="VOLTERRA_DATA_DIR")
 
     @property
     def cors_origin_list(self) -> list[str]:

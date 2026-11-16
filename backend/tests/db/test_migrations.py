@@ -10,7 +10,7 @@ import pytest
 from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -99,6 +99,49 @@ def test_0002_is_additive_and_downgrades_to_the_exact_phase_3_schema(
     command.downgrade(config, "0001")
     assert run(empty_database_url, table_names) == PHASE_3_TABLES
     assert run(empty_database_url, columns) == phase_3
+
+
+def nullability(conn: Connection) -> dict[str, bool]:
+    return {c["name"]: c["nullable"] for c in inspect(conn).get_columns("cycles")}
+
+
+def test_0004_relaxes_only_temperature_and_voltage_and_refuses_a_lossy_downgrade(
+    empty_database_url: str,
+) -> None:
+    assert_disposable(empty_database_url)
+    config = alembic_config(empty_database_url)
+    command.upgrade(config, "0003")
+    before = run(empty_database_url, nullability)
+    command.upgrade(config, "0004")
+    after = run(empty_database_url, nullability)
+    assert {k for k in after if after[k] != before[k]} == {"temp_mean_c", "voltage_mean_v"}
+    assert after["temp_mean_c"] and after["voltage_mean_v"]
+    assert not (after["capacity_ah"] or after["soh_pct"])
+
+    def add_null_cycle(conn: Connection) -> None:
+        for statement in (
+            "INSERT INTO datasets (slug, name, source, version, status) "
+            "VALUES ('t', 't', 'calce', '1', 'ready')",
+            "INSERT INTO batteries (dataset_id, external_id, nominal_capacity_ah) "
+            "SELECT id, 'c', 1.1 FROM datasets",
+            "INSERT INTO cycles (battery_id, cycle_index, capacity_ah, soh_pct, voltage_mean_v) "
+            "SELECT id, 0, 1.0, 90.9, 3.7 FROM batteries",
+        ):
+            conn.execute(text(statement))
+        conn.commit()
+
+    run(empty_database_url, add_null_cycle)
+    with pytest.raises(RuntimeError, match="1 cycles have no temperature or voltage"):
+        command.downgrade(config, "0003")
+    assert run(empty_database_url, nullability) == after  # nothing changed, nothing deleted
+
+    def remove_dataset(conn: Connection) -> None:
+        conn.execute(text("DELETE FROM datasets"))
+        conn.commit()
+
+    run(empty_database_url, remove_dataset)
+    command.downgrade(config, "0003")
+    assert run(empty_database_url, nullability) == before
 
 
 def test_migrated_schema_matches_the_models(migrated_database_url: str) -> None:

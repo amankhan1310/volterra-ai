@@ -13,11 +13,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.analytics.synthetic import CycleRecord
-from app.db.models import Battery, Cycle, Dataset, Scenario
+from app.db.models import Battery, Cycle, Dataset, DatasetFile, Scenario
 
 V1_CYCLE_TYPE = "discharge"
 
@@ -53,6 +53,27 @@ class BatteryInfo:
     is_synthetic: bool
     cycles_checksum: str | None
     cycle_count: int
+    #: Cycles whose temperature or voltage was not measured (null, never filled in; D3).
+    incomplete_cycle_count: int = 0
+    #: Cycles carrying at least one data-quality flag.
+    flagged_cycle_count: int = 0
+    #: Battery-level notes from the source, ``(code, detail)`` (e.g. Severson ``paper_excluded``).
+    dataset_flags: tuple[tuple[str, str], ...] = ()
+
+
+@dataclass(frozen=True)
+class CycleData:
+    """One stored cycle for data views: measurements as stored (null when not measured)."""
+
+    cycle: int
+    capacity_ah: float
+    soh_pct: float
+    temp_c: float | None
+    voltage_v: float | None
+    internal_resistance_ohm: float | None
+    charge_time_s: float | None
+    quality_flags: tuple[str, ...]
+    source_cycle_index: int | None
 
 
 @dataclass(frozen=True)
@@ -72,6 +93,8 @@ class Repository(Protocol):
     async def list_batteries(self) -> list[BatteryInfo]: ...
     async def get_battery(self, battery_id: uuid.UUID) -> BatteryInfo | None: ...
     async def load_records(self, battery_id: uuid.UUID) -> tuple[CycleRecord, ...]: ...
+    async def load_cycle_data(self, battery_id: uuid.UUID) -> tuple[CycleData, ...]: ...
+    async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]: ...
     async def list_scenarios(self, battery_id: uuid.UUID) -> list[ScenarioInfo]: ...
     async def get_scenario(self, scenario_id: uuid.UUID) -> ScenarioInfo | None: ...
     async def create_scenario(
@@ -114,7 +137,7 @@ class SqlRepository:
         rows = await self.session.execute(
             select(Dataset, func.coalesce(counts.c.n, 0))
             .outerjoin(counts, counts.c.dataset_id == Dataset.id)
-            .order_by(Dataset.slug)
+            .order_by((Dataset.source == "synthetic").desc(), Dataset.slug)
         )
         return [self._dataset_info(d, int(n)) for d, n in rows.all()]
 
@@ -141,6 +164,36 @@ class SqlRepository:
             .order_by(Cycle.cycle_index)
         )
         return tuple(CycleRecord(*row) for row in rows.all())
+
+    async def load_cycle_data(self, battery_id: uuid.UUID) -> tuple[CycleData, ...]:
+        rows = await self.session.execute(
+            select(
+                Cycle.cycle_index,
+                Cycle.capacity_ah,
+                Cycle.soh_pct,
+                Cycle.temp_mean_c,
+                Cycle.voltage_mean_v,
+                Cycle.internal_resistance_ohm,
+                Cycle.charge_time_s,
+                Cycle.quality_flags,
+                Cycle.source_cycle_index,
+            )
+            .where(Cycle.battery_id == battery_id, Cycle.cycle_type == V1_CYCLE_TYPE)
+            .order_by(Cycle.cycle_index)
+        )
+        return tuple(
+            CycleData(i, cap, soh, temp, volt, ir, ct, tuple(sorted(flags)), src)
+            for i, cap, soh, temp, volt, ir, ct, flags, src in rows.all()
+        )
+
+    async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]:
+        """Paths (relative to the data directory) of the battery's sample files."""
+        rows = await self.session.scalars(
+            select(DatasetFile.path)
+            .where(DatasetFile.battery_id == battery_id, DatasetFile.kind == "samples")
+            .order_by(DatasetFile.path)
+        )
+        return tuple(rows.all())
 
     async def list_scenarios(self, battery_id: uuid.UUID) -> list[ScenarioInfo]:
         rows = await self.session.scalars(
@@ -190,17 +243,31 @@ class SqlRepository:
         return True
 
     async def _batteries(self, battery_id: uuid.UUID | None = None) -> list[BatteryInfo]:
+        incomplete = or_(Cycle.temp_mean_c.is_(None), Cycle.voltage_mean_v.is_(None))
         counts = (
-            select(Cycle.battery_id, func.count(Cycle.id).label("n"))
+            select(
+                Cycle.battery_id,
+                func.count(Cycle.id).label("n"),
+                func.count(Cycle.id).filter(incomplete).label("incomplete"),
+                func.count(Cycle.id).filter(Cycle.quality_flags != {}).label("flagged"),
+            )
             .where(Cycle.cycle_type == V1_CYCLE_TYPE)
             .group_by(Cycle.battery_id)
             .subquery()
         )
         query = (
-            select(Battery, Dataset.slug, Dataset.name, func.coalesce(counts.c.n, 0))
+            select(
+                Battery,
+                Dataset.slug,
+                Dataset.name,
+                func.coalesce(counts.c.n, 0),
+                func.coalesce(counts.c.incomplete, 0),
+                func.coalesce(counts.c.flagged, 0),
+            )
             .join(Dataset, Dataset.id == Battery.dataset_id)
             .outerjoin(counts, counts.c.battery_id == Battery.id)
-            .order_by(Dataset.slug, Battery.external_id)
+            # Synthetic first: the frontend opens the first battery by default (decision D11).
+            .order_by(Battery.is_synthetic.desc(), Dataset.slug, Battery.external_id)
         )
         if battery_id is not None:
             query = query.where(Battery.id == battery_id)
@@ -219,8 +286,13 @@ class SqlRepository:
                 is_synthetic=b.is_synthetic,
                 cycles_checksum=b.cycles_checksum,
                 cycle_count=int(n),
+                incomplete_cycle_count=int(n_incomplete),
+                flagged_cycle_count=int(n_flagged),
+                dataset_flags=tuple(
+                    sorted((b.test_conditions or {}).get("dataset_flags", {}).items())
+                ),
             )
-            for b, slug, dname, n in rows.all()
+            for b, slug, dname, n, n_incomplete, n_flagged in rows.all()
         ]
 
     @staticmethod

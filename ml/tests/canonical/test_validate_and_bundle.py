@@ -37,7 +37,7 @@ def test_contract_identifiers_are_required_and_measurements_nullable():
         n for n in cols.CYCLE_COLUMNS if n.endswith(("_ah", "_pct", "_c", "_v", "_a", "_s"))
     ]
     assert measurements and all(cols.CYCLE_COLUMNS[n][1] for n in measurements)
-    assert set(cols.DB_REQUIRED) <= set(cols.CYCLE_COLUMNS)
+    assert set(cols.ANALYSIS_INPUTS) <= set(cols.CYCLE_COLUMNS)
     for table in (
         cols.BATTERY_COLUMNS,
         cols.CYCLE_COLUMNS,

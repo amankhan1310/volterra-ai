@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.analytics.synthetic import CycleRecord, generate_synthetic_v1
-from app.db.repositories import BatteryInfo, DatasetInfo, ScenarioInfo
+from app.db.repositories import BatteryInfo, CycleData, DatasetInfo, ScenarioInfo
 from app.db.seed import cycles_checksum, synthetic_battery_values, synthetic_dataset_values
 
 
@@ -57,6 +57,17 @@ class InMemoryRepository:
     async def load_records(self, battery_id: uuid.UUID) -> tuple[CycleRecord, ...]:
         self.load_calls += 1
         return self._records.get(battery_id, ())
+
+    async def load_cycle_data(self, battery_id: uuid.UUID) -> tuple[CycleData, ...]:
+        return tuple(
+            CycleData(
+                r.cycle, r.capacity_ah, r.soh_pct, r.temp_c, r.voltage_v, None, None, (), None
+            )
+            for r in self._records.get(battery_id, ())
+        )
+
+    async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]:
+        return ()  # synthetic data has cycle summaries only
 
     async def list_scenarios(self, battery_id: uuid.UUID) -> list[ScenarioInfo]:
         return [s for s in self._scenarios.values() if s.battery_id == battery_id]

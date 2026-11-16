@@ -40,13 +40,21 @@ class SeedResult:
     created: bool
 
 
+def _hex(value: float | None) -> str:
+    return "null" if value is None else value.hex()
+
+
 def cycles_checksum(records: Sequence[CycleRecord]) -> str:
-    """SHA-256 over the exact binary values of every cycle (``float.hex``)."""
+    """SHA-256 over the exact binary values of every cycle (``float.hex``; ``null`` if missing).
+
+    Real cells may lack temperature or voltage (migration 0004); synthetic data never does, so
+    its checksum is unchanged.
+    """
     digest = hashlib.sha256()
     for r in records:
         line = (
-            f"{r.cycle},{r.capacity_ah.hex()},{r.soh_pct.hex()},"
-            f"{r.temp_c.hex()},{r.voltage_v.hex()}\n"
+            f"{r.cycle},{_hex(r.capacity_ah)},{_hex(r.soh_pct)},"
+            f"{_hex(r.temp_c)},{_hex(r.voltage_v)}\n"
         )
         digest.update(line.encode("ascii"))
     return digest.hexdigest()

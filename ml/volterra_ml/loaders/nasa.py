@@ -42,9 +42,9 @@ from volterra_ml.acquisition import manifest as raw_manifest
 from volterra_ml.acquisition.sources import NASA_PCOE, DatasetSpec
 from volterra_ml.canonical import bundle as bdl
 from volterra_ml.canonical.columns import (
+    ANALYSIS_INPUTS,
     BATTERY_COLUMNS,
     CYCLE_COLUMNS,
-    DB_REQUIRED,
     IMPEDANCE_COLUMNS,
     SAMPLE_COLUMNS,
 )
@@ -311,7 +311,7 @@ def convert_cell(cell: _Cell) -> CellResult:
             "n_samples": int(n),
             "quality_flags_json": json.dumps(flags, sort_keys=True),
         }
-        row["db_eligible"] = all(row[k] is not None for k in DB_REQUIRED)
+        row["db_eligible"] = all(row[k] is not None for k in ANALYSIS_INPUTS)
         rows.append(row)
 
     for k, detail in check_capacity_jumps(

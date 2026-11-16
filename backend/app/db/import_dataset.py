@@ -18,9 +18,10 @@ Guarantees:
 * **Provenance.** Dataset publisher, licence, citation and DOI; per-battery source identifiers,
   chemistry basis, SOH reference and first measured capacity; per-cycle source position and
   quality flags; and every raw and processed file (relative path, size, SHA-256) are recorded.
-* **Nothing invented.** Only cycles the loader marked ``db_eligible`` (all analysis inputs
-  measured) enter ``cycles``; the others stay in the Parquet bundle with their flags. The
-  synthetic dataset can never be overwritten.
+* **Nothing invented.** Only cycles with a measured capacity and SOH and at least one sample
+  enter ``cycles``; missing temperature or voltage stays null (never filled in), and the other
+  cycles stay in the Parquet bundle with their flags. The synthetic dataset can never be
+  overwritten.
 """
 
 from __future__ import annotations
@@ -94,7 +95,13 @@ CYCLE_COLUMNS: dict[str, tuple[str, bool]] = {
     "quality_flags_json": ("string", False),
     "db_eligible": ("bool", False),
 }
-DB_REQUIRED = ("capacity_ah", "soh_pct", "temp_mean_c", "voltage_mean_v")
+ANALYSIS_INPUTS = ("capacity_ah", "soh_pct", "temp_mean_c", "voltage_mean_v")
+#: A cycle is imported when these are measured (NOT NULL in ``cycles``); temperature and voltage
+#: may be null since migration 0004 (CALCE has no temperature channel, decision D3).
+IMPORT_REQUIRED = ("capacity_ah", "soh_pct")
+#: Placeholder cycles without a single sample (Severson batch 1, cycle 0: capacity 0, no data)
+#: are not measurements; they stay in the Parquet bundle with their flags.
+NOT_IMPORTED_FLAGS = frozenset({"empty_samples"})
 #: Canonical cycle column -> ``cycles`` table column, for the optional measurements.
 OPTIONAL_CYCLE_COLUMNS = {
     "temp_min_c": "temp_min_c",
@@ -189,6 +196,12 @@ def _finite(x: Any) -> bool:
     return isinstance(x, float) and math.isfinite(x)
 
 
+def importable(c: dict[str, Any]) -> bool:
+    """Whether a canonical cycle enters ``cycles`` (see ``IMPORT_REQUIRED``)."""
+    flags = json.loads(c["quality_flags_json"])
+    return all(_finite(c[k]) for k in IMPORT_REQUIRED) and not NOT_IMPORTED_FLAGS & set(flags)
+
+
 def _check(
     dataset: dict[str, Any], batteries: list[dict[str, Any]], cycles: list[dict[str, Any]]
 ) -> None:
@@ -232,16 +245,16 @@ def _check(
             json.loads(c["source_ref_json"]), dict
         ):
             raise BundleImportError(f"{where}: source_ref_json must be a JSON object")
-        complete = all(_finite(c[k]) for k in DB_REQUIRED)
+        complete = all(_finite(c[k]) for k in ANALYSIS_INPUTS)
         if c["db_eligible"] != complete:
             raise BundleImportError(f"{where}: db_eligible does not match its measurements")
-        if not complete:
+        if not importable(c):
             continue
         if c["capacity_ah"] < 0:
             raise BundleImportError(f"{where}: negative capacity")
         if c["soh_pct"] != c["capacity_ah"] / reference[c["external_id"]] * 100.0:
             raise BundleImportError(f"{where}: soh_pct is not capacity / reference capacity")
-        for k in OPTIONAL_CYCLE_COLUMNS:
+        for k in (*OPTIONAL_CYCLE_COLUMNS, "temp_mean_c", "voltage_mean_v"):
             if c[k] is not None and not _finite(c[k]):
                 raise BundleImportError(f"{where}: {k} is not finite")
 
@@ -334,7 +347,7 @@ async def import_bundle(session: AsyncSession, bundle_dir: Path, data_dir: Path)
     _check_outputs(body, batteries)
     checksum: str = body["bundle_checksum"]
     report = json.loads((bundle_dir / "quality_report.json").read_text(encoding="utf-8"))
-    eligible = [c for c in cycles if c["db_eligible"]]
+    eligible = [c for c in cycles if importable(c)]
 
     try:
         dataset = await session.scalar(select(Dataset).where(Dataset.slug == meta_ds["slug"]))

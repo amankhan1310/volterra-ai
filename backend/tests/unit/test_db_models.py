@@ -65,11 +65,19 @@ def test_no_numeric_or_generated_columns() -> None:
         assert "NUMERIC" not in text and "GENERATED ALWAYS AS (" not in text, table.name
 
 
-def test_v1_inputs_are_not_null_and_extras_are_nullable() -> None:
+def test_capacity_and_soh_are_not_null_and_other_measurements_are_nullable() -> None:
     cycles = TABLES["cycles"].c
-    for name in ("capacity_ah", "soh_pct", "temp_mean_c", "voltage_mean_v", "cycle_index"):
+    for name in ("capacity_ah", "soh_pct", "cycle_index"):
         assert not cycles[name].nullable, name
-    for name in ("temp_max_c", "internal_resistance_ohm", "start_time", "c_rate"):
+    # Temperature and voltage: nullable since migration 0004 (decision D3, CALCE).
+    for name in (
+        "temp_mean_c",
+        "voltage_mean_v",
+        "temp_max_c",
+        "internal_resistance_ohm",
+        "start_time",
+        "c_rate",
+    ):
         assert cycles[name].nullable, name
 
 

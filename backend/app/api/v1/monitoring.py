@@ -68,6 +68,15 @@ async def get_twin(
     record = last if cycle is None else by_cycle.get(cycle)
     if record is None:
         raise ApiError(
-            422, "cycle_out_of_range", f"Cycle {cycle} not found (cycles 0..{last.cycle})"
+            422,
+            "cycle_out_of_range",
+            f"Cycle {cycle} not found (cycles {records[0].cycle}..{last.cycle})",
+        )
+    if record.temp_c is None or record.voltage_v is None:
+        raise ApiError(
+            422,
+            "missing_measurement",
+            f"Cycle {record.cycle} has no temperature or voltage measurement; the pack view "
+            "needs both and never fills them in",
         )
     return mappers.twin_response(battery, record, last.cycle)

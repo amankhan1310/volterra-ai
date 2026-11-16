@@ -37,7 +37,7 @@ from python_calamine import CalamineWorkbook
 
 from volterra_ml.acquisition.sources import CALCE, DatasetSpec
 from volterra_ml.canonical import bundle as bdl
-from volterra_ml.canonical.columns import DB_REQUIRED, SAMPLE_COLUMNS
+from volterra_ml.canonical.columns import ANALYSIS_INPUTS, SAMPLE_COLUMNS
 from volterra_ml.canonical.validate import (
     check_capacity,
     check_capacity_jumps,
@@ -290,7 +290,7 @@ def convert_cell(
         cycles[k]["_flags"]["capacity_jump_up"] = detail
     for row in cycles:
         row["quality_flags_json"] = json.dumps(row.pop("_flags"), sort_keys=True)
-        row["db_eligible"] = all(row[k] is not None for k in DB_REQUIRED)
+        row["db_eligible"] = all(row[k] is not None for k in ANALYSIS_INPUTS)
 
     first = first_positive_capacity(cycles)
     dataset_flags: dict[str, str] = {}

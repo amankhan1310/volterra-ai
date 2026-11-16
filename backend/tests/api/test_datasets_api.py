@@ -68,6 +68,9 @@ async def test_cycles_are_exact_and_filterable() -> None:
             "soh_pct": want.soh_pct,
             "temp_c": want.temp_c,
             "voltage_v": want.voltage_v,
+            "internal_resistance_ohm": None,
+            "charge_time_s": None,
+            "quality_flags": [],
         }
     assert [c["cycle"] for c in window["items"]] == [10, 11, 12]
     assert full["provenance"] == "simulated" and full["context"]["data_provenance"] == "simulated"

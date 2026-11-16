@@ -12,6 +12,7 @@ from __future__ import annotations
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass
+from typing import Literal
 
 from starlette.concurrency import run_in_threadpool
 
@@ -25,6 +26,42 @@ from app.db.seed import cycles_checksum
 
 #: v1 needs the backtest window (cycles 100-219) plus at least one test cycle.
 MIN_CYCLES_V1 = TEST_FROM_CYCLE + 1
+
+#: Shown with every analysis of a measured cell (decision D4).
+REAL_DATA_NOTE = (
+    "The analytics were developed on the synthetic reference pack. They run unchanged on this "
+    "measured cell and are not validated on real cells."
+)
+
+
+UnavailableReason = Literal["missing_measurement", "insufficient_data"]
+
+
+@dataclass(frozen=True)
+class Availability:
+    """Whether the v1/v2 analytics can run for a battery, and why not (decisions D3 and D4)."""
+
+    available: bool
+    reason: UnavailableReason | None = None
+    message: str | None = None
+
+
+def analysis_availability(battery: BatteryInfo) -> Availability:
+    if battery.incomplete_cycle_count:
+        return Availability(
+            False,
+            "missing_measurement",
+            f"{battery.incomplete_cycle_count} of {battery.cycle_count} cycles have no "
+            "temperature or voltage measurement; the analytics need both and never fill them in",
+        )
+    if battery.cycle_count < MIN_CYCLES_V1:
+        return Availability(
+            False,
+            "insufficient_data",
+            f"The analytics need at least {MIN_CYCLES_V1} cycles; "
+            f"this battery has {battery.cycle_count}",
+        )
+    return Availability(True)
 
 
 @dataclass(frozen=True)
@@ -96,6 +133,9 @@ class AnalysisService:
         self, repo: Repository, battery_id: uuid.UUID, version: str
     ) -> tuple[BatteryInfo, tuple[CycleRecord, ...]]:
         battery = await self.battery(repo, battery_id)
+        if battery.incomplete_cycle_count:
+            gate = analysis_availability(battery)
+            raise ApiError(422, str(gate.reason), str(gate.message))
         records = await repo.load_records(battery_id)
         if len(records) < MIN_CYCLES_V1:
             raise ApiError(

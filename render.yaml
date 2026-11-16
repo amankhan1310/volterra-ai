@@ -1,0 +1,43 @@
+# Render Blueprint for the VOLTERRA AI API and its PostgreSQL database (Phase 10).
+# The frontend is deployed separately on Vercel (frontend/vercel.json proxies /api to this service).
+# Usage: Render dashboard -> New -> Blueprint -> select this repository. See docs/deployment.md.
+#
+# Only the synthetic-v1 dataset is seeded. Real datasets are never deployed (licences, size), and
+# model runs are imported only with the owner's decision (docs/deployment.md).
+
+databases:
+  - name: volterra-db
+    databaseName: volterra
+    user: volterra
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: volterra-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    healthCheckPath: /api/v1/health
+    buildCommand: pip install uv==0.12.24 && uv sync --locked --no-dev
+    # Migrations and the idempotent synthetic seed run at start-up (Render's free plan has no
+    # pre-deploy step; both are no-ops when the database is already current).
+    startCommand: >-
+      uv run --no-sync alembic upgrade head &&
+      uv run --no-sync python -m app.db.seed &&
+      uv run --no-sync uvicorn --factory app.main:create_app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: UV_PYTHON_DOWNLOADS
+        value: never
+      - key: VOLTERRA_ENV
+        value: production
+      # Browsers reach the API through the Vercel rewrite (same origin); this list only matters for
+      # direct cross-origin calls. Set it to the Vercel production URL.
+      - key: VOLTERRA_CORS_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: volterra-db
+          property: connectionString

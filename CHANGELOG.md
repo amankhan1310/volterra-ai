@@ -5,6 +5,13 @@ original prototype exactly (including the known defects F1–F8 in `ARCHITECTURE
 is permanent, and stays the API default. **v2** holds the corrected methods. The golden fixtures
 in `backend/tests/golden/` describe v1 and are never modified.
 
+## [Unreleased] — Phase 10: deployment configuration and hardening
+
+- `render.yaml` (API + PostgreSQL) and `frontend/vercel.json` (SPA, `/api` rewrite, security
+  headers); `docs/deployment.md`.
+- `DATABASE_URL` accepts `postgres://` / `postgresql://` (converted for asyncpg, `sslmode` →
+  `ssl`).
+
 ## [Unreleased] — Phase 8: simulator evidence and baseline validation
 
 No analytics change: v1 and v2 simulator outputs are unchanged (fixtures re-recorded, zero diff).

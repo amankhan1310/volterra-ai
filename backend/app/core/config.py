@@ -48,8 +48,23 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     def database_dsn(self) -> str | None:
-        """The plain database URL (contains credentials: never log it)."""
-        return self.database_url.get_secret_value() if self.database_url else None
+        """The plain database URL (contains credentials: never log it), for asyncpg."""
+        return normalise_dsn(self.database_url.get_secret_value()) if self.database_url else None
+
+
+def normalise_dsn(url: str) -> str:
+    """Accept the ``postgres://`` / ``postgresql://`` URLs hosting providers issue (Render).
+
+    The scheme becomes ``postgresql+asyncpg://`` and libpq's ``sslmode`` query parameter, which
+    asyncpg does not understand, becomes asyncpg's ``ssl``. Other URLs pass through unchanged.
+    """
+    for scheme in ("postgres://", "postgresql://"):
+        if url.startswith(scheme):
+            url = "postgresql+asyncpg://" + url[len(scheme) :]
+            break
+    if url.startswith("postgresql+asyncpg://"):
+        url = url.replace("?sslmode=", "?ssl=").replace("&sslmode=", "&ssl=")
+    return url
 
 
 @lru_cache(maxsize=1)

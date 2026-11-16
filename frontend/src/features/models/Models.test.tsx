@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { ModelTask } from "../../api/types";
 import { fixtures, server } from "../../test/msw";
 import { renderApp } from "../../test/render";
-import { MIN_STABLE_TEST_BATTERIES, taskLabel } from "./ModelsPage";
+import { MIN_STABLE_TEST_BATTERIES, taskLabel, taskOrder } from "./ModelsPage";
 
 const text = (el: Element) => el.textContent;
 
@@ -52,6 +52,23 @@ describe("Models page (Phase 7)", () => {
     );
   });
 
+  it("orders tasks: RUL, forecasts by horizon, SOH estimation, stress test", () => {
+    const tasks = [
+      "soh_x",
+      "rul_cross_dataset",
+      "forecast_h200",
+      "rul",
+      "forecast_h50",
+    ];
+    expect(tasks.sort((a, b) => taskOrder(a) - taskOrder(b))).toEqual([
+      "rul",
+      "forecast_h50",
+      "forecast_h200",
+      "soh_x",
+      "rul_cross_dataset",
+    ]);
+  });
+
   it("names tasks with their error unit", () => {
     const task = (t: Partial<ModelTask>) =>
       ({ ...fixtures.models.tasks[0], ...t }) as ModelTask;
@@ -93,9 +110,13 @@ describe("RUL panel on Battery Data", () => {
     expect(text(await within(panel).findByTestId("rul-warning"))).toContain(
       "not production-validated",
     );
-    const last = fixtures.rulCalce.points.at(-1);
+    const before = fixtures.rulCalce.points.filter((p) => !p.past_eol);
+    const last = before.at(-1);
+    expect(text(within(panel).getByTestId("rul-past-eol"))).toBe(
+      `This battery reached its end of life at cycle ${String(fixtures.rulCalce.eol_cycle)} (from its measured data): no remaining life is predicted after that.`,
+    );
     expect(text(within(panel).getByTestId("rul-latest"))).toBe(
-      `At cycle ${String(last?.cycle)}: predicted remaining life ${String(last?.rul.point)} cycles, 90% interval ${String(last?.rul.lower)}–${String(last?.rul.upper)} cycles (split conformal dataset); actual ${String(last?.actual_rul?.value)} cycles.`,
+      `Last prediction before EOL, at cycle ${String(last?.cycle)}: predicted remaining life ${String(last?.rul.point)} cycles, 90% interval ${String(last?.rul.lower)}–${String(last?.rul.upper)} cycles (split-conformal, calibrated on held-out batteries of this dataset); actual ${String(last?.actual_rul?.value)} cycles.`,
     );
     expect(text(within(panel).getByTestId("rul-split"))).toContain(
       "Held-out test battery",

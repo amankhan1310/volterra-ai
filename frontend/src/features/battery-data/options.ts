@@ -105,7 +105,8 @@ export function sampleChartOption(
   channel: SampleChannel,
 ) {
   const meta = SAMPLE_CHANNELS[channel];
-  const last = points.at(-1)?.[0] ?? 0;
+  // Whole seconds for the axis end, so its label is not a raw float such as 2461.1012.
+  const last = Math.ceil(points.at(-1)?.[0] ?? 0);
   const base = baseOption(theme, {
     xMax: last,
     yMin: null,

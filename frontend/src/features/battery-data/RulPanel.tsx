@@ -22,24 +22,47 @@ const SPLIT_TEXT: Record<RulPredictions["split"], string> = {
     "Training battery: these predictions are in-sample and say little about accuracy on new batteries.",
 };
 
+const INTERVAL_TEXT: Record<string, string> = {
+  dataset: "split-conformal, calibrated on held-out batteries of this dataset",
+  pooled:
+    "split-conformal, pooled calibration: too few calibration batteries in this dataset",
+};
+
+/**
+ * Before EOL the model's prediction is shown. Once the battery has reached its EOL label, its
+ * remaining life is known from the data (0), so no prediction is presented for those cycles.
+ */
 function RulChart({ data }: { data: RulPredictions }) {
   const theme = useChartTheme();
-  const series = useMemo(() => rulSeries(data.points), [data.points]);
+  const before = useMemo(
+    () => data.points.filter((p) => !p.past_eol),
+    [data.points],
+  );
+  const series = useMemo(() => rulSeries(before), [before]);
   const option = useMemo(() => rulChartOption(theme, series), [theme, series]);
   const search = useBatterySearch();
-  const latest = data.points.at(-1);
+  const latest = before.at(-1);
+  const passed = data.points.at(-1)?.past_eol === true;
   return (
     <>
       <p className={styles.warn} role="note" data-testid="rul-warning">
         Experimental: trained and evaluated offline on public laboratory cells;
         not production-validated and not a guarantee for this battery.
       </p>
+      {passed ? (
+        <p className={styles.analysis} data-testid="rul-past-eol">
+          This battery reached its end of life at cycle{" "}
+          {fixed(data.eol_cycle, 0)} (from its measured data): no remaining life
+          is predicted after that.
+        </p>
+      ) : null}
       {latest ? (
         <p className={styles.analysis} data-testid="rul-latest">
-          At cycle {latest.cycle}: predicted remaining life{" "}
+          {passed ? "Last prediction before EOL, at" : "At"} cycle{" "}
+          {latest.cycle}: predicted remaining life{" "}
           <b>{fixed(latest.rul.point, 0)} cycles</b>, 90% interval{" "}
           {fixed(latest.rul.lower, 0)}–{fixed(latest.rul.upper, 0)} cycles (
-          {latest.rul.method.replaceAll("_", " ")})
+          {INTERVAL_TEXT[data.interval_basis] ?? data.interval_basis})
           {latest.actual_rul
             ? `; actual ${fixed(latest.actual_rul.value, 0)} cycles`
             : ""}
@@ -55,7 +78,7 @@ function RulChart({ data }: { data: RulPredictions }) {
       <EChart
         option={option}
         height={300}
-        label={`Predicted remaining useful life with 90% interval over ${String(data.points.length)} prediction points${data.censored ? "" : ", with the actual remaining life"}.`}
+        label={`Predicted remaining useful life with 90% interval at ${String(before.length)} prediction points before end of life${data.censored ? "" : ", with the actual remaining life"}.`}
       />
       <p className="mu">
         Model {data.model.model} ({data.model.status}), run {data.model.run_id}.{" "}
@@ -65,7 +88,7 @@ function RulChart({ data }: { data: RulPredictions }) {
       <ChartDataTable
         caption="Predicted and actual remaining useful life (cycles)"
         columns={["Cycle", "SOH (%)", "Predicted", "90% interval", "Actual"]}
-        rows={data.points.map((p) => [
+        rows={before.map((p) => [
           String(p.cycle),
           fixed(p.soh.value, 2),
           fixed(p.rul.point, 0),

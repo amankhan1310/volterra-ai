@@ -238,6 +238,15 @@ function TaskCard({ task }: { task: ModelTask }) {
   );
 }
 
+/** Display order: the main RUL task, the forecasts, SOH estimation, then the stress test. */
+export function taskOrder(task: string): number {
+  if (task === "rul") return 0;
+  if (task.startsWith("forecast_h"))
+    return 1 + Number(task.slice("forecast_h".length)) / 1e6;
+  if (task.startsWith("soh_")) return 2;
+  return 3;
+}
+
 export function ModelsContent({ models }: { models: Models }) {
   if (!models.run) {
     return (
@@ -253,9 +262,11 @@ export function ModelsContent({ models }: { models: Models }) {
   return (
     <div className={styles.stack}>
       <RunCard run={models.run} note={models.note} />
-      {models.tasks.map((t) => (
-        <TaskCard key={t.task} task={t} />
-      ))}
+      {[...models.tasks]
+        .sort((x, y) => taskOrder(x.task) - taskOrder(y.task))
+        .map((t) => (
+          <TaskCard key={t.task} task={t} />
+        ))}
     </div>
   );
 }

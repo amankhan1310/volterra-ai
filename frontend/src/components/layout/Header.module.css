@@ -72,6 +72,28 @@
   display: inline-flex;
 }
 
+/*
+ * A select is as wide as its longest option; let the battery selector give way to the fixed header
+ * items instead of pushing the header past the viewport (980 px with the docked sidebar).
+ */
+.bs {
+  flex: 0 4 260px;
+  min-width: 120px;
+  max-width: 260px;
+}
+
+/*
+ * Narrow desktop widths: keep the page name and the battery selector readable. The provenance pill
+ * and the "Workspace /" prefix give way first (as on phones); the page's data-context line and the
+ * sidebar status card still show the provenance.
+ */
+@media (max-width: 1240px) {
+  .tag,
+  .workspace {
+    display: none;
+  }
+}
+
 @media (max-width: 860px) {
   .hd {
     padding: 0 16px;
@@ -99,7 +121,8 @@
     display: none;
   }
 
-  .tag {
+  .tag,
+  .bs {
     display: none;
   }
 

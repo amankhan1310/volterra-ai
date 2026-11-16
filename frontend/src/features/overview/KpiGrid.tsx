@@ -91,7 +91,9 @@ export function KpiGrid({ battery, summary, cycles, anomalies }: KpiGridProps) {
         note={`${String(tempEvents)} excursions flagged in history`}
         extra={
           <Sparkline
-            values={cycles.items.map((c) => c.temp_c)}
+            values={cycles.items.flatMap((c) =>
+              c.temp_c === null ? [] : [c.temp_c],
+            )}
             color="var(--cy)"
           />
         }

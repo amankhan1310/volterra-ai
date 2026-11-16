@@ -1,0 +1,9 @@
+{
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "missing_measurement",
+      "message": "230 of 230 cycles have no temperature or voltage measurement; the analytics need both and never fill them in"
+    }
+  }
+}

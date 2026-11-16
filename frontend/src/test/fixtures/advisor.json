@@ -5,7 +5,8 @@
     "is_synthetic": true,
     "data_provenance": "simulated",
     "algorithm_version": "v1",
-    "eol_pct": 80
+    "eol_pct": 80,
+    "note": null
   },
   "start_soh_pct": 86.1,
   "eol_pct": 80,

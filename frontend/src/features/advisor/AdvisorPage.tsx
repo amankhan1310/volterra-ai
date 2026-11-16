@@ -208,7 +208,7 @@ export function AdvisorPage() {
         actions={<RunAnalysisButton />}
       />
       <ContextBar />
-      <BatteryGate>
+      <BatteryGate need="analysis">
         {(battery) => <AdvisorContent battery={battery} />}
       </BatteryGate>
     </>

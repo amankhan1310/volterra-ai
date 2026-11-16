@@ -1,4 +1,8 @@
-// Records test fixtures from a running VOLTERRA API (seeded with synthetic-v1):
+// Records test fixtures from a running VOLTERRA API on a disposable database seeded with
+// synthetic-v1 plus the generated real-style bundles (generated values, never real data):
+//
+//   cd backend && uv run python -m tests.support.fixture_bundles import <volterra_test_db> <data-dir>
+//   then serve the API on that database with VOLTERRA_DATA_DIR=<data-dir>
 //
 //   node scripts/record-fixtures.mjs [apiBase]      (default http://127.0.0.1:8000)
 //
@@ -14,6 +18,16 @@ async function get(path) {
   const response = await fetch(base + path);
   if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
   return response.json();
+}
+
+/** Error envelopes (422 etc.) are recorded too: the UI must explain them. */
+async function getError(path) {
+  const response = await fetch(base + path);
+  if (response.ok)
+    throw new Error(
+      `${path}: expected an error, got ${String(response.status)}`,
+    );
+  return { status: response.status, body: await response.json() };
 }
 
 async function send(method, path, body) {
@@ -58,6 +72,40 @@ const fixtures = {
   "twin-319": await get(`/api/v1/batteries/${id}/twin?cycle=319`),
 };
 
+// Real-style batteries (generated bundles): limitation states, null measurements and samples.
+// Database ids are random per import, so every battery id is replaced by a fixed one.
+const fixedIds = { [battery.id]: "5b0f37f1-3383-4495-a70d-bd0ff24be316" };
+const realId = (slug, fixed) => {
+  const b = batteries.items.find((x) => x.dataset === slug);
+  if (!b)
+    throw new Error(
+      `No ${slug} battery: import the generated bundles first (see top).`,
+    );
+  fixedIds[b.id] = fixed;
+  return encodeURIComponent(b.id);
+};
+const calce = realId("calce-test", "00000000-0000-4000-8000-000000000101");
+const nasa = realId("nasa-test", "00000000-0000-4000-8000-000000000102");
+Object.assign(fixtures, {
+  "cycles-calce": await get(`/api/v1/batteries/${calce}/cycles`),
+  "cycles-nasa": await get(`/api/v1/batteries/${nasa}/cycles`),
+  "samples-nasa-0": await get(
+    `/api/v1/batteries/${nasa}/cycles/0/samples?max_points=1500`,
+  ),
+  "samples-calce-7": await get(
+    `/api/v1/batteries/${calce}/cycles/7/samples?max_points=1500`,
+  ),
+  "error-missing-measurement": await getError(
+    `/api/v1/batteries/${calce}/summary`,
+  ),
+  "error-insufficient-data": await getError(
+    `/api/v1/batteries/${nasa}/summary`,
+  ),
+  "error-no-samples": await getError(
+    `/api/v1/batteries/${id}/cycles/0/samples`,
+  ),
+});
+
 // What-If Simulator: the defaults and one changed temperature (the tests move that slider).
 const simulator = fixtures.simulator;
 const simulate = (params) =>
@@ -99,9 +147,9 @@ fixtures.scenario = {
 
 await mkdir(outDir, { recursive: true });
 for (const [name, body] of Object.entries(fixtures)) {
-  await writeFile(
-    new URL(`${name}.json`, outDir),
-    JSON.stringify(body, null, 2) + "\n",
-  );
+  let text = JSON.stringify(body, null, 2) + "\n";
+  for (const [random, fixed] of Object.entries(fixedIds))
+    text = text.replaceAll(random, fixed);
+  await writeFile(new URL(`${name}.json`, outDir), text);
   console.log(`recorded ${name}.json`);
 }

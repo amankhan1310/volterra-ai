@@ -56,6 +56,11 @@ describe("dataSourceText", () => {
       detail: "NASA PCoE · no vehicle link",
     });
     expect(dataSourceText(null).title).toBe("No data");
+    expect(dataSourceText(null).detail).toBe("No battery in the database");
+    expect(dataSourceText(null, true)).toEqual({
+      title: "No data",
+      detail: "Selected battery not found",
+    });
     expect(dataSourceText(undefined).title).toBe("Data source");
   });
 });

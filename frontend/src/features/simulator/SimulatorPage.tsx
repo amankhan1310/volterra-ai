@@ -306,7 +306,7 @@ export function SimulatorPage() {
         actions={<RunAnalysisButton />}
       />
       <ContextBar />
-      <BatteryGate>
+      <BatteryGate need="analysis">
         {(battery) => <SimulatorContent battery={battery} />}
       </BatteryGate>
     </>

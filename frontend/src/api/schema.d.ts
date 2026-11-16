@@ -109,6 +109,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/batteries/{battery_id}/cycles/{cycle}/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Measured samples of one cycle (downsampled for charts) */
+        get: operations["get_cycle_samples_api_v1_batteries__battery_id__cycles__cycle__samples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/batteries/{battery_id}/summary": {
         parameters: {
             query?: never;
@@ -374,6 +391,26 @@ export interface components {
             comparison?: ("comparable" | "at_or_below_eol" | "beyond_horizon") | null;
         };
         /**
+         * AnalysisAvailability
+         * @description Whether the v1/v2 analytics (overview, anomalies, simulator, advisor) can run.
+         */
+        AnalysisAvailability: {
+            /** Available */
+            available: boolean;
+            /**
+             * Reason
+             * @description Error code the analysis endpoints return (422) when unavailable.
+             */
+            reason: ("missing_measurement" | "insufficient_data") | null;
+            /** Message */
+            message: string | null;
+            /**
+             * Min Cycles
+             * @description Cycles the analytics need.
+             */
+            min_cycles: number;
+        };
+        /**
          * AnalysisContext
          * @description Identifies what an analytical response was computed from.
          */
@@ -405,6 +442,11 @@ export interface components {
              * @description End-of-life SOH threshold used.
              */
             eol_pct?: number | null;
+            /**
+             * Note
+             * @description Set for measured cells: the analytics are not validated on real cells.
+             */
+            note?: string | null;
         };
         /** AnomaliesResponse */
         AnomaliesResponse: {
@@ -538,6 +580,16 @@ export interface components {
             /** Dod Pct */
             dod_pct: number;
         };
+        /**
+         * BatteryFlag
+         * @description A battery-level note from the source (e.g. the paper excluded this cell).
+         */
+        BatteryFlag: {
+            /** Code */
+            code: string;
+            /** Detail */
+            detail: string;
+        };
         /** BatteryList */
         BatteryList: {
             /** Items */
@@ -575,6 +627,19 @@ export interface components {
             data_provenance: "measured" | "simulated";
             /** Cycle Count */
             cycle_count: number;
+            /**
+             * Incomplete Cycle Count
+             * @description Cycles without a temperature or voltage measurement (null, never filled in).
+             */
+            incomplete_cycle_count: number;
+            /**
+             * Flagged Cycle Count
+             * @description Cycles with at least one data-quality flag.
+             */
+            flagged_cycle_count: number;
+            /** Flags */
+            flags: components["schemas"]["BatteryFlag"][];
+            analysis: components["schemas"]["AnalysisAvailability"];
         };
         /** ChannelStatsOut */
         ChannelStatsOut: {
@@ -630,14 +695,63 @@ export interface components {
             soh_pct: number;
             /**
              * Temp C
-             * @description Mean cycle temperature.
+             * @description Mean cycle temperature; null if not measured.
              */
-            temp_c: number;
+            temp_c: number | null;
             /**
              * Voltage V
-             * @description Mean cycle voltage.
+             * @description Mean cycle voltage; null if not measured.
              */
-            voltage_v: number;
+            voltage_v: number | null;
+            /**
+             * Internal Resistance Ohm
+             * @description As reported by the source.
+             */
+            internal_resistance_ohm: number | null;
+            /**
+             * Charge Time S
+             * @description Charge duration, if the source has it.
+             */
+            charge_time_s: number | null;
+            /**
+             * Quality Flags
+             * @description Data-quality flags of this cycle (if any).
+             */
+            quality_flags: string[];
+        };
+        /**
+         * CycleSamplesResponse
+         * @description Measured samples of one cycle, deterministically downsampled for charts (decision E).
+         */
+        CycleSamplesResponse: {
+            context: components["schemas"]["AnalysisContext"];
+            /**
+             * Provenance
+             * @enum {string}
+             */
+            provenance: "measured" | "simulated";
+            /** Cycle */
+            cycle: number;
+            /**
+             * Cycle Types
+             * @description Operations in the samples (charge, discharge).
+             */
+            cycle_types: string[];
+            /**
+             * Total Samples
+             * @description Samples in the source before downsampling.
+             */
+            total_samples: number;
+            /** Returned Samples */
+            returned_samples: number;
+            /** Downsampled */
+            downsampled: boolean;
+            /** Units */
+            units: {
+                [key: string]: string;
+            };
+            /** Items */
+            items: components["schemas"]["SampleOut"][];
         };
         /** CycleWindow */
         CycleWindow: {
@@ -892,6 +1006,22 @@ export interface components {
              * @enum {string}
              */
             provenance: "measured" | "simulated" | "fitted" | "predicted" | "assumed";
+        };
+        /** SampleOut */
+        SampleOut: {
+            /**
+             * Position
+             * @description Index of this sample in the full, time-ordered series.
+             */
+            position: number;
+            /** Time S */
+            time_s: number | null;
+            /** Voltage V */
+            voltage_v: number | null;
+            /** Current A */
+            current_a: number | null;
+            /** Temp C */
+            temp_c: number | null;
         };
         /** ScenarioCreate */
         ScenarioCreate: {
@@ -1363,6 +1493,59 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_cycle_samples_api_v1_batteries__battery_id__cycles__cycle__samples_get: {
+        parameters: {
+            query?: {
+                /** @description Most samples to return; longer series are evenly downsampled, always keeping the first and last sample. */
+                max_points?: number;
+            };
+            header?: never;
+            path: {
+                battery_id: string;
+                cycle: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CycleSamplesResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

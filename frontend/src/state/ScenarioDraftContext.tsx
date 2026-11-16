@@ -40,7 +40,10 @@ interface Overrides {
 export function ScenarioDraftProvider({ children }: { children: ReactNode }) {
   const { battery } = useDefaultBattery();
   const batteryId = battery?.id;
-  const config = useSimulatorConfig(batteryId);
+  // The simulator needs the analytics (decision D4); an ineligible battery has no draft.
+  const config = useSimulatorConfig(
+    battery?.analysis.available ? batteryId : undefined,
+  );
   const [overrides, setOverrides] = useState<Overrides>({
     batteryId,
     values: {},

@@ -112,9 +112,10 @@ function AboutContent({ battery }: { battery: Battery }) {
           and is not a guaranteed replacement date.
         </p>
         <p className="mu" data-testid="about-not-included">
-          Not included yet: real-data import (CSV upload), ML model comparison,
-          PDF and CSV reports, user accounts. These are later phases of the
-          plan.
+          Real datasets (NASA, CALCE, Severson) are imported by command line and
+          shown on Battery Data. Not included yet: CSV upload, ML model
+          comparison, PDF and CSV reports, user accounts. These are later phases
+          of the plan.
         </p>
       </Card>
       <Limitations />
@@ -132,7 +133,7 @@ export function AboutPage() {
         actions={<RunAnalysisButton />}
       />
       <ContextBar />
-      <BatteryGate>
+      <BatteryGate need="analysis">
         {(battery) => <AboutContent battery={battery} />}
       </BatteryGate>
     </>

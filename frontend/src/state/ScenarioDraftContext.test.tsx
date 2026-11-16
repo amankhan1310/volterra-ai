@@ -1,16 +1,24 @@
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import { http } from "msw";
 import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import { AppProviders } from "../app/providers";
 import { fixtures, server } from "../test/msw";
 import { testQueryClient } from "../test/render";
-import { useScenarioDraft } from "./ScenarioDraftContext";
+import {
+  ScenarioDraftProvider,
+  useScenarioDraft,
+} from "./ScenarioDraftContext";
 
 function setup() {
   const client = testQueryClient();
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AppProviders client={client}>{children}</AppProviders>
+    <AppProviders client={client}>
+      <MemoryRouter>
+        <ScenarioDraftProvider>{children}</ScenarioDraftProvider>
+      </MemoryRouter>
+    </AppProviders>
   );
   return { client, ...renderHook(() => useScenarioDraft(), { wrapper }) };
 }

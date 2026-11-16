@@ -1,0 +1,2324 @@
+{
+  "context": {
+    "battery_id": "00000000-0000-4000-8000-000000000101",
+    "dataset": "calce-test",
+    "is_synthetic": false,
+    "data_provenance": "measured",
+    "algorithm_version": "v1",
+    "eol_pct": null,
+    "note": "The analytics were developed on the synthetic reference pack. They run unchanged on this measured cell and are not validated on real cells."
+  },
+  "provenance": "measured",
+  "units": {
+    "capacity_ah": "Ah",
+    "soh_pct": "%",
+    "temp_c": "°C",
+    "voltage_v": "V",
+    "internal_resistance_ohm": "Ω",
+    "charge_time_s": "s"
+  },
+  "items": [
+    {
+      "cycle": 0,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 1,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 2,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 3,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": [
+        "capacity_jump_up"
+      ]
+    },
+    {
+      "cycle": 4,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 5,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 6,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 7,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 8,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 9,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 10,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 11,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 12,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 13,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 14,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 15,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 16,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 17,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 18,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 19,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 20,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 21,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 22,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 23,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 24,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 25,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 26,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 27,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 28,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 29,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 30,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 31,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 32,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 33,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 34,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 35,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 36,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 37,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 38,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 39,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 40,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 41,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 42,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 43,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 44,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 45,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 46,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 47,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 48,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 49,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 50,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 51,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 52,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 53,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 54,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 55,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 56,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 57,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 58,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 59,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 60,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 61,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 62,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 63,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 64,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 65,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 66,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 67,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 68,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 69,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 70,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 71,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 72,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 73,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 74,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 75,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 76,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 77,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 78,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 79,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 80,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 81,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 82,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 83,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 84,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 85,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 86,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 87,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 88,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 89,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 90,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 91,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 92,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 93,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 94,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 95,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 96,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 97,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 98,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 99,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 100,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 101,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 102,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 103,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 104,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 105,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 106,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 107,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 108,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 109,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 110,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 111,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 112,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 113,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 114,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 115,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 116,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 117,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 118,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 119,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 120,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 121,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 122,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 123,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 124,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 125,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 126,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 127,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 128,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 129,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 130,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 131,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 132,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 133,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 134,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 135,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 136,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 137,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 138,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 139,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 140,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 141,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 142,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 143,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 144,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 145,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 146,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 147,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 148,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 149,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 150,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 151,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 152,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 153,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 154,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 155,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 156,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 157,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 158,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 159,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 160,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 161,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 162,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 163,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 164,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 165,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 166,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 167,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 168,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 169,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 170,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 171,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 172,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 173,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 174,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 175,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 176,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 177,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 178,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 179,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 180,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 181,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 182,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 183,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 184,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 185,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 186,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 187,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 188,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 189,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 190,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 191,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 192,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 193,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 194,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 195,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 196,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 197,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 198,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 199,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 200,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 201,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 202,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 203,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 204,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 205,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 206,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 207,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 208,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 209,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 210,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 211,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 212,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 213,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 214,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 215,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 216,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 217,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 218,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 219,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 220,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 221,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 222,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 223,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 224,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 225,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 226,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 227,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 228,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 229,
+      "capacity_ah": 1.05,
+      "soh_pct": 95.45454545454545,
+      "temp_c": null,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    }
+  ]
+}

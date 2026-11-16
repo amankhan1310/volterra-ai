@@ -1,10 +1,10 @@
 import {
-  keepPreviousData,
   useMutation,
   useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useSearchParams } from "react-router";
 import { api, request } from "./client";
 import type { Battery, Scenario, ScenarioParams } from "./types";
 
@@ -17,6 +17,8 @@ export const queryKeys = {
   simulatorConfig: (batteryId: string) =>
     ["batteries", batteryId, "simulator"] as const,
   cycles: (batteryId: string) => ["batteries", batteryId, "cycles"] as const,
+  samples: (batteryId: string, cycle: number | undefined) =>
+    ["batteries", batteryId, "samples", { cycle }] as const,
   summary: (batteryId: string, eolPct: number | undefined) =>
     ["batteries", batteryId, "summary", { eolPct }] as const,
   forecast: (batteryId: string, eolPct: number | undefined) =>
@@ -37,6 +39,20 @@ export const queryKeys = {
     startSohPct: number | undefined,
   ) => ["batteries", batteryId, "advisor", { eolPct, startSohPct }] as const,
 };
+
+/**
+ * Keeps the previous result on screen while new parameters load (no flicker), but only for the
+ * same battery: after a battery switch nothing from the previous battery is ever shown.
+ */
+function sameBattery(batteryId: string | undefined) {
+  return <T>(
+    previous: T | undefined,
+    query: { queryKey: readonly unknown[] } | undefined,
+  ): T | undefined =>
+    query !== undefined && query.queryKey[1] === batteryId
+      ? previous
+      : undefined;
+}
 
 const batteryPath = (batteryId: string | undefined) => ({
   path: { battery_id: batteryId ?? "" },
@@ -76,7 +92,7 @@ export function useSummary(
         }),
       ),
     enabled: batteryId !== undefined && eolPct !== undefined,
-    placeholderData: keepPreviousData,
+    placeholderData: sameBattery(batteryId),
   });
 }
 
@@ -96,7 +112,7 @@ export function useForecast(
         }),
       ),
     enabled: batteryId !== undefined && eolPct !== undefined,
-    placeholderData: keepPreviousData,
+    placeholderData: sameBattery(batteryId),
   });
 }
 
@@ -148,16 +164,73 @@ export function useBatteries() {
   });
 }
 
+/** URL parameter that selects the battery (decision D11): `?battery=<dataset>:<external_id>`. */
+export const BATTERY_PARAM = "battery";
+
+/** Stable, readable battery key for the URL (database ids change between imports). */
+export function batteryKey(battery: Pick<Battery, "dataset" | "external_id">) {
+  return `${battery.dataset}:${battery.external_id}`;
+}
+
 /**
- * The battery every page analyses. Phase 4 has a single seeded battery; the multi-battery
- * selector arrives with real data in Phase 6. `battery` is `null` when the database has none.
+ * The battery every page shows: the one named by `?battery=`, else the first listed (the API
+ * lists the synthetic reference battery first). `battery` is `null` when the database has
+ * none, or when the requested battery does not exist (`notFound`).
  */
 export function useDefaultBattery() {
   const query = useBatteries();
-  const battery: Battery | null | undefined = query.data
-    ? (query.data.items[0] ?? null)
-    : undefined;
-  return { ...query, battery };
+  const [params] = useSearchParams();
+  const requested = params.get(BATTERY_PARAM);
+  const items = query.data?.items;
+  let battery: Battery | null | undefined;
+  if (items) {
+    battery =
+      requested === null
+        ? (items[0] ?? null)
+        : (items.find((b) => batteryKey(b) === requested) ?? null);
+  }
+  return {
+    ...query,
+    battery,
+    requested,
+    notFound: items !== undefined && requested !== null && battery === null,
+  };
+}
+
+/** `?battery=…` of the current URL (or ""), so links keep the selected battery. */
+export function useBatterySearch(): string {
+  const [params] = useSearchParams();
+  const key = params.get(BATTERY_PARAM);
+  return key === null
+    ? ""
+    : `?${new URLSearchParams({ [BATTERY_PARAM]: key }).toString()}`;
+}
+
+/** The selected battery's id, only when the analytics can run for it (otherwise the API 422s). */
+export function useAnalysisBatteryId(): string | undefined {
+  const { battery } = useDefaultBattery();
+  return battery?.analysis.available ? battery.id : undefined;
+}
+
+/** Measured samples of one cycle (real datasets only; the synthetic data has none). */
+export function useCycleSamples(
+  batteryId: string | undefined,
+  cycle: number | undefined,
+) {
+  return useQuery({
+    queryKey: queryKeys.samples(batteryId ?? "", cycle),
+    queryFn: () =>
+      request(() =>
+        api.GET("/api/v1/batteries/{battery_id}/cycles/{cycle}/samples", {
+          params: {
+            path: { battery_id: batteryId ?? "", cycle: cycle ?? 0 },
+            query: { max_points: 1500 },
+          },
+        }),
+      ),
+    enabled: batteryId !== undefined && cycle !== undefined,
+    placeholderData: sameBattery(batteryId),
+  });
 }
 
 export function useAnomalies(batteryId: string | undefined) {
@@ -206,7 +279,7 @@ export function useTwin(
         }),
       ),
     enabled: batteryId !== undefined && cycle !== undefined,
-    placeholderData: keepPreviousData,
+    placeholderData: sameBattery(batteryId),
   });
 }
 
@@ -236,7 +309,7 @@ export function useSimulation(
 ) {
   return useQuery({
     ...simulateQuery(batteryId, params),
-    placeholderData: keepPreviousData,
+    placeholderData: sameBattery(batteryId),
   });
 }
 
@@ -323,6 +396,6 @@ export function useAdvisor(
         }),
       ),
     enabled: eolPct !== undefined && startSohPct !== undefined,
-    placeholderData: keepPreviousData,
+    placeholderData: sameBattery(batteryId),
   });
 }

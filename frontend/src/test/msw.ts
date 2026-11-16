@@ -6,6 +6,7 @@ import type {
   Backtest,
   Battery,
   Cycles,
+  CycleSamples,
   Forecast,
   Health,
   Insights,
@@ -22,11 +23,18 @@ import advisorJson from "./fixtures/advisor.json";
 import anomaliesJson from "./fixtures/anomalies.json";
 import backtestJson from "./fixtures/backtest.json";
 import batteriesJson from "./fixtures/batteries.json";
+import cyclesCalceJson from "./fixtures/cycles-calce.json";
+import cyclesNasaJson from "./fixtures/cycles-nasa.json";
 import cyclesJson from "./fixtures/cycles.json";
+import errorInsufficientJson from "./fixtures/error-insufficient-data.json";
+import errorMissingJson from "./fixtures/error-missing-measurement.json";
+import errorNoSamplesJson from "./fixtures/error-no-samples.json";
 import forecastEol70Json from "./fixtures/forecast-eol-70.json";
 import forecastJson from "./fixtures/forecast.json";
 import healthJson from "./fixtures/health.json";
 import insightsJson from "./fixtures/insights.json";
+import samplesCalce7Json from "./fixtures/samples-calce-7.json";
+import samplesNasa0Json from "./fixtures/samples-nasa-0.json";
 import scenarioJson from "./fixtures/scenario.json";
 import simulateDefaultJson from "./fixtures/simulate-default.json";
 import simulateT35Json from "./fixtures/simulate-t35.json";
@@ -71,7 +79,35 @@ export const fixtures = {
   advisor: advisorJson as Advisor,
   advisorEol70Soh90: advisorEol70Soh90Json as Advisor,
   advisorEol90Soh85: advisorEol90Soh85Json as Advisor,
+  /** Generated real-style batteries (see record-fixtures.mjs): CALCE-like and NASA-like. */
+  calce: batteriesJson.items.find((b) => b.dataset === "calce-test") as Battery,
+  nasa: batteriesJson.items.find((b) => b.dataset === "nasa-test") as Battery,
+  cyclesCalce: cyclesCalceJson as unknown as Cycles,
+  cyclesNasa: cyclesNasaJson as Cycles,
+  samplesNasa0: samplesNasa0Json as CycleSamples,
+  samplesCalce7: samplesCalce7Json as unknown as CycleSamples,
 };
+
+interface RecordedError {
+  status: number;
+  body: unknown;
+}
+/** What the API answers for each real-style battery's analytics (recorded 422s). */
+const REAL_ANALYTICS_ERROR: Record<string, RecordedError> = {
+  [fixtures.calce.id]: errorMissingJson,
+  [fixtures.nasa.id]: errorInsufficientJson,
+};
+const CYCLES_BY_ID: Record<string, Cycles> = {
+  [fixtures.battery.id]: fixtures.cycles,
+  [fixtures.calce.id]: fixtures.cyclesCalce,
+  [fixtures.nasa.id]: fixtures.cyclesNasa,
+};
+const SAMPLES: Record<string, CycleSamples> = {
+  [`${fixtures.nasa.id}|0`]: fixtures.samplesNasa0,
+  [`${fixtures.calce.id}|7`]: fixtures.samplesCalce7,
+};
+const recorded = (e: RecordedError) =>
+  HttpResponse.json(e.body as object, { status: e.status });
 
 const ADVISOR: Record<string, Advisor> = {
   "80|86.1": fixtures.advisor,
@@ -150,6 +186,15 @@ const byEol = <T>(recorded: Record<string, T>) =>
   byParam("eol_pct", "80", recorded);
 
 export const handlers = [
+  // Analytics of a real-style battery answer with the recorded 422 (gated pages must never ask);
+  // its cycles are served below and its twin was not recorded.
+  http.get("*/api/v1/batteries/:id/:endpoint", ({ params }) => {
+    const error = REAL_ANALYTICS_ERROR[String(params["id"])];
+    if (!error || params["endpoint"] === "cycles") return undefined;
+    return params["endpoint"] === "twin"
+      ? apiError(500, "test_fixture_missing", "No twin fixture")
+      : recorded(error);
+  }),
   http.get("*/api/v1/health", () => HttpResponse.json(fixtures.health)),
   http.get("*/api/v1/batteries", () => HttpResponse.json(fixtures.batteries)),
   http.get("*/api/v1/batteries/:id/anomalies", () =>
@@ -158,9 +203,20 @@ export const handlers = [
   http.get("*/api/v1/batteries/:id/simulator", () =>
     HttpResponse.json(fixtures.simulator),
   ),
-  http.get("*/api/v1/batteries/:id/cycles", () =>
-    HttpResponse.json(fixtures.cycles),
-  ),
+  http.get("*/api/v1/batteries/:id/cycles", ({ params }) => {
+    const body = CYCLES_BY_ID[String(params["id"])];
+    return body
+      ? HttpResponse.json(body)
+      : apiError(404, "battery_not_found", "Battery not found");
+  }),
+  http.get("*/api/v1/batteries/:id/cycles/:cycle/samples", ({ params }) => {
+    const id = String(params["id"]);
+    if (id === fixtures.battery.id) return recorded(errorNoSamplesJson);
+    const body = SAMPLES[`${id}|${String(params["cycle"])}`];
+    return body
+      ? HttpResponse.json(body)
+      : apiError(500, "test_fixture_missing", "No samples fixture");
+  }),
   http.get(
     "*/api/v1/batteries/:id/summary",
     byEol({ "80": fixtures.summary, "70": fixtures.summaryEol70 }),

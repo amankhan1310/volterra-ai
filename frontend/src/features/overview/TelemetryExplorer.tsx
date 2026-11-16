@@ -61,7 +61,7 @@ export function TelemetryExplorer({
         columns={["Cycle", `${meta.label} (${meta.unit})`, "Flagged"]}
         rows={cycles.items.map((c) => [
           String(c.cycle),
-          c[meta.field].toFixed(meta.dp),
+          c[meta.field]?.toFixed(meta.dp) ?? "not measured",
           flagged.has(c.cycle) ? "Yes" : "",
         ])}
       />

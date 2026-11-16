@@ -1,0 +1,9 @@
+{
+  "status": 404,
+  "body": {
+    "error": {
+      "code": "predictions_not_found",
+      "message": "No model predictions for battery SYN-001 in the latest imported run"
+    }
+  }
+}

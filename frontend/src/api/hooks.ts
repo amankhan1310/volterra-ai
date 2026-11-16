@@ -12,6 +12,9 @@ import type { Battery, Scenario, ScenarioParams } from "./types";
 export const queryKeys = {
   health: ["health"] as const,
   batteries: ["batteries"] as const,
+  models: ["models"] as const,
+  rulPredictions: (batteryId: string) =>
+    ["batteries", batteryId, "rul-predictions"] as const,
   anomalies: (batteryId: string) =>
     ["batteries", batteryId, "anomalies"] as const,
   simulatorConfig: (batteryId: string) =>
@@ -397,5 +400,27 @@ export function useAdvisor(
       ),
     enabled: eolPct !== undefined && startSohPct !== undefined,
     placeholderData: sameBattery(batteryId),
+  });
+}
+
+/** Evaluations of the latest imported Phase 7 model run (`run` is null when none). */
+export function useModels() {
+  return useQuery({
+    queryKey: queryKeys.models,
+    queryFn: () => request(() => api.GET("/api/v1/models")),
+  });
+}
+
+/** Stored RUL predictions of the latest run for a battery (404 `predictions_not_found` if none). */
+export function useRulPredictions(batteryId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.rulPredictions(batteryId ?? ""),
+    queryFn: () =>
+      request(() =>
+        api.GET("/api/v1/batteries/{battery_id}/rul-predictions", {
+          params: batteryPath(batteryId),
+        }),
+      ),
+    enabled: batteryId !== undefined,
   });
 }

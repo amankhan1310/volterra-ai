@@ -9,7 +9,7 @@ import {
 } from "./pages";
 
 describe("pages", () => {
-  it("lists the legacy pages in the legacy order, then Battery Data and About", () => {
+  it("lists the legacy pages in the legacy order, then Battery Data, Models and About", () => {
     expect(PAGES.map((p) => p.label)).toEqual([
       "Overview",
       "Digital Twin",
@@ -17,6 +17,7 @@ describe("pages", () => {
       "Anomaly Detection",
       "Charging Advisor",
       "Battery Data",
+      "Models",
       "About",
     ]);
   });
@@ -25,7 +26,7 @@ describe("pages", () => {
     expect(NAV_GROUPS.map((g) => [g.group, g.keys])).toEqual([
       ["Monitor", ["overview", "digital", "anom", "data"]],
       ["Plan", ["sim", "advisor"]],
-      ["Project", ["about"]],
+      ["Project", ["models", "about"]],
     ]);
     const keys = NAV_GROUPS.flatMap((g) => g.keys).sort();
     expect(keys).toEqual(PAGES.map((p) => p.key).sort());
@@ -39,6 +40,7 @@ describe("pages", () => {
       anom: 5,
       advisor: 5,
       data: 6,
+      models: 7,
       about: 6,
     });
   });

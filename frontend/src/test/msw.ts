@@ -10,6 +10,8 @@ import type {
   Forecast,
   Health,
   Insights,
+  Models,
+  RulPredictions,
   Scenario,
   ScenarioParams,
   Simulation,
@@ -28,11 +30,15 @@ import cyclesNasaJson from "./fixtures/cycles-nasa.json";
 import cyclesJson from "./fixtures/cycles.json";
 import errorInsufficientJson from "./fixtures/error-insufficient-data.json";
 import errorMissingJson from "./fixtures/error-missing-measurement.json";
+import errorNoPredictionsJson from "./fixtures/error-no-predictions.json";
 import errorNoSamplesJson from "./fixtures/error-no-samples.json";
 import forecastEol70Json from "./fixtures/forecast-eol-70.json";
 import forecastJson from "./fixtures/forecast.json";
 import healthJson from "./fixtures/health.json";
 import insightsJson from "./fixtures/insights.json";
+import modelsJson from "./fixtures/models.json";
+import rulCalceJson from "./fixtures/rul-calce.json";
+import rulNasaJson from "./fixtures/rul-nasa.json";
 import samplesCalce7Json from "./fixtures/samples-calce-7.json";
 import samplesNasa0Json from "./fixtures/samples-nasa-0.json";
 import scenarioJson from "./fixtures/scenario.json";
@@ -86,6 +92,10 @@ export const fixtures = {
   cyclesNasa: cyclesNasaJson as Cycles,
   samplesNasa0: samplesNasa0Json as CycleSamples,
   samplesCalce7: samplesCalce7Json as unknown as CycleSamples,
+  /** Phase 7: the generated model run (made-up values) and its stored RUL predictions. */
+  models: modelsJson as Models,
+  rulCalce: rulCalceJson as RulPredictions,
+  rulNasa: rulNasaJson as RulPredictions,
 };
 
 interface RecordedError {
@@ -190,12 +200,22 @@ export const handlers = [
   // its cycles are served below and its twin was not recorded.
   http.get("*/api/v1/batteries/:id/:endpoint", ({ params }) => {
     const error = REAL_ANALYTICS_ERROR[String(params["id"])];
-    if (!error || params["endpoint"] === "cycles") return undefined;
+    const own = ["cycles", "rul-predictions"].includes(
+      String(params["endpoint"]),
+    );
+    if (!error || own) return undefined;
     return params["endpoint"] === "twin"
       ? apiError(500, "test_fixture_missing", "No twin fixture")
       : recorded(error);
   }),
   http.get("*/api/v1/health", () => HttpResponse.json(fixtures.health)),
+  http.get("*/api/v1/models", () => HttpResponse.json(fixtures.models)),
+  http.get("*/api/v1/batteries/:id/rul-predictions", ({ params }) => {
+    const id = String(params["id"]);
+    if (id === fixtures.calce.id) return HttpResponse.json(fixtures.rulCalce);
+    if (id === fixtures.nasa.id) return HttpResponse.json(fixtures.rulNasa);
+    return recorded(errorNoPredictionsJson);
+  }),
   http.get("*/api/v1/batteries", () => HttpResponse.json(fixtures.batteries)),
   http.get("*/api/v1/batteries/:id/anomalies", () =>
     HttpResponse.json(fixtures.anomalies),

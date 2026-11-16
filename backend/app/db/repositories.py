@@ -76,6 +76,10 @@ class CycleData:
     source_cycle_index: int | None
 
 
+class IncompleteCycleError(ValueError):
+    """A v1 analytics record was requested for a cycle without temperature or voltage."""
+
+
 @dataclass(frozen=True)
 class ScenarioInfo:
     id: uuid.UUID
@@ -163,7 +167,15 @@ class SqlRepository:
             .where(Cycle.battery_id == battery_id, Cycle.cycle_type == V1_CYCLE_TYPE)
             .order_by(Cycle.cycle_index)
         )
-        return tuple(CycleRecord(*row) for row in rows.all())
+        records = []
+        for cycle, capacity, soh, temp, voltage in rows.all():
+            if temp is None or voltage is None:
+                raise IncompleteCycleError(
+                    f"cycle {cycle} has no temperature or voltage measurement; "
+                    "load_cycle_data serves batteries with incomplete cycles"
+                )
+            records.append(CycleRecord(cycle, capacity, soh, temp, voltage))
+        return tuple(records)
 
     async def load_cycle_data(self, battery_id: uuid.UUID) -> tuple[CycleData, ...]:
         rows = await self.session.execute(

@@ -8,6 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from app.analytics.health import DEFAULT_EOL_PCT
+from app.analytics.synthetic import CycleRecord
 from app.api.deps import get_analysis_service, get_repository
 from app.api.v1.params import AlgorithmQuery, ModeQuery
 from app.core.errors import ApiError, error_responses
@@ -60,23 +61,25 @@ async def get_twin(
     cycle: Annotated[int | None, Query(ge=0, description="Cycle to show; default latest.")] = None,
 ) -> TwinResponse:
     battery = await service.battery(repo, battery_id)
-    records = await repo.load_records(battery_id)
-    if not records:
+    # Cycle data, not v1 records: a real battery may lack temperature or voltage on some cycles.
+    data = await repo.load_cycle_data(battery_id)
+    if not data:
         raise ApiError(422, "insufficient_data", "The battery has no cycle data")
-    by_cycle = {r.cycle: r for r in records}
-    last = records[-1]
-    record = last if cycle is None else by_cycle.get(cycle)
-    if record is None:
+    by_cycle = {d.cycle: d for d in data}
+    last = data[-1]
+    row = last if cycle is None else by_cycle.get(cycle)
+    if row is None:
         raise ApiError(
             422,
             "cycle_out_of_range",
-            f"Cycle {cycle} not found (cycles {records[0].cycle}..{last.cycle})",
+            f"Cycle {cycle} not found (cycles {data[0].cycle}..{last.cycle})",
         )
-    if record.temp_c is None or record.voltage_v is None:
+    if row.temp_c is None or row.voltage_v is None:
         raise ApiError(
             422,
             "missing_measurement",
-            f"Cycle {record.cycle} has no temperature or voltage measurement; the pack view "
+            f"Cycle {row.cycle} has no temperature or voltage measurement; the pack view "
             "needs both and never fills them in",
         )
+    record = CycleRecord(row.cycle, row.capacity_ah, row.soh_pct, row.temp_c, row.voltage_v)
     return mappers.twin_response(battery, record, last.cycle)

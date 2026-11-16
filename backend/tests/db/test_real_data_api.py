@@ -12,6 +12,7 @@ Two generated bundles exercise every real-data path without real data (decision 
 from __future__ import annotations
 
 import json
+import uuid
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ from alembic import command
 from fastapi import FastAPI
 
 from app.db.import_dataset import import_bundle
+from app.db.repositories import IncompleteCycleError, SqlRepository
 from app.db.seed import seed_synthetic_v1
 from app.db.session import Database
 from app.main import create_app
@@ -284,6 +286,20 @@ async def test_twin_works_for_short_cells_and_refuses_missing_measurements(clien
     assert calce.status_code == 422 and calce.json()["error"]["code"] == "missing_measurement"
     gone = await client.get(f"/api/v1/batteries/{ids['B0005']['id']}/twin", params={"cycle": 1})
     assert gone.json()["error"]["message"] == "Cycle 1 not found (cycles 0..2)"
+
+
+async def test_v1_records_are_never_built_from_incomplete_cycles(client, database_url: str) -> None:
+    ids = await batteries(client)
+    database = Database(database_url)
+    try:
+        async with database.session() as session:
+            repo = SqlRepository(session)
+            with pytest.raises(IncompleteCycleError, match="no temperature or voltage"):
+                await repo.load_records(uuid.UUID(ids["CS2_T"]["id"]))
+            nasa = await repo.load_records(uuid.UUID(ids["B0005"]["id"]))
+            assert [r.cycle for r in nasa] == [0, 2]
+    finally:
+        await database.dispose()
 
 
 async def test_nasa_samples_follow_the_source_cycle_index(client) -> None:

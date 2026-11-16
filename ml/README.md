@@ -42,6 +42,17 @@ and the database mapping are documented in
 [`../docs/datasets/canonical-schema.md`](../docs/datasets/canonical-schema.md); the column
 contract (`volterra_ml/canonical/columns.py`) is shared with the backend importer.
 
+## Models (Phase 7)
+
+```sh
+uv run python -m volterra_ml.modeling run --data-dir "$VOLTERRA_DATA_DIR" --out ../artifacts/models/<run>
+```
+
+Trains and evaluates the experimental RUL, SOH-forecast and SOH-estimation models on the
+processed bundles and writes `run.json`, `metrics.json`, `predictions.json` and `models/*.joblib`
+(never committed). Methodology and results: [`../docs/models/README.md`](../docs/models/README.md).
+Import a run with `cd ../backend && uv run python -m app.db.import_models <run-dir>`.
+
 ## Checks
 
 ```sh

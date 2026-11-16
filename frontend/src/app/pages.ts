@@ -1,5 +1,6 @@
 /**
- * The six prototype pages, plus Battery Data (Phase 6 M6: measured data of real cells). Labels, groups, titles and subtitles are copied verbatim from
+ * The six prototype pages, plus Battery Data (Phase 6 M6: measured data of real cells) and Models
+ * (Phase 7: evaluation of the experimental ML models). Labels, groups, titles and subtitles are copied verbatim from
  * legacy/core.js (`names`) and legacy/ui.js (`head(...)` calls and the nav groups).
  */
 export type PageKey =
@@ -9,6 +10,7 @@ export type PageKey =
   | "anom"
   | "advisor"
   | "data"
+  | "models"
   | "about";
 
 export type NavGroup = "Monitor" | "Plan" | "Project";
@@ -21,7 +23,7 @@ export interface PageMeta {
   label: string;
   title: string;
   subtitle: string;
-  /** Phase 4 milestone that rebuilt the page (Battery Data: Phase 6 milestone 6). */
+  /** Phase 4 milestone that rebuilt the page (Battery Data: Phase 6 M6; Models: Phase 7). */
   milestone: number;
 }
 
@@ -82,6 +84,15 @@ export const PAGES: readonly PageMeta[] = [
     milestone: 6,
   },
   {
+    key: "models",
+    path: "/models",
+    label: "Models",
+    title: "Model Evaluation",
+    subtitle:
+      "Experimental SOH, degradation and remaining-life models, evaluated on batteries they never saw.",
+    milestone: 7,
+  },
+  {
     key: "about",
     path: "/about",
     label: "About",
@@ -98,7 +109,7 @@ export const NAV_GROUPS: readonly {
 }[] = [
   { group: "Monitor", keys: ["overview", "digital", "anom", "data"] },
   { group: "Plan", keys: ["sim", "advisor"] },
-  { group: "Project", keys: ["about"] },
+  { group: "Project", keys: ["models", "about"] },
 ];
 
 const BY_KEY = new Map(PAGES.map((p) => [p.key, p]));

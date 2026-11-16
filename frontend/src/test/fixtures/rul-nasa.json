@@ -1,0 +1,64 @@
+{
+  "context": {
+    "battery_id": "00000000-0000-4000-8000-000000000102",
+    "dataset": "nasa-test",
+    "is_synthetic": false,
+    "data_provenance": "measured",
+    "algorithm_version": "v1",
+    "eol_pct": 80,
+    "note": "The analytics were developed on the synthetic reference pack. They run unchanged on this measured cell and are not validated on real cells."
+  },
+  "model": {
+    "run_id": "generated0001",
+    "task": "rul",
+    "model": "lightgbm",
+    "status": "experimental",
+    "trained_at": "2026-11-16T20:00:00Z"
+  },
+  "split": "train",
+  "in_sample": true,
+  "interval_basis": "pooled",
+  "eol_cycle": null,
+  "censored": true,
+  "note": "Experimental model prediction with a split-conformal 90% interval. For training batteries the prediction is in-sample; only calibration and test batteries are held out.",
+  "points": [
+    {
+      "cycle": 0,
+      "soh": {
+        "value": 95,
+        "unit": "%",
+        "provenance": "measured"
+      },
+      "rul": {
+        "point": 200,
+        "lower": 140,
+        "upper": 280,
+        "level": 0.9,
+        "method": "split_conformal_pooled",
+        "unit": "cycles",
+        "provenance": "predicted"
+      },
+      "actual_rul": null,
+      "past_eol": false
+    },
+    {
+      "cycle": 2,
+      "soh": {
+        "value": 94,
+        "unit": "%",
+        "provenance": "measured"
+      },
+      "rul": {
+        "point": 180,
+        "lower": 125.99999999999999,
+        "upper": 251.99999999999997,
+        "level": 0.9,
+        "method": "split_conformal_pooled",
+        "unit": "cycles",
+        "provenance": "predicted"
+      },
+      "actual_rul": null,
+      "past_eol": false
+    }
+  ]
+}

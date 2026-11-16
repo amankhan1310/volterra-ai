@@ -1,5 +1,6 @@
 // Records test fixtures from a running VOLTERRA API on a disposable database seeded with
-// synthetic-v1 plus the generated real-style bundles (generated values, never real data):
+// synthetic-v1 plus the generated real-style bundles and model run (generated values, never
+// real data):
 //
 //   cd backend && uv run python -m tests.support.fixture_bundles import <volterra_test_db> <data-dir>
 //   then serve the API on that database with VOLTERRA_DATA_DIR=<data-dir>
@@ -103,6 +104,17 @@ Object.assign(fixtures, {
   ),
   "error-no-samples": await getError(
     `/api/v1/batteries/${id}/cycles/0/samples`,
+  ),
+});
+
+// Phase 7 models: the generated model run (made-up values, tests/support/model_runs.py) that
+// fixture_bundles imports next to the bundles.
+Object.assign(fixtures, {
+  models: await get("/api/v1/models"),
+  "rul-calce": await get(`/api/v1/batteries/${calce}/rul-predictions`),
+  "rul-nasa": await get(`/api/v1/batteries/${nasa}/rul-predictions`),
+  "error-no-predictions": await getError(
+    `/api/v1/batteries/${id}/rul-predictions`,
   ),
 });
 

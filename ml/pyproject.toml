@@ -8,9 +8,11 @@ requires-python = ">=3.10"
 # (M2+) read MATLAB files with scipy/numpy and write Parquet bundles with pyarrow.
 dependencies = [
     "h5py>=3.11",
+    "lightgbm>=4.5",
     "numpy>=1.26",
     "pyarrow>=17",
     "python-calamine>=0.3",
+    "scikit-learn>=1.5",
     "scipy>=1.13",
 ]
 
@@ -62,7 +64,8 @@ warn_unreachable = true
 
 [[tool.mypy.overrides]]
 # These libraries ship no type information; their objects are typed as Any at the boundary.
-module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*", "h5py", "h5py.*", "python_calamine"]
+module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*", "h5py", "h5py.*", "python_calamine",
+  "sklearn", "sklearn.*", "lightgbm", "lightgbm.*", "joblib"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

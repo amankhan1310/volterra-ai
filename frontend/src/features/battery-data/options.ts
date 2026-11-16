@@ -105,7 +105,8 @@ export function sampleChartOption(
   channel: SampleChannel,
 ) {
   const meta = SAMPLE_CHANNELS[channel];
-  const last = points.at(-1)?.[0] ?? 0;
+  // Whole seconds for the axis end, so its label is not a raw float such as 2461.1012.
+  const last = Math.ceil(points.at(-1)?.[0] ?? 0);
   const base = baseOption(theme, {
     xMax: last,
     yMin: null,
@@ -141,6 +142,80 @@ export function sampleChartOption(
         showSymbol: false,
         lineStyle: { width: 2, color: theme.ib },
         itemStyle: { color: theme.ib },
+      },
+    ],
+  };
+}
+
+export interface RulSeries {
+  predicted: [number, number][];
+  lower: [number, number][];
+  upper: [number, number][];
+  actual: [number, number][];
+}
+
+/** The stored predictions as chart series (values copied from the API; nothing recomputed). */
+export function rulSeries(
+  points: readonly {
+    cycle: number;
+    rul: { point: number | null; lower: number | null; upper: number | null };
+    actual_rul: { value: number | null } | null;
+  }[],
+): RulSeries {
+  const pick = (v: number | null | undefined, cycle: number) =>
+    v === null || v === undefined ? [] : [[cycle, v] as [number, number]];
+  return {
+    predicted: points.flatMap((p) => pick(p.rul.point, p.cycle)),
+    lower: points.flatMap((p) => pick(p.rul.lower, p.cycle)),
+    upper: points.flatMap((p) => pick(p.rul.upper, p.cycle)),
+    actual: points.flatMap((p) => pick(p.actual_rul?.value, p.cycle)),
+  };
+}
+
+export function rulChartOption(theme: ChartTheme, s: RulSeries) {
+  const last = s.predicted.at(-1)?.[0] ?? 0;
+  const base = baseOption(theme, {
+    xMax: last,
+    yMin: 0,
+    yMax: null,
+    zoom: s.predicted.length > 60,
+    dp: 0,
+  });
+  const bound = (name: string, data: [number, number][]) => ({
+    name,
+    type: "line",
+    data,
+    showSymbol: false,
+    lineStyle: { width: 1, type: "dashed", color: theme.cy },
+    itemStyle: { color: theme.cy },
+  });
+  return {
+    ...base,
+    xAxis: {
+      ...base.xAxis,
+      name: "Cycle",
+      nameLocation: "middle",
+      nameGap: 26,
+    },
+    yAxis: { ...base.yAxis, name: "Cycles to EOL" },
+    series: [
+      {
+        name: "Predicted RUL",
+        type: "line",
+        data: s.predicted,
+        showSymbol: false,
+        lineStyle: { width: 2, color: theme.cy },
+        itemStyle: { color: theme.cy },
+      },
+      bound("90% interval (lower)", s.lower),
+      bound("90% interval (upper)", s.upper),
+      {
+        name: "Actual RUL",
+        type: "line",
+        data: s.actual,
+        showSymbol: false,
+        lineStyle: { width: 2, color: theme.gr },
+        itemStyle: { color: theme.gr },
       },
     ],
   };

@@ -66,6 +66,11 @@ const PAGE_ICON_PATHS: Record<PageKey, ReactNode> = {
       <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
     </>
   ),
+  models: (
+    <>
+      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+    </>
+  ),
   about: (
     <>
       <circle cx="12" cy="12" r="9" />

@@ -17,7 +17,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.analytics.synthetic import CycleRecord
-from app.db.models import Battery, Cycle, Dataset, DatasetFile, Scenario
+from app.db.models import Battery, Cycle, Dataset, DatasetFile, MlModel, MlPrediction, Scenario
 
 V1_CYCLE_TYPE = "discharge"
 
@@ -76,6 +76,45 @@ class CycleData:
     source_cycle_index: int | None
 
 
+@dataclass(frozen=True)
+class MlModelInfo:
+    """One task of an imported Phase 7 run, with its evaluation as the run reported it."""
+
+    id: uuid.UUID
+    run_id: str
+    task: str
+    kind: str
+    selected_model: str
+    status: str
+    trained_at: datetime
+    artifact_sha256: str | None
+    metrics: Mapping[str, Any]
+    run_meta: Mapping[str, Any]
+
+
+@dataclass(frozen=True)
+class RulPoint:
+    cycle: int
+    soh_pct: float
+    rul: float
+    lower: float
+    upper: float
+    actual_rul: float | None
+    past_eol: bool
+
+
+@dataclass(frozen=True)
+class RulPredictionSet:
+    """The latest run's stored RUL predictions for one battery."""
+
+    model: MlModelInfo
+    split: str
+    interval_basis: str
+    eol_cycle: float | None
+    censored: bool
+    points: tuple[RulPoint, ...]
+
+
 class IncompleteCycleError(ValueError):
     """A v1 analytics record was requested for a cycle without temperature or voltage."""
 
@@ -99,6 +138,8 @@ class Repository(Protocol):
     async def load_records(self, battery_id: uuid.UUID) -> tuple[CycleRecord, ...]: ...
     async def load_cycle_data(self, battery_id: uuid.UUID) -> tuple[CycleData, ...]: ...
     async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]: ...
+    async def latest_ml_models(self) -> list[MlModelInfo]: ...
+    async def rul_predictions(self, battery_id: uuid.UUID) -> RulPredictionSet | None: ...
     async def list_scenarios(self, battery_id: uuid.UUID) -> list[ScenarioInfo]: ...
     async def get_scenario(self, scenario_id: uuid.UUID) -> ScenarioInfo | None: ...
     async def create_scenario(
@@ -196,6 +237,52 @@ class SqlRepository:
         return tuple(
             CycleData(i, cap, soh, temp, volt, ir, ct, tuple(sorted(flags)), src)
             for i, cap, soh, temp, volt, ir, ct, flags, src in rows.all()
+        )
+
+    async def latest_ml_models(self) -> list[MlModelInfo]:
+        """Every task of the most recently imported run (empty when none was imported)."""
+        latest = await self.session.scalar(
+            select(MlModel.run_id).order_by(MlModel.created_at.desc(), MlModel.run_id).limit(1)
+        )
+        if latest is None:
+            return []
+        models = await self.session.scalars(
+            select(MlModel).where(MlModel.run_id == latest).order_by(MlModel.task)
+        )
+        return [_ml_model_info(m) for m in models]
+
+    async def rul_predictions(self, battery_id: uuid.UUID) -> RulPredictionSet | None:
+        model = next((m for m in await self.latest_ml_models() if m.task == "rul"), None)
+        if model is None:
+            return None
+        rows = (
+            await self.session.scalars(
+                select(MlPrediction)
+                .where(MlPrediction.model_id == model.id, MlPrediction.battery_id == battery_id)
+                .order_by(MlPrediction.cycle_index)
+            )
+        ).all()
+        if not rows:
+            return None
+        first = rows[0]
+        return RulPredictionSet(
+            model=model,
+            split=first.split,
+            interval_basis=first.interval_basis,
+            eol_cycle=first.eol_cycle,
+            censored=first.censored,
+            points=tuple(
+                RulPoint(
+                    r.cycle_index,
+                    r.soh_pct,
+                    r.rul,
+                    r.lower_rul,
+                    r.upper_rul,
+                    r.actual_rul,
+                    r.past_eol,
+                )
+                for r in rows
+            ),
         )
 
     async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]:
@@ -323,3 +410,18 @@ class SqlRepository:
             battery_count=battery_count,
             meta=dict(d.meta),
         )
+
+
+def _ml_model_info(m: MlModel) -> MlModelInfo:
+    return MlModelInfo(
+        id=m.id,
+        run_id=m.run_id,
+        task=m.task,
+        kind=m.kind,
+        selected_model=m.selected_model,
+        status=m.status,
+        trained_at=m.trained_at,
+        artifact_sha256=m.artifact_sha256,
+        metrics=m.metrics,
+        run_meta=m.run_meta,
+    )

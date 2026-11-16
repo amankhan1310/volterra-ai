@@ -21,7 +21,7 @@ from tests.support.migrations import alembic_config
 pytestmark = pytest.mark.db
 
 PHASE_3_TABLES = {"alembic_version", "batteries", "cycles", "datasets", "scenarios"}
-HEAD_TABLES = PHASE_3_TABLES | {"dataset_files"}  # 0002 (Phase 6 M3); 0003 adds a column
+HEAD_TABLES = PHASE_3_TABLES | {"dataset_files", "ml_models", "ml_predictions"}  # 0002, 0005
 PHASE_6_COLUMNS = {
     "datasets": {"publisher", "landing_url", "doi"},
     "batteries": {
@@ -163,3 +163,14 @@ def test_constraint_and_index_names_in_the_database(migrated_database_url: str) 
     assert "fk_cycles_battery_id_batteries" in found["fk"]
     assert "ix_cycles_start_time" in found["ix"]
     assert {"ck_datasets_source", "ck_datasets_status"} <= found["ck"]
+
+
+def test_0005_adds_only_the_ml_tables_and_downgrades_cleanly(empty_database_url: str) -> None:
+    assert_disposable(empty_database_url)
+    config = alembic_config(empty_database_url)
+    command.upgrade(config, "0004")
+    before = run(empty_database_url, table_names)
+    command.upgrade(config, "0005")
+    assert run(empty_database_url, table_names) == before | {"ml_models", "ml_predictions"}
+    command.downgrade(config, "0004")
+    assert run(empty_database_url, table_names) == before

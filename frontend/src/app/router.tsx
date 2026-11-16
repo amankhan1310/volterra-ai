@@ -48,6 +48,11 @@ export const PAGE_COMPONENTS: Record<PageKey, ComponentType> = {
       default: m.BatteryDataPage,
     })),
   ),
+  models: lazy(() =>
+    import("../features/models/ModelsPage").then((m) => ({
+      default: m.ModelsPage,
+    })),
+  ),
   about: lazy(() =>
     import("../features/about/AboutPage").then((m) => ({
       default: m.AboutPage,

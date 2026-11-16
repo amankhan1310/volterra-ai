@@ -316,6 +316,46 @@ export interface paths {
         patch: operations["update_scenario_api_v1_scenarios__scenario_id__patch"];
         trace?: never;
     };
+    "/api/v1/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Model evaluations of the latest imported run
+         * @description Battery-wise cross-validation and held-out test metrics per dataset, as the offline run reported them. `run` is null and `tasks` empty when no run was imported.
+         */
+        get: operations["list_models_api_v1_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batteries/{battery_id}/rul-predictions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stored RUL predictions for a battery
+         * @description Predicted remaining useful life at each prediction point with its conformal interval, next to the battery's actual RUL when its EOL is known. 404 `predictions_not_found` when the latest run has none for this battery (for example the synthetic battery, or a battery that was not in the run).
+         */
+        get: operations["get_rul_predictions_api_v1_batteries__battery_id__rul_predictions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -641,6 +681,32 @@ export interface components {
             flags: components["schemas"]["BatteryFlag"][];
             analysis: components["schemas"]["AnalysisAvailability"];
         };
+        /** CalibrationSize */
+        CalibrationSize: {
+            /** Rows */
+            rows: number;
+            /** Batteries */
+            batteries: number;
+        };
+        /** CandidateEvaluation */
+        CandidateEvaluation: {
+            /** Name */
+            name: string;
+            /** Learned */
+            learned: boolean;
+            /** Selected */
+            selected: boolean;
+            cv: components["schemas"]["MetricSet"];
+            test: components["schemas"]["MetricSet"];
+            /** Interval Scale */
+            interval_scale: string;
+            /** Pooled Half Width */
+            pooled_half_width: number | null;
+            /** Datasets */
+            datasets: components["schemas"]["DatasetEvaluation"][];
+            /** By Life Fraction */
+            by_life_fraction?: components["schemas"]["LifeFractionMetrics"][] | null;
+        };
         /** ChannelStatsOut */
         ChannelStatsOut: {
             /**
@@ -789,6 +855,51 @@ export interface components {
              * @description Exception type only; never a message.
              */
             error?: string | null;
+        };
+        /** DatasetCensus */
+        DatasetCensus: {
+            /** Dataset */
+            dataset: string;
+            /** Version */
+            version: string;
+            /** Bundle Checksum */
+            bundle_checksum: string;
+            /** Batteries */
+            batteries: number;
+            /**
+             * Excluded
+             * @description Excluded by the source (e.g. Severson paper).
+             */
+            excluded: string[];
+            /** Too Short */
+            too_short: string[];
+            /** Start Below Eol */
+            start_below_eol: string[];
+            /**
+             * Censored
+             * @description Never reach EOL: no exact RUL target.
+             */
+            censored: string[];
+        };
+        /** DatasetEvaluation */
+        DatasetEvaluation: {
+            /** Dataset */
+            dataset: string;
+            /**
+             * Interval Basis
+             * @description 'dataset' (Mondrian) or the pooled fallback.
+             */
+            interval_basis: string;
+            /**
+             * Interval Half Width
+             * @description Conformal half-width on the interval scale of the task.
+             */
+            interval_half_width: number | null;
+            /** @description Out-of-fold over this dataset's training batteries. */
+            cv: components["schemas"]["MetricSet"];
+            /** @description This dataset's held-out test batteries. */
+            test: components["schemas"]["MetricSet"];
+            calibration: components["schemas"]["CalibrationSize"];
         };
         /** DatasetList */
         DatasetList: {
@@ -966,6 +1077,24 @@ export interface components {
              */
             max_calibrated_horizon_cycles?: number | null;
         };
+        /**
+         * LabelCheck
+         * @description The threshold EOL rule against the source's documented cycle lives.
+         */
+        LabelCheck: {
+            /** Labelled Cells */
+            labelled_cells: number;
+            /** Rule Finds Eol */
+            rule_finds_eol: number;
+            /** Rule Misses Eol */
+            rule_misses_eol: number;
+            /** Rule Minus Label Max Abs Cycles */
+            rule_minus_label_max_abs_cycles: number | null;
+            /** Missed Cells Final Soh Range */
+            missed_cells_final_soh_range: number[] | null;
+            /** Note */
+            note: string | null;
+        };
         /** LatestCycle */
         LatestCycle: {
             /** Cycle */
@@ -973,6 +1102,15 @@ export interface components {
             capacity: components["schemas"]["Quantity"];
             temperature: components["schemas"]["Quantity"];
             voltage: components["schemas"]["Quantity"];
+        };
+        /** LifeFractionMetrics */
+        LifeFractionMetrics: {
+            /**
+             * Fraction
+             * @description Prediction point as a fraction of the battery's life.
+             */
+            fraction: string;
+            metrics: components["schemas"]["MetricSet"];
         };
         /** LinearFitOut */
         LinearFitOut: {
@@ -995,6 +1133,149 @@ export interface components {
              */
             origin_cycle?: number | null;
         };
+        /**
+         * MetricSet
+         * @description Point and interval metrics over rows of held-out (or out-of-fold) batteries.
+         */
+        MetricSet: {
+            /**
+             * N
+             * @description Prediction rows evaluated (0 when none).
+             */
+            n: number;
+            /** Mae */
+            mae?: number | null;
+            /** Rmse */
+            rmse?: number | null;
+            /**
+             * Bias
+             * @description Mean of prediction - truth.
+             */
+            bias?: number | null;
+            /** R2 */
+            r2?: number | null;
+            /**
+             * Picp
+             * @description Interval coverage (90 % nominal).
+             */
+            picp?: number | null;
+            /**
+             * Mpiw
+             * @description Mean interval width.
+             */
+            mpiw?: number | null;
+            /**
+             * Alpha Lambda 20
+             * @description RUL only: share of predictions within +-20 % of the true RUL.
+             */
+            alpha_lambda_20?: number | null;
+            /**
+             * Batteries
+             * @description Batteries behind these rows.
+             */
+            batteries?: number | null;
+            /**
+             * Batteries Per Fold
+             * @description CV only: training batteries in each of the grouped folds.
+             */
+            batteries_per_fold?: number[] | null;
+        };
+        /** ModelRef */
+        ModelRef: {
+            /** Run Id */
+            run_id: string;
+            /** Task */
+            task: string;
+            /** Model */
+            model: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "experimental";
+            /**
+             * Trained At
+             * Format: date-time
+             */
+            trained_at: string;
+        };
+        /** ModelRunOut */
+        ModelRunOut: {
+            /** Run Id */
+            run_id: string;
+            /**
+             * Trained At
+             * Format: date-time
+             */
+            trained_at: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "experimental";
+            /** Git Sha */
+            git_sha: string | null;
+            /** Code Sha256 */
+            code_sha256: string | null;
+            /** Data Hash */
+            data_hash: string;
+            /** Eol Definition */
+            eol_definition: string;
+            /** Split Rule */
+            split_rule: string;
+            /** Interval Level */
+            interval_level: number;
+            /** Eol Pct */
+            eol_pct: number;
+            /** Libraries */
+            libraries: {
+                [key: string]: string;
+            };
+            /** Datasets */
+            datasets: components["schemas"]["DatasetCensus"][];
+            label_check: components["schemas"]["LabelCheck"];
+        };
+        /** ModelTaskOut */
+        ModelTaskOut: {
+            /** Task */
+            task: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "rul" | "forecast" | "soh";
+            /** Horizon Cycles */
+            horizon_cycles: number | null;
+            /**
+             * Status
+             * @constant
+             */
+            status: "experimental";
+            /** Selected Model */
+            selected_model: string;
+            /** Selection Rule */
+            selection_rule: string;
+            /** Features */
+            features: string[];
+            batteries: components["schemas"]["SplitCounts"];
+            /** Batteries By Dataset */
+            batteries_by_dataset: {
+                [key: string]: components["schemas"]["SplitCounts"];
+            };
+            /** Candidates */
+            candidates: components["schemas"]["CandidateEvaluation"][];
+            /** Artifact Sha256 */
+            artifact_sha256: string | null;
+        };
+        /** ModelsResponse */
+        ModelsResponse: {
+            /** @description Null when no model run was imported. */
+            run: components["schemas"]["ModelRunOut"] | null;
+            /** Tasks */
+            tasks: components["schemas"]["ModelTaskOut"][];
+            /** Note */
+            note: string;
+        };
         /** Quantity */
         Quantity: {
             /** Value */
@@ -1006,6 +1287,44 @@ export interface components {
              * @enum {string}
              */
             provenance: "measured" | "simulated" | "fitted" | "predicted" | "assumed";
+        };
+        /** RulPointOut */
+        RulPointOut: {
+            /** Cycle */
+            cycle: number;
+            /** @description Measured SOH at the prediction point. */
+            soh: components["schemas"]["Quantity"];
+            /** @description Predicted RUL in cycles with its conformal interval. */
+            rul: components["schemas"]["Interval"];
+            /** @description Cycles to the battery's EOL label; null for censored batteries. */
+            actual_rul: components["schemas"]["Quantity"] | null;
+            /** Past Eol */
+            past_eol: boolean;
+        };
+        /** RulPredictionsResponse */
+        RulPredictionsResponse: {
+            context: components["schemas"]["AnalysisContext"];
+            model: components["schemas"]["ModelRef"];
+            /**
+             * Split
+             * @enum {string}
+             */
+            split: "train" | "calibration" | "test";
+            /**
+             * In Sample
+             * @description True for training batteries: not a held-out result.
+             */
+            in_sample: boolean;
+            /** Interval Basis */
+            interval_basis: string;
+            /** Eol Cycle */
+            eol_cycle: number | null;
+            /** Censored */
+            censored: boolean;
+            /** Note */
+            note: string;
+            /** Points */
+            points: components["schemas"]["RulPointOut"][];
         };
         /** SampleOut */
         SampleOut: {
@@ -1187,6 +1506,15 @@ export interface components {
             step: number;
             /** Unit */
             unit: string;
+        };
+        /** SplitCounts */
+        SplitCounts: {
+            /** Train */
+            train: number;
+            /** Calibration */
+            calibration: number;
+            /** Test */
+            test: number;
         };
         /** SummaryResponse */
         SummaryResponse: {
@@ -2154,6 +2482,84 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_models_api_v1_models_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelsResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_rul_predictions_api_v1_batteries__battery_id__rul_predictions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                battery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulPredictionsResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

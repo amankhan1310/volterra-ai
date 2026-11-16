@@ -1,0 +1,84 @@
+/* Model Evaluation (Phase 7): run provenance, per-task comparison tables. */
+
+.stack {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.stack > * {
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 16px;
+  margin: 12px 0 0;
+}
+
+.facts dt {
+  color: var(--mu);
+  font-size: 0.8rem;
+}
+
+.facts dd {
+  margin: 2px 0 0;
+}
+
+/* Tables scroll inside their card on narrow screens; the page itself never does. */
+.scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--bd);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--mu);
+  font-weight: 600;
+}
+
+.group td {
+  padding-top: 12px;
+  font-weight: 700;
+}
+
+.selected td:first-child {
+  font-weight: 700;
+}
+
+.warn {
+  margin: 8px 0 0;
+  color: var(--am);
+}
+
+.note {
+  margin: 8px 0 0;
+}

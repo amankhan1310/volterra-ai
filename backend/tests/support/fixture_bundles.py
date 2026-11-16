@@ -5,14 +5,16 @@
     uv run python -m tests.support.fixture_bundles ci-import <data-dir>
 
 ``write`` writes the two generated bundles of ``tests/db/test_real_data_api.py`` (NASA-style and
-CALCE-style) under ``<data-dir>`` and prints their paths. ``import`` writes and imports them into
-a local disposable ``volterra_test_*`` database (credentials come from the test settings and are
-never printed). ``ci-import`` is the GitHub Actions E2E path: it refuses unless it runs in GitHub
-Actions (``CI=true``, ``GITHUB_ACTIONS=true``) and ``DATABASE_URL`` names exactly the CI service
-database ``volterra_ci`` on localhost, so it can never write to the development database or any
-other one. It checks the target before writing any file, then imports both bundles with the
-standard importer (``import_bundle``: every validation and provenance check, one transaction per
-bundle) and re-imports them to prove the import is idempotent. Serve the API with
+CALCE-style) under ``<data-dir>`` and prints their paths; ``import`` and ``ci-import`` also import
+the generated model run of ``tests/support/model_runs.py`` (made-up values). ``import`` loads
+them into a local disposable ``volterra_test_*`` database (credentials come from the test
+settings and are never printed). ``ci-import`` is the GitHub Actions E2E path: it refuses unless
+it runs in GitHub Actions (``CI=true``, ``GITHUB_ACTIONS=true``) and ``DATABASE_URL`` names
+exactly the CI service database ``volterra_ci`` on localhost, so it can never write to the
+development database or any other one. It checks the target before writing any file, then
+imports both bundles with the standard importer (``import_bundle``: every validation and
+provenance check, one transaction per bundle) and re-imports everything to prove the imports
+are idempotent. Serve the API with
 ``VOLTERRA_DATA_DIR=<data-dir>`` so their samples can be read.
 """
 
@@ -28,6 +30,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
 from app.db.import_dataset import import_bundle
+from app.db.import_models import import_run
 from app.db.session import Database
 from tests.db.test_real_data_api import calce_bundle, nasa_samples
 from tests.support import bundles as b
@@ -37,6 +40,7 @@ from tests.support.database import (
     assert_disposable_name,
     disposable_url,
 )
+from tests.support.model_runs import write_run
 
 CI_DATABASE = "volterra_ci"
 _CI_HOSTS = frozenset({"localhost", "127.0.0.1"})
@@ -72,6 +76,14 @@ async def _import_all(dsn: str, data_dir: Path, *, expect_unchanged: bool = Fals
             if expect_unchanged and not result.unchanged:
                 raise SystemExit(f"re-import of {result.slug} was not a no-op")
             print(f"{result.slug}: {result.batteries} battery, {result.cycles_imported} cycles")
+        run_dir = data_dir / "runs" / "generated"
+        if not run_dir.exists():
+            write_run(run_dir)
+        async with database.session() as session:
+            run = await import_run(session, run_dir)
+        if expect_unchanged and not run.unchanged:
+            raise SystemExit(f"re-import of model run {run.run_id} was not a no-op")
+        print(f"model run {run.run_id}: {run.predictions} predictions (generated values)")
     finally:
         await database.dispose()
 

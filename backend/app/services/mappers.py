@@ -7,8 +7,8 @@ rounding or aggregation happens here, so API responses carry exactly the numbers
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Literal
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal
 
 from app.analytics.advisor import AdvisorTable
 from app.analytics.advisor_v2 import AdvisorTableV2
@@ -48,7 +48,14 @@ from app.analytics.simulator_v2 import SIMULATOR_VERSION_V2
 from app.analytics.stats import LinearFit
 from app.analytics.synthetic import CycleRecord
 from app.analytics.twin import TWIN_MODULE_COUNT, temperature_band
-from app.db.repositories import BatteryInfo, CycleData, DatasetInfo, ScenarioInfo
+from app.db.repositories import (
+    BatteryInfo,
+    CycleData,
+    DatasetInfo,
+    MlModelInfo,
+    RulPredictionSet,
+    ScenarioInfo,
+)
 from app.schemas.analysis import (
     AccelerationOut,
     AnomalyCounts,
@@ -74,6 +81,22 @@ from app.schemas.datasets import (
     CyclesResponse,
     DatasetOut,
     SampleOut,
+)
+from app.schemas.models import (
+    CalibrationSize,
+    CandidateEvaluation,
+    DatasetCensus,
+    DatasetEvaluation,
+    LabelCheck,
+    LifeFractionMetrics,
+    MetricSet,
+    ModelRef,
+    ModelRunOut,
+    ModelsResponse,
+    ModelTaskOut,
+    RulPointOut,
+    RulPredictionsResponse,
+    SplitCounts,
 )
 from app.schemas.monitoring import (
     AnomaliesResponse,
@@ -824,4 +847,169 @@ def scenario_out(s: ScenarioInfo) -> ScenarioOut:
         simulator_version=s.simulator_version,
         created_at=s.created_at,
         updated_at=s.updated_at,
+    )
+
+
+# --- Phase 7 models (values copied from the imported offline run) -------------------------------
+
+MODELS_NOTE = (
+    "Experimental models trained offline on public laboratory datasets and evaluated on held-out "
+    "batteries. Not production-validated: results depend on each dataset's test protocol and "
+    "batteries, and some datasets have too few batteries for a stable estimate."
+)
+RUL_NOTE = (
+    "Experimental model prediction with a split-conformal 90% interval. For training batteries "
+    "the prediction is in-sample; only calibration and test batteries are held out."
+)
+
+
+def _metric_set(m: Mapping[str, Any]) -> MetricSet:
+    return MetricSet(
+        n=m.get("n", 0),
+        mae=m.get("mae"),
+        rmse=m.get("rmse"),
+        bias=m.get("bias"),
+        r2=m.get("r2"),
+        picp=m.get("picp"),
+        mpiw=m.get("mpiw"),
+        alpha_lambda_20=m.get("alpha_lambda_0.2"),
+        batteries=m.get("batteries"),
+        batteries_per_fold=m.get("batteries_per_fold"),
+    )
+
+
+def _candidate(name: str, r: Mapping[str, Any], selected: str) -> CandidateEvaluation:
+    interval = r["interval"]
+    by_ds = interval["half_width_by_dataset"]
+    fractions = r.get("test_by_life_fraction")
+    return CandidateEvaluation(
+        name=name,
+        learned=r["learned"],
+        selected=name == selected,
+        cv=_metric_set(r["cv"]),
+        test=_metric_set(r["test"]),
+        interval_scale=interval["scale"],
+        pooled_half_width=interval["pooled_half_width"],
+        datasets=[
+            DatasetEvaluation(
+                dataset=ds,
+                interval_basis=e["interval_basis"],
+                interval_half_width=by_ds.get(ds, interval["pooled_half_width"]),
+                cv=_metric_set(e["cv"]),
+                test=_metric_set(e["test"]),
+                calibration=CalibrationSize(**e["calibration"]),
+            )
+            for ds, e in r["by_dataset"].items()
+        ],
+        by_life_fraction=None
+        if fractions is None
+        else [
+            LifeFractionMetrics(fraction=f, metrics=_metric_set(v)) for f, v in fractions.items()
+        ],
+    )
+
+
+def model_task_out(m: MlModelInfo) -> ModelTaskOut:
+    s = m.metrics
+    return ModelTaskOut(
+        task=m.task,
+        kind=s["kind"],
+        horizon_cycles=s.get("horizon"),
+        status="experimental",
+        selected_model=m.selected_model,
+        selection_rule=s["selection_rule"],
+        features=s["features"],
+        batteries=SplitCounts(**s["batteries"]),
+        batteries_by_dataset={k: SplitCounts(**v) for k, v in s["batteries_by_dataset"].items()},
+        candidates=[_candidate(n, r, m.selected_model) for n, r in s["models"].items()],
+        artifact_sha256=m.artifact_sha256,
+    )
+
+
+def model_run_out(m: MlModelInfo) -> ModelRunOut:
+    r = m.run_meta
+    check = r["target_check_vs_reported_cycle_life"]
+    return ModelRunOut(
+        run_id=m.run_id,
+        trained_at=m.trained_at,
+        status="experimental",
+        git_sha=r.get("git_sha"),
+        code_sha256=r.get("code_sha256"),
+        data_hash=r["data_hash"],
+        eol_definition=r["eol_definition"],
+        split_rule=r["split_rule"],
+        interval_level=r["config"]["interval_level"],
+        eol_pct=r["config"]["eol_pct"],
+        libraries=r["libraries"],
+        datasets=[
+            DatasetCensus(
+                dataset=slug,
+                version=d["version"],
+                bundle_checksum=d["bundle_checksum"],
+                batteries=d["batteries"],
+                excluded=d["excluded"],
+                too_short=d["too_short"],
+                start_below_eol=d["start_below_eol"],
+                censored=d["censored"],
+            )
+            for slug, d in r["data"].items()
+        ],
+        label_check=LabelCheck(
+            labelled_cells=check.get("labelled_cells", 0),
+            rule_finds_eol=check.get("rule_finds_eol", 0),
+            rule_misses_eol=check.get("rule_misses_eol", 0),
+            rule_minus_label_max_abs_cycles=check.get("rule_minus_label_max_abs_cycles"),
+            missed_cells_final_soh_range=check.get("missed_cells_final_soh_range"),
+            note=check.get("note"),
+        ),
+    )
+
+
+def models_response(models: Sequence[MlModelInfo]) -> ModelsResponse:
+    return ModelsResponse(
+        run=model_run_out(models[0]) if models else None,
+        tasks=[model_task_out(m) for m in models],
+        note=MODELS_NOTE,
+    )
+
+
+def rul_predictions_response(battery: BatteryInfo, p: RulPredictionSet) -> RulPredictionsResponse:
+    meta = p.model.run_meta
+    level = meta["config"]["interval_level"]
+    method = f"split_conformal_{p.interval_basis}"
+    return RulPredictionsResponse(
+        context=context(battery, meta["config"]["eol_pct"]),
+        model=ModelRef(
+            run_id=p.model.run_id,
+            task=p.model.task,
+            model=p.model.selected_model,
+            status="experimental",
+            trained_at=p.model.trained_at,
+        ),
+        split=p.split,  # type: ignore[arg-type]  # checked by the database constraint
+        in_sample=p.split == "train",
+        interval_basis=p.interval_basis,
+        eol_cycle=p.eol_cycle,
+        censored=p.censored,
+        note=RUL_NOTE,
+        points=[
+            RulPointOut(
+                cycle=pt.cycle,
+                soh=Quantity(value=pt.soh_pct, unit="%", provenance="measured"),
+                rul=Interval(
+                    point=pt.rul,
+                    lower=pt.lower,
+                    upper=pt.upper,
+                    level=level,
+                    method=method,
+                    unit="cycles",
+                    provenance="predicted",
+                ),
+                actual_rul=None
+                if pt.actual_rul is None
+                else Quantity(value=pt.actual_rul, unit="cycles", provenance="measured"),
+                past_eol=pt.past_eol,
+            )
+            for pt in p.points
+        ],
     )

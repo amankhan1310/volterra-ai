@@ -27,6 +27,8 @@ EXPECTED_PATHS = {
     "/api/v1/batteries/{battery_id}/advisor": {"get"},
     "/api/v1/batteries/{battery_id}/scenarios": {"get", "post"},
     "/api/v1/scenarios/{scenario_id}": {"get", "patch", "delete"},
+    "/api/v1/models": {"get"},
+    "/api/v1/batteries/{battery_id}/rul-predictions": {"get"},
 }
 
 

@@ -5,6 +5,20 @@ original prototype exactly (including the known defects F1–F8 in `ARCHITECTURE
 is permanent, and stays the API default. **v2** holds the corrected methods. The golden fixtures
 in `backend/tests/golden/` describe v1 and are never modified.
 
+## [Unreleased] — Phase 7: experimental ML models
+
+No v1 or v2 analytics change; existing API responses are unchanged (fixtures re-recorded with zero
+diff). See `docs/models/README.md`.
+
+- `python -m volterra_ml.modeling run`: battery-wise evaluation of RUL, SOH-forecast and SOH
+  estimation models (baselines, ridge, LightGBM) with split-conformal intervals; run outputs stay
+  outside git.
+- Migration `0005` (additive): `ml_models`, `ml_predictions`; `python -m app.db.import_models`.
+- API: `GET /models`, `GET /batteries/{id}/rul-predictions` (provenance `predicted`, 90 % interval,
+  held-out/in-sample split).
+- Frontend: Models page; experimental RUL panel on Battery Data.
+- ml dependencies: scikit-learn, lightgbm.
+
 ## [Unreleased] — Phase 6 M5 + M6: real-data API and frontend
 
 No v1 or v2 analytics change: synthetic-v1 responses are unchanged (fixtures re-recorded; only the

@@ -1,11 +1,11 @@
-"""ORM models: datasets, batteries, cycles and scenarios (Phase 3), dataset files (Phase 6).
+"""ORM models: datasets, batteries, cycles, scenarios (Phase 3), dataset files (6), ML runs (7).
 
 Numeric measurements use ``DOUBLE PRECISION`` (IEEE-754 binary64) so values round-trip exactly
 between Python, PostgreSQL and the v1 analytics; ``NUMERIC`` would alter the binary value.
 ``soh_pct`` is stored as produced by the data source rather than computed by the database.
 Phase 6 (migration 0002) adds provenance columns and ``dataset_files``; every new column is
 nullable, so rows that predate it (the synthetic dataset) are unchanged.
-Further tables (models, predictions, jobs, ...) arrive in the phases that need them.
+Phase 7 (migration 0005) adds `ml_models` and `ml_predictions`; jobs arrive with Phase 6b.
 """
 
 from __future__ import annotations
@@ -242,3 +242,71 @@ class Scenario(TimestampMixin, Base):
     )
 
     battery: Mapped[Battery] = relationship(back_populates="scenarios")
+
+
+ML_STATUSES = ("experimental",)
+ML_KINDS = ("rul", "forecast", "soh")
+ML_SPLITS = ("train", "calibration", "test")
+ML_INTERVAL_BASES = ("dataset", "pooled")
+
+
+class MlModel(CreatedAtMixin, Base):
+    """One task of an offline Phase 7 run (``volterra_ml.modeling``), imported with its evaluation.
+
+    ``metrics`` holds the task's model comparison as the run reported it (battery-wise CV,
+    held-out test, per-dataset calibration); ``run_meta`` the run's provenance (config, data and
+    code hashes, census, EOL labels). Models are experimental: nothing is production-validated.
+    """
+
+    __tablename__ = "ml_models"
+    __table_args__ = (
+        UniqueConstraint("run_id", "task"),
+        CheckConstraint(_in("status", ML_STATUSES), name="status"),
+        CheckConstraint(_in("kind", ML_KINDS), name="kind"),
+        CheckConstraint(
+            "artifact_sha256 IS NULL OR artifact_sha256 ~ '^[0-9a-f]{64}$'", name="sha256_hex"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    run_id: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    task: Mapped[str] = mapped_column(String(64), nullable=False)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    selected_model: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    trained_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    artifact_sha256: Mapped[str | None] = mapped_column(String(64))
+    metrics: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    run_meta: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+
+
+class MlPrediction(Base):
+    """A stored RUL prediction for one battery at one cycle, with its conformal interval."""
+
+    __tablename__ = "ml_predictions"
+    __table_args__ = (
+        UniqueConstraint("model_id", "battery_id", "cycle_index"),
+        CheckConstraint(_in("split", ML_SPLITS), name="split"),
+        CheckConstraint(_in("interval_basis", ML_INTERVAL_BASES), name="interval_basis"),
+        CheckConstraint("lower_rul <= rul AND rul <= upper_rul", name="interval_ordered"),
+        CheckConstraint("rul >= 0 AND lower_rul >= 0", name="rul_non_negative"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    model_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("ml_models.id", ondelete="CASCADE"), nullable=False
+    )
+    battery_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("batteries.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    split: Mapped[str] = mapped_column(String(16), nullable=False)
+    interval_basis: Mapped[str] = mapped_column(String(16), nullable=False)
+    cycle_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    soh_pct: Mapped[float] = mapped_column(Double, nullable=False)
+    rul: Mapped[float] = mapped_column(Double, nullable=False)
+    lower_rul: Mapped[float] = mapped_column(Double, nullable=False)
+    upper_rul: Mapped[float] = mapped_column(Double, nullable=False)
+    actual_rul: Mapped[float | None] = mapped_column(Double)
+    past_eol: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    eol_cycle: Mapped[float | None] = mapped_column(Double)
+    censored: Mapped[bool] = mapped_column(Boolean, nullable=False)

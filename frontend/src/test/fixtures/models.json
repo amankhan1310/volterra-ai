@@ -1,0 +1,884 @@
+{
+  "run": {
+    "run_id": "generated0001",
+    "trained_at": "2026-11-16T20:00:00Z",
+    "status": "experimental",
+    "git_sha": "0000000000000000000000000000000000000000",
+    "code_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "data_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+    "eol_definition": "generated test run",
+    "split_rule": "salted SHA-256 of '<dataset>:<battery>' (60/20/20), never by row",
+    "interval_level": 0.9,
+    "eol_pct": 80,
+    "libraries": {
+      "python": "3.12",
+      "lightgbm": "generated"
+    },
+    "datasets": [
+      {
+        "dataset": "nasa-test",
+        "version": "v1",
+        "bundle_checksum": "3333333333333333333333333333333333333333333333333333333333333333",
+        "batteries": 1,
+        "excluded": [],
+        "too_short": [],
+        "start_below_eol": [],
+        "censored": [
+          "B0005"
+        ]
+      },
+      {
+        "dataset": "calce-test",
+        "version": "v1",
+        "bundle_checksum": "3333333333333333333333333333333333333333333333333333333333333333",
+        "batteries": 1,
+        "excluded": [],
+        "too_short": [],
+        "start_below_eol": [],
+        "censored": []
+      }
+    ],
+    "label_check": {
+      "labelled_cells": 0,
+      "rule_finds_eol": 0,
+      "rule_misses_eol": 0,
+      "rule_minus_label_max_abs_cycles": null,
+      "missed_cells_final_soh_range": null,
+      "note": null
+    }
+  },
+  "tasks": [
+    {
+      "task": "forecast_h50",
+      "kind": "forecast",
+      "horizon_cycles": 50,
+      "status": "experimental",
+      "selected_model": "lightgbm",
+      "selection_rule": "lowest grouped-CV MAE on the training batteries (test batteries unused)",
+      "features": [
+        "cycle",
+        "soh_now",
+        "slope_100"
+      ],
+      "batteries": {
+        "train": 8,
+        "calibration": 4,
+        "test": 2
+      },
+      "batteries_by_dataset": {
+        "nasa-test": {
+          "train": 3,
+          "calibration": 1,
+          "test": 1
+        },
+        "calce-test": {
+          "train": 5,
+          "calibration": 3,
+          "test": 1
+        }
+      },
+      "candidates": [
+        {
+          "name": "ridge",
+          "learned": true,
+          "selected": false,
+          "cv": {
+            "n": 40,
+            "mae": 125,
+            "rmse": 175,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 500,
+            "alpha_lambda_20": 0.6,
+            "batteries": 8,
+            "batteries_per_fold": null
+          },
+          "test": {
+            "n": 40,
+            "mae": 120,
+            "rmse": 168,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 480,
+            "alpha_lambda_20": 0.6,
+            "batteries": 2,
+            "batteries_per_fold": null
+          },
+          "interval_scale": "SOH percentage points",
+          "pooled_half_width": 0.4,
+          "datasets": [
+            {
+              "dataset": "nasa-test",
+              "interval_basis": "pooled (too few calibration batteries)",
+              "interval_half_width": 0.4,
+              "cv": {
+                "n": 40,
+                "mae": 125,
+                "rmse": 175,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 500,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 120,
+                "rmse": 168,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 480,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 1
+              }
+            },
+            {
+              "dataset": "calce-test",
+              "interval_basis": "dataset",
+              "interval_half_width": 0.35,
+              "cv": {
+                "n": 40,
+                "mae": 125,
+                "rmse": 175,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 500,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 120,
+                "rmse": 168,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 480,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 3
+              }
+            }
+          ],
+          "by_life_fraction": null
+        },
+        {
+          "name": "lightgbm",
+          "learned": true,
+          "selected": true,
+          "cv": {
+            "n": 40,
+            "mae": 65,
+            "rmse": 91,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 260,
+            "alpha_lambda_20": 0.6,
+            "batteries": 8,
+            "batteries_per_fold": null
+          },
+          "test": {
+            "n": 40,
+            "mae": 60,
+            "rmse": 84,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 240,
+            "alpha_lambda_20": 0.6,
+            "batteries": 2,
+            "batteries_per_fold": null
+          },
+          "interval_scale": "SOH percentage points",
+          "pooled_half_width": 0.4,
+          "datasets": [
+            {
+              "dataset": "nasa-test",
+              "interval_basis": "pooled (too few calibration batteries)",
+              "interval_half_width": 0.4,
+              "cv": {
+                "n": 40,
+                "mae": 65,
+                "rmse": 91,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 260,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 60,
+                "rmse": 84,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 240,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 1
+              }
+            },
+            {
+              "dataset": "calce-test",
+              "interval_basis": "dataset",
+              "interval_half_width": 0.35,
+              "cv": {
+                "n": 40,
+                "mae": 65,
+                "rmse": 91,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 260,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 60,
+                "rmse": 84,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 240,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 3
+              }
+            }
+          ],
+          "by_life_fraction": null
+        },
+        {
+          "name": "linear_trend",
+          "learned": false,
+          "selected": false,
+          "cv": {
+            "n": 40,
+            "mae": 305,
+            "rmse": 427,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 1220,
+            "alpha_lambda_20": 0.6,
+            "batteries": 8,
+            "batteries_per_fold": null
+          },
+          "test": {
+            "n": 40,
+            "mae": 300,
+            "rmse": 420,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 1200,
+            "alpha_lambda_20": 0.6,
+            "batteries": 2,
+            "batteries_per_fold": null
+          },
+          "interval_scale": "SOH percentage points",
+          "pooled_half_width": 0.4,
+          "datasets": [
+            {
+              "dataset": "nasa-test",
+              "interval_basis": "pooled (too few calibration batteries)",
+              "interval_half_width": 0.4,
+              "cv": {
+                "n": 40,
+                "mae": 305,
+                "rmse": 427,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1220,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 300,
+                "rmse": 420,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1200,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 1
+              }
+            },
+            {
+              "dataset": "calce-test",
+              "interval_basis": "dataset",
+              "interval_half_width": 0.35,
+              "cv": {
+                "n": 40,
+                "mae": 305,
+                "rmse": 427,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1220,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 300,
+                "rmse": 420,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1200,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 3
+              }
+            }
+          ],
+          "by_life_fraction": null
+        }
+      ],
+      "artifact_sha256": null
+    },
+    {
+      "task": "rul",
+      "kind": "rul",
+      "horizon_cycles": null,
+      "status": "experimental",
+      "selected_model": "lightgbm",
+      "selection_rule": "lowest grouped-CV MAE on the training batteries (test batteries unused)",
+      "features": [
+        "cycle",
+        "soh_now",
+        "slope_100"
+      ],
+      "batteries": {
+        "train": 8,
+        "calibration": 4,
+        "test": 2
+      },
+      "batteries_by_dataset": {
+        "nasa-test": {
+          "train": 3,
+          "calibration": 1,
+          "test": 1
+        },
+        "calce-test": {
+          "train": 5,
+          "calibration": 3,
+          "test": 1
+        }
+      },
+      "candidates": [
+        {
+          "name": "ridge",
+          "learned": true,
+          "selected": false,
+          "cv": {
+            "n": 40,
+            "mae": 125,
+            "rmse": 175,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 500,
+            "alpha_lambda_20": 0.6,
+            "batteries": 8,
+            "batteries_per_fold": null
+          },
+          "test": {
+            "n": 40,
+            "mae": 120,
+            "rmse": 168,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 480,
+            "alpha_lambda_20": 0.6,
+            "batteries": 2,
+            "batteries_per_fold": null
+          },
+          "interval_scale": "log1p(cycles)",
+          "pooled_half_width": 0.4,
+          "datasets": [
+            {
+              "dataset": "nasa-test",
+              "interval_basis": "pooled (too few calibration batteries)",
+              "interval_half_width": 0.4,
+              "cv": {
+                "n": 40,
+                "mae": 125,
+                "rmse": 175,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 500,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 120,
+                "rmse": 168,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 480,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 1
+              }
+            },
+            {
+              "dataset": "calce-test",
+              "interval_basis": "dataset",
+              "interval_half_width": 0.35,
+              "cv": {
+                "n": 40,
+                "mae": 125,
+                "rmse": 175,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 500,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 120,
+                "rmse": 168,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 480,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 3
+              }
+            }
+          ],
+          "by_life_fraction": [
+            {
+              "fraction": "0.2",
+              "metrics": {
+                "n": 40,
+                "mae": 180,
+                "rmse": 251.99999999999997,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 720,
+                "alpha_lambda_20": 0.6,
+                "batteries": 2,
+                "batteries_per_fold": null
+              }
+            },
+            {
+              "fraction": "0.8",
+              "metrics": {
+                "n": 40,
+                "mae": 60,
+                "rmse": 84,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 240,
+                "alpha_lambda_20": 0.6,
+                "batteries": 2,
+                "batteries_per_fold": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "lightgbm",
+          "learned": true,
+          "selected": true,
+          "cv": {
+            "n": 40,
+            "mae": 65,
+            "rmse": 91,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 260,
+            "alpha_lambda_20": 0.6,
+            "batteries": 8,
+            "batteries_per_fold": null
+          },
+          "test": {
+            "n": 40,
+            "mae": 60,
+            "rmse": 84,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 240,
+            "alpha_lambda_20": 0.6,
+            "batteries": 2,
+            "batteries_per_fold": null
+          },
+          "interval_scale": "log1p(cycles)",
+          "pooled_half_width": 0.4,
+          "datasets": [
+            {
+              "dataset": "nasa-test",
+              "interval_basis": "pooled (too few calibration batteries)",
+              "interval_half_width": 0.4,
+              "cv": {
+                "n": 40,
+                "mae": 65,
+                "rmse": 91,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 260,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 60,
+                "rmse": 84,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 240,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 1
+              }
+            },
+            {
+              "dataset": "calce-test",
+              "interval_basis": "dataset",
+              "interval_half_width": 0.35,
+              "cv": {
+                "n": 40,
+                "mae": 65,
+                "rmse": 91,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 260,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 60,
+                "rmse": 84,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 240,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 3
+              }
+            }
+          ],
+          "by_life_fraction": [
+            {
+              "fraction": "0.2",
+              "metrics": {
+                "n": 40,
+                "mae": 90,
+                "rmse": 125.99999999999999,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 360,
+                "alpha_lambda_20": 0.6,
+                "batteries": 2,
+                "batteries_per_fold": null
+              }
+            },
+            {
+              "fraction": "0.8",
+              "metrics": {
+                "n": 40,
+                "mae": 30,
+                "rmse": 42,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 120,
+                "alpha_lambda_20": 0.6,
+                "batteries": 2,
+                "batteries_per_fold": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "linear_trend",
+          "learned": false,
+          "selected": false,
+          "cv": {
+            "n": 40,
+            "mae": 305,
+            "rmse": 427,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 1220,
+            "alpha_lambda_20": 0.6,
+            "batteries": 8,
+            "batteries_per_fold": null
+          },
+          "test": {
+            "n": 40,
+            "mae": 300,
+            "rmse": 420,
+            "bias": -1.5,
+            "r2": 0.71,
+            "picp": 0.9,
+            "mpiw": 1200,
+            "alpha_lambda_20": 0.6,
+            "batteries": 2,
+            "batteries_per_fold": null
+          },
+          "interval_scale": "log1p(cycles)",
+          "pooled_half_width": 0.4,
+          "datasets": [
+            {
+              "dataset": "nasa-test",
+              "interval_basis": "pooled (too few calibration batteries)",
+              "interval_half_width": 0.4,
+              "cv": {
+                "n": 40,
+                "mae": 305,
+                "rmse": 427,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1220,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 300,
+                "rmse": 420,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1200,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 1
+              }
+            },
+            {
+              "dataset": "calce-test",
+              "interval_basis": "dataset",
+              "interval_half_width": 0.35,
+              "cv": {
+                "n": 40,
+                "mae": 305,
+                "rmse": 427,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1220,
+                "alpha_lambda_20": 0.6,
+                "batteries": 4,
+                "batteries_per_fold": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              "test": {
+                "n": 40,
+                "mae": 300,
+                "rmse": 420,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1200,
+                "alpha_lambda_20": 0.6,
+                "batteries": 1,
+                "batteries_per_fold": null
+              },
+              "calibration": {
+                "rows": 30,
+                "batteries": 3
+              }
+            }
+          ],
+          "by_life_fraction": [
+            {
+              "fraction": "0.2",
+              "metrics": {
+                "n": 40,
+                "mae": 450,
+                "rmse": 630,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 1800,
+                "alpha_lambda_20": 0.6,
+                "batteries": 2,
+                "batteries_per_fold": null
+              }
+            },
+            {
+              "fraction": "0.8",
+              "metrics": {
+                "n": 40,
+                "mae": 150,
+                "rmse": 210,
+                "bias": -1.5,
+                "r2": 0.71,
+                "picp": 0.9,
+                "mpiw": 600,
+                "alpha_lambda_20": 0.6,
+                "batteries": 2,
+                "batteries_per_fold": null
+              }
+            }
+          ]
+        }
+      ],
+      "artifact_sha256": "f7f41143c339aae14b45577d982e2de6f97a42a886430ff9fb7650b53c08f621"
+    }
+  ],
+  "note": "Experimental models trained offline on public laboratory datasets and evaluated on held-out batteries. Not production-validated: results depend on each dataset's test protocol and batteries, and some datasets have too few batteries for a stable estimate."
+}

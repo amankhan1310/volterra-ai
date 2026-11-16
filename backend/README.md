@@ -79,6 +79,20 @@ exercised on disposable `volterra_test_*` databases and, in CI, on generated bun
 (`python -m tests.support.fixture_bundles ci-import`, which refuses any database other than the
 local `volterra_ci` service database in GitHub Actions).
 
+## Importing model runs (Phase 7)
+
+```sh
+uv run alembic upgrade head                        # 0005 adds ml_models and ml_predictions
+uv run python -m app.db.import_models ../artifacts/models/<run>
+```
+
+The importer checks the run before writing (status `experimental`, artifact SHA-256s, selected
+models, finite and ordered predictions), imports in one transaction and treats a re-import of the
+same `run_id` as a no-op. Predictions are stored only for batteries already in the database.
+The API serves the most recently imported run. Model runs derived from real data are imported only
+into disposable databases unless the owner approves otherwise; CI imports a generated run
+(`tests/support/model_runs.py`, made-up values).
+
 ## API overview (`/api/v1`)
 
 | Method and path                          | Purpose                                                      |
@@ -99,6 +113,8 @@ local `volterra_ci` service database in GitHub Actions).
 | `GET /batteries/{id}/advisor`            | Charging Advisor (`eol_pct`, `start_soh_pct`)                |
 | `GET/POST /batteries/{id}/scenarios`     | Saved scenarios                                              |
 | `GET/PATCH/DELETE /scenarios/{id}`       | Saved scenario                                               |
+| `GET /models`                            | Latest model run: per-dataset CV and held-out test metrics   |
+| `GET /batteries/{id}/rul-predictions`    | Stored RUL predictions with 90 % intervals (experimental)    |
 
 Contract conventions:
 

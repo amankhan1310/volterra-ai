@@ -17,6 +17,7 @@ import { Stat } from "../../components/ui/Stat";
 import { ErrorState } from "../../components/ui/States";
 import { fixed } from "../../lib/format";
 import styles from "./BatteryData.module.css";
+import { RulPanel } from "./RulPanel";
 import {
   CYCLE_CHANNELS,
   SAMPLE_CHANNELS,
@@ -275,6 +276,7 @@ function BatteryDataContent({ battery }: { battery: Battery }) {
             battery={battery}
             cycles={cycles.data.items}
           />
+          <RulPanel battery={battery} />
         </>
       ) : (
         <QueryFallback

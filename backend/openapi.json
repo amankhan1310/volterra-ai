@@ -1445,6 +1445,29 @@
           }
         }
       }
+    },
+    "/api/v1/simulator/evidence": {
+      "get": {
+        "tags": [
+          "models",
+          "simulator"
+        ],
+        "summary": "Evidence behind the simulator's assumptions",
+        "description": "What the public datasets say about the simulator's assumed stress coefficients (with bootstrap 90% intervals and confounders) and how its trend-based baseline compares with the life real cells actually had. Generated offline; aggregate numbers only.",
+        "operationId": "get_simulator_evidence_api_v1_simulator_evidence_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorEvidenceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2075,6 +2098,80 @@
         ],
         "title": "BaselineConditions"
       },
+      "BaselineValidation": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "bundle_checksum": {
+            "type": "string",
+            "title": "Bundle Checksum"
+          },
+          "eol_pct": {
+            "type": "number",
+            "title": "Eol Pct"
+          },
+          "eol_label": {
+            "type": "string",
+            "title": "Eol Label"
+          },
+          "cells": {
+            "type": "integer",
+            "title": "Cells"
+          },
+          "cells_skipped_short": {
+            "type": "integer",
+            "title": "Cells Skipped Short"
+          },
+          "methods": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Methods"
+          },
+          "results": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ValidationMetrics"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Results",
+            "description": "method -> fraction of life at the prediction point -> metrics"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "generated_at",
+          "dataset",
+          "bundle_checksum",
+          "eol_pct",
+          "eol_label",
+          "cells",
+          "cells_skipped_short",
+          "methods",
+          "results",
+          "note"
+        ],
+        "title": "BaselineValidation"
+      },
       "BatteryFlag": {
         "properties": {
           "code": {
@@ -2230,6 +2327,136 @@
           "analysis"
         ],
         "title": "BatteryOut"
+      },
+      "Bootstrap": {
+        "properties": {
+          "replicates": {
+            "type": "integer",
+            "title": "Replicates"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "replicates",
+          "seed",
+          "unit"
+        ],
+        "title": "Bootstrap"
+      },
+      "CRateCoefficient": {
+        "properties": {
+          "assumed_linear": {
+            "type": "number",
+            "title": "Assumed Linear"
+          },
+          "provenance": {
+            "type": "string",
+            "const": "assumed",
+            "title": "Provenance"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/CRateEvidence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "assumed_linear",
+          "provenance",
+          "evidence"
+        ],
+        "title": "CRateCoefficient"
+      },
+      "CRateEvidence": {
+        "properties": {
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "bundle_checksum": {
+            "type": "string",
+            "title": "Bundle Checksum"
+          },
+          "cells": {
+            "type": "integer",
+            "title": "Cells"
+          },
+          "charge_c_rate_range": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Charge C Rate Range"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "b_per_c": {
+            "type": "number",
+            "title": "B Per C"
+          },
+          "b_per_c_ci90": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "B Per C Ci90"
+          },
+          "r2": {
+            "type": "number",
+            "title": "R2"
+          },
+          "life_factor_per_extra_c": {
+            "type": "number",
+            "title": "Life Factor Per Extra C"
+          },
+          "life_factor_per_extra_c_ci90": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Life Factor Per Extra C Ci90"
+          },
+          "assumed_fade_factor_per_extra_c": {
+            "type": "number",
+            "title": "Assumed Fade Factor Per Extra C"
+          },
+          "applies_to": {
+            "type": "string",
+            "title": "Applies To"
+          },
+          "bootstrap": {
+            "$ref": "#/components/schemas/Bootstrap"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset",
+          "bundle_checksum",
+          "cells",
+          "charge_c_rate_range",
+          "model",
+          "b_per_c",
+          "b_per_c_ci90",
+          "r2",
+          "life_factor_per_extra_c",
+          "life_factor_per_extra_c_ci90",
+          "assumed_fade_factor_per_extra_c",
+          "applies_to",
+          "bootstrap"
+        ],
+        "title": "CRateEvidence"
       },
       "CalibrationSize": {
         "properties": {
@@ -2930,6 +3157,27 @@
         ],
         "title": "DetectorOut"
       },
+      "DodCoefficient": {
+        "properties": {
+          "provenance": {
+            "type": "string",
+            "const": "assumed",
+            "title": "Provenance"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "provenance",
+          "note"
+        ],
+        "title": "DodCoefficient",
+        "description": "No dataset varies depth of discharge, so there is no evidence to report."
+      },
       "ErrorDetail": {
         "properties": {
           "code": {
@@ -3396,6 +3644,35 @@
           "slope_se"
         ],
         "title": "LinearFitOut"
+      },
+      "MatchedPair": {
+        "properties": {
+          "low_temp_cell": {
+            "type": "string",
+            "title": "Low Temp Cell"
+          },
+          "high_temp_cell": {
+            "type": "string",
+            "title": "High Temp Cell"
+          },
+          "fade_low": {
+            "type": "number",
+            "title": "Fade Low"
+          },
+          "fade_high": {
+            "type": "number",
+            "title": "Fade High"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "low_temp_cell",
+          "high_temp_cell",
+          "fade_low",
+          "fade_high"
+        ],
+        "title": "MatchedPair"
       },
       "MetricSet": {
         "properties": {
@@ -4387,6 +4664,28 @@
         ],
         "title": "SimulatorConfigResponse"
       },
+      "SimulatorEvidenceResponse": {
+        "properties": {
+          "stress": {
+            "$ref": "#/components/schemas/StressEvidence"
+          },
+          "baseline_validation": {
+            "$ref": "#/components/schemas/BaselineValidation"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stress",
+          "baseline_validation",
+          "note"
+        ],
+        "title": "SimulatorEvidenceResponse"
+      },
       "SliderOut": {
         "properties": {
           "key": {
@@ -4454,6 +4753,42 @@
           "test"
         ],
         "title": "SplitCounts"
+      },
+      "StressEvidence": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "temperature": {
+            "$ref": "#/components/schemas/TemperatureCoefficient"
+          },
+          "c_rate": {
+            "$ref": "#/components/schemas/CRateCoefficient"
+          },
+          "dod": {
+            "$ref": "#/components/schemas/DodCoefficient"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "generated_at",
+          "status",
+          "temperature",
+          "c_rate",
+          "dod"
+        ],
+        "title": "StressEvidence"
       },
       "SummaryResponse": {
         "properties": {
@@ -4523,6 +4858,121 @@
           "trend"
         ],
         "title": "SummaryResponse"
+      },
+      "TemperatureCoefficient": {
+        "properties": {
+          "assumed_exp_per_c": {
+            "type": "number",
+            "title": "Assumed Exp Per C"
+          },
+          "provenance": {
+            "type": "string",
+            "const": "assumed",
+            "title": "Provenance"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/TemperatureEvidence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "assumed_exp_per_c",
+          "provenance",
+          "evidence"
+        ],
+        "title": "TemperatureCoefficient"
+      },
+      "TemperatureEvidence": {
+        "properties": {
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "bundle_checksum": {
+            "type": "string",
+            "title": "Bundle Checksum"
+          },
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/MatchedPair"
+            },
+            "type": "array",
+            "title": "Pairs"
+          },
+          "fade_unit": {
+            "type": "string",
+            "title": "Fade Unit"
+          },
+          "temperatures_c": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Temperatures C"
+          },
+          "observed_ratio": {
+            "type": "number",
+            "title": "Observed Ratio"
+          },
+          "observed_ratio_ci90": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Observed Ratio Ci90"
+          },
+          "implied_exp_per_c_if_all_temperature": {
+            "type": "number",
+            "title": "Implied Exp Per C If All Temperature"
+          },
+          "implied_exp_per_c_ci90": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Implied Exp Per C Ci90"
+          },
+          "use": {
+            "type": "string",
+            "title": "Use",
+            "description": "How far this evidence may be used (exploratory only)."
+          },
+          "assumed_factor_for_this_delta": {
+            "type": "number",
+            "title": "Assumed Factor For This Delta"
+          },
+          "assumed_within_ci": {
+            "type": "boolean",
+            "title": "Assumed Within Ci"
+          },
+          "confounder": {
+            "type": "string",
+            "title": "Confounder"
+          },
+          "bootstrap": {
+            "$ref": "#/components/schemas/Bootstrap"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset",
+          "bundle_checksum",
+          "pairs",
+          "fade_unit",
+          "temperatures_c",
+          "observed_ratio",
+          "observed_ratio_ci90",
+          "implied_exp_per_c_if_all_temperature",
+          "implied_exp_per_c_ci90",
+          "use",
+          "assumed_factor_for_this_delta",
+          "assumed_within_ci",
+          "confounder",
+          "bootstrap"
+        ],
+        "title": "TemperatureEvidence"
       },
       "TrajectoriesOut": {
         "properties": {
@@ -4771,6 +5221,69 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "ValidationMetrics": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "no_estimate": {
+            "type": "integer",
+            "title": "No Estimate"
+          },
+          "mae_cycles": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mae Cycles"
+          },
+          "median_abs_error_cycles": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Abs Error Cycles"
+          },
+          "bias_cycles": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bias Cycles"
+          },
+          "within_20_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Within 20 Pct"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "n",
+          "no_estimate"
+        ],
+        "title": "ValidationMetrics"
       }
     }
   }

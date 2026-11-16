@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "generated_at": "2026-11-16T16:51:16+00:00",
+  "status": "evidence, not calibration",
+  "temperature": {
+    "assumed_exp_per_c": 0.06,
+    "provenance": "assumed",
+    "evidence": {
+      "dataset": "nasa-pcoe-battery",
+      "bundle_checksum": "471c8176372c810db9af233fd2d0d6450e33adecb761c81387dfbe62e750165d",
+      "pairs": [
+        {
+          "low_temp_cell": "B0025",
+          "high_temp_cell": "B0029",
+          "fade_low": 12.114227131994928,
+          "fade_high": 21.598731699942846
+        },
+        {
+          "low_temp_cell": "B0026",
+          "high_temp_cell": "B0030",
+          "fade_low": -3.076253017676783,
+          "fade_high": 23.07042050026292
+        },
+        {
+          "low_temp_cell": "B0027",
+          "high_temp_cell": "B0031",
+          "fade_low": 4.184890534380641,
+          "fade_high": 11.433462071821785
+        },
+        {
+          "low_temp_cell": "B0028",
+          "high_temp_cell": "B0032",
+          "fade_low": 12.072741452782882,
+          "fade_high": 23.842768099245724
+        }
+      ],
+      "fade_unit": "SOH points per 100 cycles over the first 25 cycles",
+      "temperatures_c": [24.0, 43.0],
+      "observed_ratio": 3.1604454169054494,
+      "observed_ratio_ci90": [1.8809332397861955, 31.122780938056113],
+      "implied_exp_per_c_if_all_temperature": 0.06056384065171329,
+      "implied_exp_per_c_ci90": [0.033250950411351274, 0.1809442135305471],
+      "use": "exploratory only, not suitable for calibration: temperature and discharge load change together between the groups, and 4 pairs leave the interval very wide",
+      "assumed_factor_for_this_delta": 3.1267683651861553,
+      "assumed_within_ci": true,
+      "confounder": "mean discharge load differs (2 A square wave at 24 \u00b0C vs 4 A constant at 43 \u00b0C)",
+      "bootstrap": {
+        "replicates": 5000,
+        "seed": 7,
+        "unit": "matched pairs"
+      }
+    }
+  },
+  "c_rate": {
+    "assumed_linear": 0.4,
+    "provenance": "assumed",
+    "evidence": {
+      "dataset": "severson-2019",
+      "bundle_checksum": "dec6473b8048641b42123a018f87fb5a4c3ffeb2c1c4533bb377571ce0a2c765",
+      "cells": 124,
+      "charge_c_rate_range": [3.593295360020111, 5.341518716180664],
+      "model": "ln(cycle life) = a + b * mean charging C-rate (from measured charge time)",
+      "b_per_c": -0.6602483468072036,
+      "b_per_c_ci90": [-0.8144481198110339, -0.4593812819734469],
+      "r2": 0.1950122588351445,
+      "life_factor_per_extra_c": 0.5167229920503568,
+      "life_factor_per_extra_c_ci90": [0.4428836786570969, 0.6316743529346697],
+      "assumed_fade_factor_per_extra_c": 1.4,
+      "applies_to": "LFP/graphite (A123), fast charging 3.6-5.3 C to 80 % SOC, 4 C discharge",
+      "bootstrap": {
+        "replicates": 5000,
+        "seed": 7,
+        "unit": "cells"
+      }
+    }
+  },
+  "dod": {
+    "provenance": "assumed",
+    "evidence": null,
+    "note": "Depth of discharge is not varied in the NASA, CALCE or Severson tests."
+  }
+}

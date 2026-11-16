@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "generated_at": "2026-11-16T16:31:02+00:00",
+  "dataset": "severson-2019",
+  "bundle_checksum": "dec6473b8048641b42123a018f87fb5a4c3ffeb2c1c4533bb377571ce0a2c765",
+  "eol_pct": 80.0,
+  "eol_label": "documented cycle life (joined for continued cells); index = life - 1",
+  "cells": 124,
+  "cells_skipped_short": 0,
+  "methods": {
+    "v1_overview_linear": "v1 Overview RUL: straight line over the last 120 cycles",
+    "v1_simulator_baseline": "v1 simulator baseline: linear fade plus the (1 + n/1500) term",
+    "v2_quadratic": "v2 Overview RUL = v2 simulator baseline: quadratic over the last 120 cycles"
+  },
+  "results": {
+    "v1_overview_linear": {
+      "0.3": {
+        "n": 120,
+        "no_estimate": 1,
+        "mae_cycles": 3905.0205991082375,
+        "median_abs_error_cycles": 3389.4313191811866,
+        "bias_cycles": 3905.0205991082375,
+        "within_20_pct": 0.0
+      },
+      "0.5": {
+        "n": 122,
+        "no_estimate": 1,
+        "mae_cycles": 1875.8219473731938,
+        "median_abs_error_cycles": 2062.8252570023174,
+        "bias_cycles": 1875.8219473731938,
+        "within_20_pct": 0.0
+      },
+      "0.7": {
+        "n": 123,
+        "no_estimate": 0,
+        "mae_cycles": 867.0814221145504,
+        "median_abs_error_cycles": 854.1550011049324,
+        "bias_cycles": 867.0814221145504,
+        "within_20_pct": 0.0
+      },
+      "0.9": {
+        "n": 124,
+        "no_estimate": 0,
+        "mae_cycles": 100.31414514813204,
+        "median_abs_error_cycles": 93.6430867746989,
+        "bias_cycles": 100.07139885667353,
+        "within_20_pct": 0.024193548387096774
+      }
+    },
+    "v1_simulator_baseline": {
+      "0.3": {
+        "n": 119,
+        "no_estimate": 2,
+        "mae_cycles": 1244.1512605042017,
+        "median_abs_error_cycles": 1217.0,
+        "bias_cycles": 1239.09243697479,
+        "within_20_pct": 0.01680672268907563
+      },
+      "0.5": {
+        "n": 122,
+        "no_estimate": 1,
+        "mae_cycles": 803.9016393442623,
+        "median_abs_error_cycles": 848.0,
+        "bias_cycles": 803.9016393442623,
+        "within_20_pct": 0.00819672131147541
+      },
+      "0.7": {
+        "n": 123,
+        "no_estimate": 0,
+        "mae_cycles": 478.7967479674797,
+        "median_abs_error_cycles": 498.0,
+        "bias_cycles": 478.7967479674797,
+        "within_20_pct": 0.008130081300813009
+      },
+      "0.9": {
+        "n": 124,
+        "no_estimate": 0,
+        "mae_cycles": 81.1774193548387,
+        "median_abs_error_cycles": 76.5,
+        "bias_cycles": 80.80645161290323,
+        "within_20_pct": 0.056451612903225805
+      }
+    },
+    "v2_quadratic": {
+      "0.3": {
+        "n": 113,
+        "no_estimate": 8,
+        "mae_cycles": 589.0145061810833,
+        "median_abs_error_cycles": 440.7699813514794,
+        "bias_cycles": 570.7789813740857,
+        "within_20_pct": 0.07964601769911504
+      },
+      "0.5": {
+        "n": 105,
+        "no_estimate": 18,
+        "mae_cycles": 383.79834754490986,
+        "median_abs_error_cycles": 298.93130270602205,
+        "bias_cycles": 364.406846726893,
+        "within_20_pct": 0.0761904761904762
+      },
+      "0.7": {
+        "n": 119,
+        "no_estimate": 4,
+        "mae_cycles": 249.50267646294665,
+        "median_abs_error_cycles": 175.84635696738536,
+        "bias_cycles": 245.46200387060074,
+        "within_20_pct": 0.058823529411764705
+      },
+      "0.9": {
+        "n": 124,
+        "no_estimate": 0,
+        "mae_cycles": 18.416135024362884,
+        "median_abs_error_cycles": 14.365391544686947,
+        "bias_cycles": 9.581156572673525,
+        "within_20_pct": 0.4435483870967742
+      }
+    }
+  },
+  "note": "No estimate: the trend does not reach EOL (flat or rising) within the method's horizon. Errors are in cycles of remaining life."
+}

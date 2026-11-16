@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import analysis, datasets, health, monitoring, scenarios, simulator
+from app.api.v1 import analysis, datasets, health, models, monitoring, scenarios, simulator
 
 api_router = APIRouter()
 api_router.include_router(health.router)
@@ -13,3 +13,4 @@ api_router.include_router(analysis.router)
 api_router.include_router(monitoring.router)
 api_router.include_router(simulator.router)
 api_router.include_router(scenarios.router)
+api_router.include_router(models.router)

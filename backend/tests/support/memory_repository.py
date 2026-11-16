@@ -12,7 +12,14 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.analytics.synthetic import CycleRecord, generate_synthetic_v1
-from app.db.repositories import BatteryInfo, CycleData, DatasetInfo, ScenarioInfo
+from app.db.repositories import (
+    BatteryInfo,
+    CycleData,
+    DatasetInfo,
+    MlModelInfo,
+    RulPredictionSet,
+    ScenarioInfo,
+)
 from app.db.seed import cycles_checksum, synthetic_battery_values, synthetic_dataset_values
 
 
@@ -33,6 +40,8 @@ class InMemoryRepository:
         self._records: dict[uuid.UUID, tuple[CycleRecord, ...]] = {self.battery.id: data}
         self._scenarios: dict[uuid.UUID, ScenarioInfo] = {}
         self.load_calls = 0
+        self.ml_models: list[MlModelInfo] = []
+        self.predictions: dict[uuid.UUID, RulPredictionSet] = {}
 
     def replace_records(self, records: Sequence[CycleRecord]) -> None:
         """Swap the battery's data (and checksum), as a re-import would."""
@@ -65,6 +74,12 @@ class InMemoryRepository:
             )
             for r in self._records.get(battery_id, ())
         )
+
+    async def latest_ml_models(self) -> list[MlModelInfo]:
+        return list(self.ml_models)
+
+    async def rul_predictions(self, battery_id: uuid.UUID) -> RulPredictionSet | None:
+        return self.predictions.get(battery_id)
 
     async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]:
         return ()  # synthetic data has cycle summaries only

@@ -8,7 +8,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateIndex, CreateTable
 
 from app.db.base import Base
-from app.db.models import Battery, Cycle, Dataset, DatasetFile, Scenario
+from app.db.models import Battery, Cycle, Dataset, DatasetFile, MlModel, MlPrediction, Scenario
 
 TABLES = Base.metadata.tables
 PG = postgresql.dialect()  # type: ignore[no-untyped-call]  # SQLAlchemy dialect factory is untyped
@@ -18,9 +18,17 @@ def ddl(table: Table) -> str:
     return str(CreateTable(table).compile(dialect=PG))
 
 
-def test_exactly_the_phase_3_tables_plus_dataset_files() -> None:
-    assert sorted(TABLES) == ["batteries", "cycles", "dataset_files", "datasets", "scenarios"]
-    models = (Dataset, Battery, Cycle, Scenario, DatasetFile)
+def test_exactly_the_phase_3_tables_plus_dataset_files_and_ml_tables() -> None:
+    assert sorted(TABLES) == [
+        "batteries",
+        "cycles",
+        "dataset_files",
+        "datasets",
+        "ml_models",
+        "ml_predictions",
+        "scenarios",
+    ]
+    models = (Dataset, Battery, Cycle, Scenario, DatasetFile, MlModel, MlPrediction)
     assert {m.__tablename__ for m in models} == set(TABLES)
 
 
@@ -102,7 +110,9 @@ def test_constraint_names_follow_the_naming_convention() -> None:
 
 def test_foreign_keys_cascade_on_delete() -> None:
     fks = [c for t in TABLES.values() for c in t.constraints if isinstance(c, ForeignKeyConstraint)]
-    assert len(fks) == 5  # Phase 3: 3; dataset_files -> datasets and -> batteries (Phase 6)
+    # Phase 3: 3; dataset_files -> datasets and -> batteries (Phase 6); ml_predictions -> ml_models
+    # and -> batteries (Phase 7): deleting a battery or a model run removes its predictions.
+    assert len(fks) == 7
     assert all(fk.ondelete == "CASCADE" for fk in fks)
 
 

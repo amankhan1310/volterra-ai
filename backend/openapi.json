@@ -1349,6 +1349,102 @@
           }
         }
       }
+    },
+    "/api/v1/models": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "Model evaluations of the latest imported run",
+        "description": "Battery-wise cross-validation and held-out test metrics per dataset, as the offline run reported them. `run` is null and `tasks` empty when no run was imported.",
+        "operationId": "list_models_api_v1_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/batteries/{battery_id}/rul-predictions": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "Stored RUL predictions for a battery",
+        "description": "Predicted remaining useful life at each prediction point with its conformal interval, next to the battery's actual RUL when its EOL is known. 404 `predictions_not_found` when the latest run has none for this battery (for example the synthetic battery, or a battery that was not in the run).",
+        "operationId": "get_rul_predictions_api_v1_batteries__battery_id__rul_predictions_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RulPredictionsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2135,6 +2231,96 @@
         ],
         "title": "BatteryOut"
       },
+      "CalibrationSize": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "batteries": {
+            "type": "integer",
+            "title": "Batteries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rows",
+          "batteries"
+        ],
+        "title": "CalibrationSize"
+      },
+      "CandidateEvaluation": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "learned": {
+            "type": "boolean",
+            "title": "Learned"
+          },
+          "selected": {
+            "type": "boolean",
+            "title": "Selected"
+          },
+          "cv": {
+            "$ref": "#/components/schemas/MetricSet"
+          },
+          "test": {
+            "$ref": "#/components/schemas/MetricSet"
+          },
+          "interval_scale": {
+            "type": "string",
+            "title": "Interval Scale"
+          },
+          "pooled_half_width": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pooled Half Width"
+          },
+          "datasets": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetEvaluation"
+            },
+            "type": "array",
+            "title": "Datasets"
+          },
+          "by_life_fraction": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/LifeFractionMetrics"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Life Fraction"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "learned",
+          "selected",
+          "cv",
+          "test",
+          "interval_scale",
+          "pooled_half_width",
+          "datasets"
+        ],
+        "title": "CandidateEvaluation"
+      },
       "ChannelStatsOut": {
         "properties": {
           "channel": {
@@ -2498,6 +2684,116 @@
           "status"
         ],
         "title": "DatabaseHealth"
+      },
+      "DatasetCensus": {
+        "properties": {
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "bundle_checksum": {
+            "type": "string",
+            "title": "Bundle Checksum"
+          },
+          "batteries": {
+            "type": "integer",
+            "title": "Batteries"
+          },
+          "excluded": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded",
+            "description": "Excluded by the source (e.g. Severson paper)."
+          },
+          "too_short": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Too Short"
+          },
+          "start_below_eol": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Start Below Eol"
+          },
+          "censored": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Censored",
+            "description": "Never reach EOL: no exact RUL target."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset",
+          "version",
+          "bundle_checksum",
+          "batteries",
+          "excluded",
+          "too_short",
+          "start_below_eol",
+          "censored"
+        ],
+        "title": "DatasetCensus"
+      },
+      "DatasetEvaluation": {
+        "properties": {
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "interval_basis": {
+            "type": "string",
+            "title": "Interval Basis",
+            "description": "'dataset' (Mondrian) or the pooled fallback."
+          },
+          "interval_half_width": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Half Width",
+            "description": "Conformal half-width on the interval scale of the task."
+          },
+          "cv": {
+            "$ref": "#/components/schemas/MetricSet",
+            "description": "Out-of-fold over this dataset's training batteries."
+          },
+          "test": {
+            "$ref": "#/components/schemas/MetricSet",
+            "description": "This dataset's held-out test batteries."
+          },
+          "calibration": {
+            "$ref": "#/components/schemas/CalibrationSize"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset",
+          "interval_basis",
+          "interval_half_width",
+          "cv",
+          "test",
+          "calibration"
+        ],
+        "title": "DatasetEvaluation"
       },
       "DatasetList": {
         "properties": {
@@ -2939,6 +3235,70 @@
         ],
         "title": "Interval"
       },
+      "LabelCheck": {
+        "properties": {
+          "labelled_cells": {
+            "type": "integer",
+            "title": "Labelled Cells"
+          },
+          "rule_finds_eol": {
+            "type": "integer",
+            "title": "Rule Finds Eol"
+          },
+          "rule_misses_eol": {
+            "type": "integer",
+            "title": "Rule Misses Eol"
+          },
+          "rule_minus_label_max_abs_cycles": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Minus Label Max Abs Cycles"
+          },
+          "missed_cells_final_soh_range": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missed Cells Final Soh Range"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "labelled_cells",
+          "rule_finds_eol",
+          "rule_misses_eol",
+          "rule_minus_label_max_abs_cycles",
+          "missed_cells_final_soh_range",
+          "note"
+        ],
+        "title": "LabelCheck",
+        "description": "The threshold EOL rule against the source's documented cycle lives."
+      },
       "LatestCycle": {
         "properties": {
           "cycle": {
@@ -2964,6 +3324,25 @@
           "voltage"
         ],
         "title": "LatestCycle"
+      },
+      "LifeFractionMetrics": {
+        "properties": {
+          "fraction": {
+            "type": "string",
+            "title": "Fraction",
+            "description": "Prediction point as a fraction of the battery's life."
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/MetricSet"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fraction",
+          "metrics"
+        ],
+        "title": "LifeFractionMetrics"
       },
       "LinearFitOut": {
         "properties": {
@@ -3018,6 +3397,387 @@
         ],
         "title": "LinearFitOut"
       },
+      "MetricSet": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N",
+            "description": "Prediction rows evaluated (0 when none)."
+          },
+          "mae": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mae"
+          },
+          "rmse": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rmse"
+          },
+          "bias": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bias",
+            "description": "Mean of prediction - truth."
+          },
+          "r2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "R2"
+          },
+          "picp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Picp",
+            "description": "Interval coverage (90 % nominal)."
+          },
+          "mpiw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mpiw",
+            "description": "Mean interval width."
+          },
+          "alpha_lambda_20": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha Lambda 20",
+            "description": "RUL only: share of predictions within +-20 % of the true RUL."
+          },
+          "batteries": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batteries",
+            "description": "Batteries behind these rows."
+          },
+          "batteries_per_fold": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batteries Per Fold",
+            "description": "CV only: training batteries in each of the grouped folds."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "n"
+        ],
+        "title": "MetricSet",
+        "description": "Point and interval metrics over rows of held-out (or out-of-fold) batteries."
+      },
+      "ModelRef": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "status": {
+            "type": "string",
+            "const": "experimental",
+            "title": "Status"
+          },
+          "trained_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Trained At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "task",
+          "model",
+          "status",
+          "trained_at"
+        ],
+        "title": "ModelRef"
+      },
+      "ModelRunOut": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "trained_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Trained At"
+          },
+          "status": {
+            "type": "string",
+            "const": "experimental",
+            "title": "Status"
+          },
+          "git_sha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Git Sha"
+          },
+          "code_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Sha256"
+          },
+          "data_hash": {
+            "type": "string",
+            "title": "Data Hash"
+          },
+          "eol_definition": {
+            "type": "string",
+            "title": "Eol Definition"
+          },
+          "split_rule": {
+            "type": "string",
+            "title": "Split Rule"
+          },
+          "interval_level": {
+            "type": "number",
+            "title": "Interval Level"
+          },
+          "eol_pct": {
+            "type": "number",
+            "title": "Eol Pct"
+          },
+          "libraries": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Libraries"
+          },
+          "datasets": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetCensus"
+            },
+            "type": "array",
+            "title": "Datasets"
+          },
+          "label_check": {
+            "$ref": "#/components/schemas/LabelCheck"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "trained_at",
+          "status",
+          "git_sha",
+          "code_sha256",
+          "data_hash",
+          "eol_definition",
+          "split_rule",
+          "interval_level",
+          "eol_pct",
+          "libraries",
+          "datasets",
+          "label_check"
+        ],
+        "title": "ModelRunOut"
+      },
+      "ModelTaskOut": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "rul",
+              "forecast",
+              "soh"
+            ],
+            "title": "Kind"
+          },
+          "horizon_cycles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horizon Cycles"
+          },
+          "status": {
+            "type": "string",
+            "const": "experimental",
+            "title": "Status"
+          },
+          "selected_model": {
+            "type": "string",
+            "title": "Selected Model"
+          },
+          "selection_rule": {
+            "type": "string",
+            "title": "Selection Rule"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Features"
+          },
+          "batteries": {
+            "$ref": "#/components/schemas/SplitCounts"
+          },
+          "batteries_by_dataset": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SplitCounts"
+            },
+            "type": "object",
+            "title": "Batteries By Dataset"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateEvaluation"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "artifact_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task",
+          "kind",
+          "horizon_cycles",
+          "status",
+          "selected_model",
+          "selection_rule",
+          "features",
+          "batteries",
+          "batteries_by_dataset",
+          "candidates",
+          "artifact_sha256"
+        ],
+        "title": "ModelTaskOut"
+      },
+      "ModelsResponse": {
+        "properties": {
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelRunOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when no model run was imported."
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/ModelTaskOut"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run",
+          "tasks",
+          "note"
+        ],
+        "title": "ModelsResponse"
+      },
       "Quantity": {
         "properties": {
           "value": {
@@ -3055,6 +3815,115 @@
           "provenance"
         ],
         "title": "Quantity"
+      },
+      "RulPointOut": {
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "soh": {
+            "$ref": "#/components/schemas/Quantity",
+            "description": "Measured SOH at the prediction point."
+          },
+          "rul": {
+            "$ref": "#/components/schemas/Interval",
+            "description": "Predicted RUL in cycles with its conformal interval."
+          },
+          "actual_rul": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Quantity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Cycles to the battery's EOL label; null for censored batteries."
+          },
+          "past_eol": {
+            "type": "boolean",
+            "title": "Past Eol"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycle",
+          "soh",
+          "rul",
+          "actual_rul",
+          "past_eol"
+        ],
+        "title": "RulPointOut"
+      },
+      "RulPredictionsResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelRef"
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "train",
+              "calibration",
+              "test"
+            ],
+            "title": "Split"
+          },
+          "in_sample": {
+            "type": "boolean",
+            "title": "In Sample",
+            "description": "True for training batteries: not a held-out result."
+          },
+          "interval_basis": {
+            "type": "string",
+            "title": "Interval Basis"
+          },
+          "eol_cycle": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eol Cycle"
+          },
+          "censored": {
+            "type": "boolean",
+            "title": "Censored"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/RulPointOut"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "model",
+          "split",
+          "in_sample",
+          "interval_basis",
+          "eol_cycle",
+          "censored",
+          "note",
+          "points"
+        ],
+        "title": "RulPredictionsResponse"
       },
       "SampleOut": {
         "properties": {
@@ -3561,6 +4430,30 @@
           "unit"
         ],
         "title": "SliderOut"
+      },
+      "SplitCounts": {
+        "properties": {
+          "train": {
+            "type": "integer",
+            "title": "Train"
+          },
+          "calibration": {
+            "type": "integer",
+            "title": "Calibration"
+          },
+          "test": {
+            "type": "integer",
+            "title": "Test"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "train",
+          "calibration",
+          "test"
+        ],
+        "title": "SplitCounts"
       },
       "SummaryResponse": {
         "properties": {

@@ -24,10 +24,16 @@ def offline_sql(revision: str, *, downgrade: bool = False) -> str:
     return buffer.getvalue()
 
 
-def test_single_linear_history_with_head_0004() -> None:
+def test_single_linear_history_with_head_0005() -> None:
     script = ScriptDirectory.from_config(alembic_config(OFFLINE_URL))
-    assert script.get_heads() == ["0004"]
-    assert [r.revision for r in script.walk_revisions()] == ["0004", "0003", "0002", "0001"]
+    assert script.get_heads() == ["0005"]
+    assert [r.revision for r in script.walk_revisions()] == [
+        "0005",
+        "0004",
+        "0003",
+        "0002",
+        "0001",
+    ]
 
 
 def test_offline_0002_is_additive_only() -> None:
@@ -93,3 +99,26 @@ def test_offline_0004_only_drops_not_null_on_temperature_and_voltage() -> None:
     down = offline_sql("0004:0003", downgrade=True)
     assert "ALTER COLUMN temp_mean_c SET NOT NULL" in down
     assert "ALTER COLUMN voltage_mean_v SET NOT NULL" in down
+
+
+def test_offline_0005_only_creates_the_two_ml_tables() -> None:
+    sql = offline_sql("0004:0005")
+    statements = [
+        s.strip()
+        for s in sql.splitlines()
+        if s.strip().startswith(("ALTER", "CREATE", "DROP", "DELETE"))
+    ]
+    assert statements == [
+        "CREATE TABLE ml_models (",
+        "CREATE INDEX ix_ml_models_run_id ON ml_models (run_id);",
+        "CREATE TABLE ml_predictions (",
+        "CREATE INDEX ix_ml_predictions_battery_id ON ml_predictions (battery_id);",
+    ]
+    down = offline_sql("0005:0004", downgrade=True)
+    drops = [s.strip() for s in down.splitlines() if s.strip().startswith("DROP")]
+    assert drops == [
+        "DROP INDEX ix_ml_predictions_battery_id;",
+        "DROP TABLE ml_predictions;",
+        "DROP INDEX ix_ml_models_run_id;",
+        "DROP TABLE ml_models;",
+    ]

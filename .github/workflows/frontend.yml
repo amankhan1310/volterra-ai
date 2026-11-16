@@ -72,10 +72,16 @@ jobs:
           uv sync --locked --python 3.12
           uv run --no-sync alembic upgrade head
           uv run --no-sync python -m app.db.seed
+      # Generated real-style batteries (never real data) for the real-data journey (D8). ci-import
+      # refuses unless this is GitHub Actions and DATABASE_URL names the local volterra_ci service
+      # database, imports with the standard importer and checks that a re-import is a no-op.
+      - name: Import the generated real-style bundles
+        working-directory: backend
+        run: uv run --no-sync python -m tests.support.fixture_bundles ci-import "$RUNNER_TEMP/data"
       - name: Start the API
         working-directory: backend
         run: |
-          nohup uv run --no-sync uvicorn --factory app.main:create_app \
+          VOLTERRA_DATA_DIR="$RUNNER_TEMP/data" nohup uv run --no-sync uvicorn --factory app.main:create_app \
             --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/api.log" 2>&1 &
           for _ in $(seq 1 30); do
             curl -sf http://127.0.0.1:8000/api/v1/health && exit 0

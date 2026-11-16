@@ -12,12 +12,12 @@ Run directories, model files and every real-data value stay outside git (`artifa
 
 ## Reference run
 
-|                 |                                                                                                                                      |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Run id          | `48194befb681` (2026-11-16), code `23b513b` (clean tree), code SHA-256 `63c0d855d874…`                                               |
-| Data            | NASA PCoE 2022-09-18 (`471c8176…`), CALCE CS2/CX2 2015-08-10 (`eb60aefc…`), Severson 2019-03-11 (`dec6473b…`); data hash `0adea61c…` |
-| Libraries       | Python 3.10.11, numpy 2.2.6, scikit-learn 1.7.2, LightGBM 4.7.0 (deterministic, single-thread, seed 7)                               |
-| Reproducibility | A second run on the same code and data gave byte-identical `metrics.json`                                                            |
+|                 |                                                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Run id          | `48194befb681` (2026-11-16), code `23b513b` (clean tree), code SHA-256 `63c0d855d874…`                                                                        |
+| Data            | NASA PCoE 2022-09-18 (`471c8176…`), CALCE CS2/CX2 2015-08-10 (`eb60aefc…`), Severson 2019-03-11 (`dec6473b…`); data hash `0adea61c…`                          |
+| Libraries       | Python 3.10.11, numpy 2.2.6, scikit-learn 1.7.2, LightGBM 4.7.0 (deterministic, single-thread, seed 7)                                                        |
+| Reproducibility | A second run on the same code and data gave byte-identical `metrics.json`; after a typing-only fix (`19a76ad`) run `0015bc1d2690` reproduced it byte for byte |
 
 ## Tasks
 

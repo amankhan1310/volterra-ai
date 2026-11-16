@@ -5,7 +5,8 @@
     "is_synthetic": true,
     "data_provenance": "simulated",
     "algorithm_version": "v1",
-    "eol_pct": null
+    "eol_pct": null,
+    "note": null
   },
   "detector": {
     "name": "robust_z",

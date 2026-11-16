@@ -164,11 +164,11 @@ class Cycle(CreatedAtMixin, Base):
         String(16), nullable=False, default="discharge", server_default="discharge"
     )
     start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # v1 analysis inputs
+    # v1 analysis inputs (temperature and voltage nullable since 0004, decision D3)
     capacity_ah: Mapped[float] = mapped_column(Double, nullable=False)
     soh_pct: Mapped[float] = mapped_column(Double, nullable=False)
-    temp_mean_c: Mapped[float] = mapped_column(Double, nullable=False)
-    voltage_mean_v: Mapped[float] = mapped_column(Double, nullable=False)
+    temp_mean_c: Mapped[float | None] = mapped_column(Double)
+    voltage_mean_v: Mapped[float | None] = mapped_column(Double)
     # Optional measurements for real datasets (Phase 6)
     temp_min_c: Mapped[float | None] = mapped_column(Double)
     temp_max_c: Mapped[float | None] = mapped_column(Double)
@@ -185,6 +185,8 @@ class Cycle(CreatedAtMixin, Base):
     quality_flags: Mapped[dict[str, Any]] = _jsonb_object()
     #: Position of this cycle in the source file's cycle array (Phase 6; null for synthetic).
     source_cycle_index: Mapped[int | None] = mapped_column(Integer)
+    #: Where the cycle comes from (canonical schema v2 ``source_ref_json``; migration 0003).
+    source_ref: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     battery: Mapped[Battery] = relationship(back_populates="cycles")
 

@@ -92,6 +92,7 @@ async def test_real_nasa_bundle_imports_faithfully(session: AsyncSession) -> Non
                     "discharge_time_s", "ambient_temp_c", "source_cycle_index"):  # fmt: skip
             assert getattr(c, col) == src[col], (ids[c.battery_id], c.cycle_index, col)
         assert c.quality_flags == json.loads(src["quality_flags_json"])
+        assert c.source_ref == json.loads(src["source_ref_json"])  # persisted, not only Parquet
     zero = [c for c in rows if c.capacity_ah == 0.0]
     assert len(zero) == 19 and all("capacity_zero" in c.quality_flags for c in zero)
 

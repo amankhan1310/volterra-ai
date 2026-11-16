@@ -97,6 +97,10 @@ class AnalysisContext(ApiModel):
         "v2 (?algorithm=v2) has the corrected methods (see CHANGELOG.md).",
     )
     eol_pct: float | None = Field(default=None, description="End-of-life SOH threshold used.")
+    note: str | None = Field(
+        default=None,
+        description="Set for measured cells: the analytics are not validated on real cells.",
+    )
 
 
 def data_provenance(is_synthetic: bool) -> DataProvenance:

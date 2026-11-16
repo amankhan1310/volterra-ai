@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router";
 import { Header } from "../components/layout/Header";
 import { Sidebar } from "../components/layout/Sidebar";
 import { MOBILE_QUERY, useMediaQuery } from "../lib/useMediaQuery";
+import { ScenarioDraftProvider } from "../state/ScenarioDraftContext";
 import styles from "./AppLayout.module.css";
 import { findPageByPath } from "./pages";
 
@@ -83,7 +84,10 @@ export function AppLayout() {
         />
         <main id="main" ref={mainRef} tabIndex={-1} className={styles.main}>
           <div className={styles.page}>
-            <Outlet />
+            {/* Inside the router: the draft belongs to the battery selected in the URL. */}
+            <ScenarioDraftProvider>
+              <Outlet />
+            </ScenarioDraftProvider>
           </div>
         </main>
       </div>

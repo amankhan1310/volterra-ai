@@ -1,5 +1,5 @@
 /**
- * The six prototype pages. Labels, groups, titles and subtitles are copied verbatim from
+ * The six prototype pages, plus Battery Data (Phase 6 M6: measured data of real cells). Labels, groups, titles and subtitles are copied verbatim from
  * legacy/core.js (`names`) and legacy/ui.js (`head(...)` calls and the nav groups).
  */
 export type PageKey =
@@ -8,6 +8,7 @@ export type PageKey =
   | "sim"
   | "anom"
   | "advisor"
+  | "data"
   | "about";
 
 export type NavGroup = "Monitor" | "Plan" | "Project";
@@ -20,7 +21,7 @@ export interface PageMeta {
   label: string;
   title: string;
   subtitle: string;
-  /** Phase 4 milestone that rebuilt the page. */
+  /** Phase 4 milestone that rebuilt the page (Battery Data: Phase 6 milestone 6). */
   milestone: number;
 }
 
@@ -72,6 +73,15 @@ export const PAGES: readonly PageMeta[] = [
     milestone: 5,
   },
   {
+    key: "data",
+    path: "/battery-data",
+    label: "Battery Data",
+    title: "Battery Data",
+    subtitle:
+      "Cycle and sample measurements of the selected battery, with their source and limitations.",
+    milestone: 6,
+  },
+  {
     key: "about",
     path: "/about",
     label: "About",
@@ -86,7 +96,7 @@ export const NAV_GROUPS: readonly {
   group: NavGroup;
   keys: readonly PageKey[];
 }[] = [
-  { group: "Monitor", keys: ["overview", "digital", "anom"] },
+  { group: "Monitor", keys: ["overview", "digital", "anom", "data"] },
   { group: "Plan", keys: ["sim", "advisor"] },
   { group: "Project", keys: ["about"] },
 ];

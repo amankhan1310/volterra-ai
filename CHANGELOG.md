@@ -5,6 +5,41 @@ original prototype exactly (including the known defects F1–F8 in `ARCHITECTURE
 is permanent, and stays the API default. **v2** holds the corrected methods. The golden fixtures
 in `backend/tests/golden/` describe v1 and are never modified.
 
+## [Unreleased] — Phase 6 M5 + M6: real-data API and frontend
+
+No v1 or v2 analytics change: synthetic-v1 responses are unchanged (fixtures re-recorded; only the
+new optional fields were added). The development database is unchanged (still migration 0002).
+
+- Migration `0004`: `cycles.temp_mean_c` and `voltage_mean_v` become nullable. Its downgrade
+  refuses while nulls exist (it never deletes). The importer now imports every cycle with a
+  measured capacity and SOH, except sample-less placeholders (`empty_samples`); missing
+  temperature or voltage stays null and is never filled in.
+- API: batteries report `analysis {available, reason, message, min_cycles}`, `flags` and
+  incomplete/flagged cycle counts; cycles expose nullable temperature/voltage, internal
+  resistance, charge time and quality flags; analytical contexts carry a `note` for real cells
+  (not validated on real cells). Analytics on a battery without the inputs they need return 422
+  `missing_measurement` or `insufficient_data` instead of guessing.
+- New `GET /batteries/{id}/cycles/{cycle}/samples?max_points=` (deterministic downsampling, first
+  and last samples kept; 422 `no_samples`, 404 `cycle_not_found`, 503 `samples_unavailable`)
+  reading the bundle files under the new `VOLTERRA_DATA_DIR` setting.
+- Frontend: battery selection by URL (`?battery=<dataset>:<external_id>`, synthetic default),
+  header battery selector, limitation states that show the API's reason, and a new
+  **Battery Data** page (per-cycle measured channels with flagged cycles, per-cycle samples).
+- CI E2E imports two generated real-style bundles (never real data) through
+  `tests.support.fixture_bundles ci-import`, which refuses unless it runs in GitHub Actions
+  against the local `volterra_ci` service database, and checks that a re-import is a no-op.
+
+## [Unreleased] — Phase 6 M4: CALCE and Severson loaders, canonical schema v2
+
+No analytics, API or frontend change; the development database is unchanged.
+
+- Canonical schema v2: nullable cycle columns `internal_resistance_ohm`, `charge_time_s`,
+  `source_ref_json`; migration `0003` adds `cycles.source_ref` (JSONB) and the importer persists it.
+- `python -m volterra_ml.loaders build calce-cs2-cx2` (12 cells, 15,971 cycles) and
+  `build severson-2019` (135 cells: 5 continuations joined, 11 paper-excluded flagged; 114,738
+  cycles). The NASA bundle is rebuilt under v2.
+- The importer refuses over-long text fields before writing (database column limits).
+
 ## [Unreleased] — Phase 6 M2 + M3: canonical schema, NASA loader, database and importer
 
 No analytics, API or frontend change; the development database is unchanged.

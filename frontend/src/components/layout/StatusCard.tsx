@@ -26,12 +26,17 @@ export function serviceStatus(
 }
 
 /** The data-source lines of the legacy status card ("Simulation mode / Seeded dataset · no vehicle link"). */
-export function dataSourceText(battery: Battery | null | undefined): {
+export function dataSourceText(
+  battery: Battery | null | undefined,
+  notFound = false,
+): {
   title: string;
   detail: string;
 } {
   if (battery === undefined)
     return { title: "Data source", detail: "Not loaded" };
+  if (notFound)
+    return { title: "No data", detail: "Selected battery not found" };
   if (battery === null)
     return { title: "No data", detail: "No battery in the database" };
   if (battery.is_synthetic)
@@ -47,9 +52,9 @@ export function dataSourceText(battery: Battery | null | undefined): {
 
 export function StatusCard() {
   const health = useHealth();
-  const { battery } = useDefaultBattery();
+  const { battery, notFound } = useDefaultBattery();
   const service = serviceStatus(health.data, health.isError);
-  const source = dataSourceText(battery);
+  const source = dataSourceText(battery, notFound);
 
   return (
     <div

@@ -1,4 +1,5 @@
 import { NavLink } from "react-router";
+import { useBatterySearch } from "../../api/hooks";
 import { NAV_GROUPS, getPage } from "../../app/pages";
 import { cx } from "../../lib/cx";
 import { BrandMark, PageIcon } from "./icons";
@@ -23,6 +24,7 @@ export function Sidebar({
   inert,
   onNavigate,
 }: SidebarProps) {
+  const search = useBatterySearch();
   return (
     <aside
       id={SIDEBAR_ID}
@@ -51,7 +53,7 @@ export function Sidebar({
               return (
                 <NavLink
                   key={key}
-                  to={page.path}
+                  to={{ pathname: page.path, search }}
                   className={cx(styles.link)}
                   aria-label={page.label}
                   title={collapsed ? page.label : undefined}

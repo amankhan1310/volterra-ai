@@ -83,11 +83,32 @@ All 414 workbooks were checked (header row only, 2026-11-15). They share one 17-
 provides thermocouple data only for CX2_4, which is not selected), so temperature stays null and
 is reported as missing, never filled in (decision D3).
 
-## Notes for M2 (parsing; not done in M1)
+## Conversion (Phase 6 M4)
 
-- File dates are `M_D_YY` without zero padding (`CS2_33_9_7_10`, `CS2_33_10_04_10`): sort by the
-  parsed date, never alphabetically.
-- Data sits in the `Channel_1-NNN` sheet, except `CX2_34_8_16_10.xlsx`, whose data is in
-  `Sheet1` (same header); select the sheet by its header, not its name.
-- `Cycle_Index` comes from the tester per file; stitch files in date order and record how cycle
-  numbers map across files.
+`python -m volterra_ml.loaders build calce-cs2-cx2` (about 100 s) writes
+`processed/calce-cs2-cx2/2015-08-10/`: 12 batteries, **15,971 canonical discharge cycles**,
+4,873,533 sample rows (219 MB). Verified facts it relies on (all 414 workbooks):
+
+- Workbooks are ordered by their first sample time; the `M_D_YY` name sorts wrongly as text
+  for every cell. Data is taken from the sheet with the Arbin header (`CX2_34_8_16_10.xlsx`:
+  `Sheet1`); midnight `Date_Time` cells read as dates and are converted.
+- `Cycle_Index` restarts in every workbook; a canonical cycle is a (workbook, `Cycle_Index`)
+  group with discharge samples; its capacity is the increase of the workbook's cumulative
+  `Discharge_Capacity(Ah)` over the group. Groups without discharge stay in the samples only.
+- `CS2_35_2_10_11.xlsx` and `CS2_38_2_10_11.xlsx` repeat the `_2_4_11` workbooks row for row:
+  recorded (`duplicate_of`) and skipped (4,885,068 − 11,535 rows). Any other overlap stops the
+  loader.
+- One empty cell in 4.9 million rows (`CS2_33_11_10_10.xlsx`, row 2, `Test_Time(s)`): null and
+  flagged `empty_source_cells`.
+- Temperature is null throughout and the per-cycle resistance is null (the tester's value is a
+  held reading; the full series is in the samples). SOH uses the rated 1.1 / 1.35 Ah.
+- CX2_33's three `.txt` exports are recorded as unconverted source files; the battery is
+  flagged `earlier_history_not_converted`.
+
+Flags: 292 `capacity_above_rated` (fresh CS2 cells deliver ~1.14 Ah), 489 `capacity_jump_up`,
+134 `file_ends_during_discharge`, 1 `empty_source_cells`. Since migration 0004 (Phase 6 M5,
+decision D3) all 15,971 cycles import with temperature and mean voltage null. The v1/v2
+analytics need both, so the API answers `missing_measurement` for every CALCE cell and the app
+shows its measured data on the Battery Data page only. The local
+`test_calce_realdata.py` compares every sample value and every cycle capacity with the
+workbooks.

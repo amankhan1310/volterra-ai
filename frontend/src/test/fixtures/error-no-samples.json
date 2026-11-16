@@ -1,0 +1,9 @@
+{
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "no_samples",
+      "message": "The synthetic dataset has cycle summaries only, no samples"
+    }
+  }
+}

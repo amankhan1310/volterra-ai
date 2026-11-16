@@ -1,0 +1,70 @@
+/* Battery Data (Phase 6 M6): battery facts, per-cycle chart, cycle samples. */
+
+.stack {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.stack > * {
+  min-width: 0;
+}
+
+.head,
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toolbar {
+  margin-bottom: 8px;
+}
+
+.title {
+  margin: 6px 0 0;
+}
+
+.picker,
+.cycle {
+  display: grid;
+  gap: 4px;
+}
+
+.select,
+.cycle input {
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--el);
+  color: var(--tx);
+  font: inherit;
+}
+
+.cycle input {
+  width: 120px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.analysis {
+  margin: 16px 0 0;
+}
+
+.flags {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  overflow-wrap: anywhere;
+}
+
+.warn {
+  color: var(--rd);
+}

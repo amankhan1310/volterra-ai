@@ -19,7 +19,7 @@ def test_importer_matches_the_canonical_contract() -> None:
     assert contract["SCHEMA_VERSION"] == imp.SCHEMA_VERSION
     assert contract["BATTERY_COLUMNS"] == imp.BATTERY_COLUMNS
     assert contract["CYCLE_COLUMNS"] == imp.CYCLE_COLUMNS
-    assert tuple(contract["DB_REQUIRED"]) == imp.DB_REQUIRED
+    assert tuple(contract["ANALYSIS_INPUTS"]) == imp.ANALYSIS_INPUTS
     assert set(imp.OPTIONAL_CYCLE_COLUMNS) <= set(contract["CYCLE_COLUMNS"])
 
 

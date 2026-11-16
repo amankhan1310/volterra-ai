@@ -171,7 +171,7 @@ export function DigitalTwinPage() {
         actions={<RunAnalysisButton />}
       />
       <ContextBar />
-      <BatteryGate>
+      <BatteryGate need="measurements">
         {(battery) => <TwinContent battery={battery} />}
       </BatteryGate>
     </>

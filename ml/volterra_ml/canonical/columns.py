@@ -15,7 +15,7 @@ Rules:
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 #: Column -> Arrow type name (``string``, ``int32``, ``int64``, ``float64``, ``bool``) and
 #: whether nulls are allowed. Order is the column order written to Parquet.
@@ -54,9 +54,12 @@ CYCLE_COLUMNS: dict[str, tuple[str, bool]] = {
     "current_mean_a": ("float64", True),
     "discharge_time_s": ("float64", True),
     "ambient_temp_c": ("float64", True),
+    "internal_resistance_ohm": ("float64", True),  # as reported by the source (v2)
+    "charge_time_s": ("float64", True),  # charge duration as reported or measured (v2)
+    "source_ref_json": ("string", True),  # JSON: where the cycle comes from (v2)
     "n_samples": ("int32", False),
     "quality_flags_json": ("string", False),  # JSON object {flag: detail}
-    "db_eligible": ("bool", False),  # has every value the cycles table requires
+    "db_eligible": ("bool", False),  # has every v1 analysis input (ANALYSIS_INPUTS)
 }
 
 #: Per-sample traces (one file per cell and operation type; extra source channels are kept).
@@ -90,9 +93,10 @@ IMPEDANCE_COLUMNS: dict[str, tuple[str, bool]] = {
     "quality_flags_json": ("string", False),  # e.g. {"re_complex": ...} when a fit is complex
 }
 
-#: Values the database ``cycles`` table requires (NOT NULL in migration 0001). A canonical cycle
-#: lacking any of them stays in Parquet with ``db_eligible = false`` and is not imported.
-DB_REQUIRED = ("capacity_ah", "soh_pct", "temp_mean_c", "voltage_mean_v")
+#: The v1/v2 analysis inputs. ``db_eligible`` records whether a cycle has all of them. Since
+#: migration 0004 the importer also loads cycles that lack temperature or voltage (they stay null;
+#: the API reports ``missing_measurement``); see docs/datasets/canonical-schema.md.
+ANALYSIS_INPUTS = ("capacity_ah", "soh_pct", "temp_mean_c", "voltage_mean_v")
 
 CHEMISTRY_BASES = ("stated_by_source", "not_stated")
 SOH_REFERENCES = ("rated_capacity",)

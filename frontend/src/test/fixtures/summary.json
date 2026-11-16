@@ -5,7 +5,8 @@
     "is_synthetic": true,
     "data_provenance": "simulated",
     "algorithm_version": "v1",
-    "eol_pct": 80
+    "eol_pct": 80,
+    "note": null
   },
   "soh_now": {
     "value": 86.08941987140724,

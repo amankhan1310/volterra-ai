@@ -59,6 +59,13 @@ const PAGE_ICON_PATHS: Record<PageKey, ReactNode> = {
     </>
   ),
   advisor: <path d="M13 2L4 14h7l-1 8 9-12h-7z" />,
+  data: (
+    <>
+      <ellipse cx="12" cy="5" rx="8" ry="3" />
+      <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+      <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+    </>
+  ),
   about: (
     <>
       <circle cx="12" cy="12" r="9" />

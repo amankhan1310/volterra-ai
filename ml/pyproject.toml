@@ -7,8 +7,10 @@ requires-python = ">=3.10"
 # Acquisition (M1) and the canonical column contract stay standard-library only; the loaders
 # (M2+) read MATLAB files with scipy/numpy and write Parquet bundles with pyarrow.
 dependencies = [
+    "h5py>=3.11",
     "numpy>=1.26",
     "pyarrow>=17",
+    "python-calamine>=0.3",
     "scipy>=1.13",
 ]
 
@@ -59,8 +61,8 @@ files = ["volterra_ml", "tests"]
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-# Neither library ships type information; their objects are typed as Any at the boundary.
-module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*"]
+# These libraries ship no type information; their objects are typed as Any at the boundary.
+module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*", "h5py", "h5py.*", "python_calamine"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

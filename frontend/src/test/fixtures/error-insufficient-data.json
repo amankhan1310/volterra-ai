@@ -1,0 +1,9 @@
+{
+  "status": 422,
+  "body": {
+    "error": {
+      "code": "insufficient_data",
+      "message": "v1 analysis needs at least 221 cycles; battery has 2"
+    }
+  }
+}

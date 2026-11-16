@@ -107,8 +107,11 @@ async def test_import_records_provenance_and_only_measured_cycles(session, tmp_p
     assert (first.capacity_ah, first.soh_pct) == (1.85, 1.85 / 2.0 * 100.0)
     assert (first.temp_mean_c, first.voltage_mean_v, first.ambient_temp_c) == (30.5, 3.5, 24.0)
     assert first.current_mean_a is None  # missing in the source: null, never 0
+    assert first.charge_time_s is None  # likewise (schema v2 column)
+    assert first.internal_resistance_ohm == 0.0185  # schema v2 column, as reported
     assert first.start_time is None  # the source has no timezone
     assert first.quality_flags == {}
+    assert first.source_ref == {"member": "G/B0005.mat"}  # schema v2, persisted (0003)
     records = [
         CycleRecord(c.cycle_index, c.capacity_ah, c.soh_pct, c.temp_mean_c, c.voltage_mean_v)
         for c in cycles
@@ -247,6 +250,7 @@ def _unexpected_file(out: Path) -> None:
         ({"dataset": b.dataset_block(is_synthetic=True)}, "only real"),
         ({"dataset": b.dataset_block(source="synthetic")}, "cannot be imported"),
         ({"batteries": [b.battery(), b.battery()]}, "duplicate external_id"),
+        ({"batteries": [b.battery(chemistry="x" * 33)]}, "chemistry longer than 32 characters"),
         (
             {"batteries": [b.battery(rated_capacity_ah=0.0, soh_reference_capacity_ah=0.0)]},
             "must be positive",
@@ -259,6 +263,8 @@ def _unexpected_file(out: Path) -> None:
         ({"cycles": [b.cycle(capacity=-0.5)]}, "negative capacity"),
         ({"cycles": [b.cycle(soh_pct=50.0)]}, "soh_pct is not capacity"),
         ({"cycles": [b.cycle(temp_max_c=float("inf"))]}, "temp_max_c is not finite"),
+        ({"cycles": [b.cycle(internal_resistance_ohm=float("nan"))]}, "internal_resistance_ohm"),
+        ({"cycles": [b.cycle(source_ref_json="[1, 2]")]}, "source_ref_json must be a JSON object"),
         ({"tamper": _drop_column}, "differ from the contract"),
         ({"tamper": _wrong_type}, "has type int64"),
         ({"tamper": _null_required}, "contains nulls"),
@@ -293,9 +299,9 @@ async def test_damaged_bundles_are_refused(session, tmp_path: Path, damage: str)
         manifest.write_text(json.dumps(body))
         match = "bundle_checksum does not match"
     elif damage == "schema":
-        body["schema_version"] = 2
+        body["schema_version"] = 99
         manifest.write_text(json.dumps(body))
-        match = "unsupported bundle schema_version 2"
+        match = "unsupported bundle schema_version 99"
     else:
         manifest.unlink()
         match = "no bundle_manifest.json"

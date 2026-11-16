@@ -48,7 +48,7 @@ from app.analytics.simulator_v2 import SIMULATOR_VERSION_V2
 from app.analytics.stats import LinearFit
 from app.analytics.synthetic import CycleRecord
 from app.analytics.twin import TWIN_MODULE_COUNT, temperature_band
-from app.db.repositories import BatteryInfo, DatasetInfo, ScenarioInfo
+from app.db.repositories import BatteryInfo, CycleData, DatasetInfo, ScenarioInfo
 from app.schemas.analysis import (
     AccelerationOut,
     AnomalyCounts,
@@ -65,7 +65,16 @@ from app.schemas.analysis import (
     TrendOut,
 )
 from app.schemas.common import AnalysisContext, Interval, Quantity, data_provenance
-from app.schemas.datasets import BatteryOut, CycleOut, CyclesResponse, DatasetOut
+from app.schemas.datasets import (
+    AnalysisAvailability,
+    BatteryFlag,
+    BatteryOut,
+    CycleOut,
+    CycleSamplesResponse,
+    CyclesResponse,
+    DatasetOut,
+    SampleOut,
+)
 from app.schemas.monitoring import (
     AnomaliesResponse,
     AnomalyEventOut,
@@ -88,7 +97,14 @@ from app.schemas.simulator import (
     SliderOut,
     TrajectoriesOut,
 )
-from app.services.analysis import BatteryAnalysis, BatteryAnalysisV2
+from app.services.analysis import (
+    MIN_CYCLES_V1,
+    REAL_DATA_NOTE,
+    Availability,
+    BatteryAnalysis,
+    BatteryAnalysisV2,
+)
+from app.services.samples import SAMPLE_FIELDS, CycleSamples
 from app.services.simulation import SimulationResult
 
 
@@ -104,6 +120,7 @@ def context(
         data_provenance=data_provenance(battery.is_synthetic),
         algorithm_version=algorithm,
         eol_pct=eol_pct,
+        note=None if battery.is_synthetic else REAL_DATA_NOTE,
     )
 
 
@@ -124,7 +141,7 @@ def dataset_out(d: DatasetInfo) -> DatasetOut:
     )
 
 
-def battery_out(b: BatteryInfo) -> BatteryOut:
+def battery_out(b: BatteryInfo, availability: Availability) -> BatteryOut:
     return BatteryOut(
         id=b.id,
         external_id=b.external_id,
@@ -138,28 +155,68 @@ def battery_out(b: BatteryInfo) -> BatteryOut:
         is_synthetic=b.is_synthetic,
         data_provenance=data_provenance(b.is_synthetic),
         cycle_count=b.cycle_count,
+        incomplete_cycle_count=b.incomplete_cycle_count,
+        flagged_cycle_count=b.flagged_cycle_count,
+        flags=[BatteryFlag(code=code, detail=detail) for code, detail in b.dataset_flags],
+        analysis=AnalysisAvailability(
+            available=availability.available,
+            reason=availability.reason,
+            message=availability.message,
+            min_cycles=MIN_CYCLES_V1,
+        ),
     )
 
 
-CYCLE_UNITS = {"capacity_ah": "Ah", "soh_pct": "%", "temp_c": "°C", "voltage_v": "V"}
+CYCLE_UNITS = {
+    "capacity_ah": "Ah",
+    "soh_pct": "%",
+    "temp_c": "°C",
+    "voltage_v": "V",
+    "internal_resistance_ohm": "Ω",
+    "charge_time_s": "s",
+}
 
 
-def cycle_out(r: CycleRecord) -> CycleOut:
+def cycle_out(c: CycleData) -> CycleOut:
     return CycleOut(
-        cycle=r.cycle,
-        capacity_ah=r.capacity_ah,
-        soh_pct=r.soh_pct,
-        temp_c=r.temp_c,
-        voltage_v=r.voltage_v,
+        cycle=c.cycle,
+        capacity_ah=c.capacity_ah,
+        soh_pct=c.soh_pct,
+        temp_c=c.temp_c,
+        voltage_v=c.voltage_v,
+        internal_resistance_ohm=c.internal_resistance_ohm,
+        charge_time_s=c.charge_time_s,
+        quality_flags=list(c.quality_flags),
     )
 
 
-def cycles_response(battery: BatteryInfo, records: Sequence[CycleRecord]) -> CyclesResponse:
+def cycles_response(battery: BatteryInfo, cycles: Sequence[CycleData]) -> CyclesResponse:
     return CyclesResponse(
         context=context(battery),
         provenance=data_provenance(battery.is_synthetic),
         units=CYCLE_UNITS,
-        items=[cycle_out(r) for r in records],
+        items=[cycle_out(c) for c in cycles],
+    )
+
+
+SAMPLE_UNITS = {"time_s": "s", "voltage_v": "V", "current_a": "A", "temp_c": "°C"}
+
+
+def samples_response(battery: BatteryInfo, cycle: int, s: CycleSamples) -> CycleSamplesResponse:
+    columns = [s.values[f] for f in SAMPLE_FIELDS]
+    return CycleSamplesResponse(
+        context=context(battery),
+        provenance=data_provenance(battery.is_synthetic),
+        cycle=cycle,
+        cycle_types=list(s.cycle_types),
+        total_samples=s.total,
+        returned_samples=len(s.positions),
+        downsampled=s.downsampled,
+        units=SAMPLE_UNITS,
+        items=[
+            SampleOut(position=pos, time_s=t, voltage_v=v, current_a=i, temp_c=temp)
+            for pos, t, v, i, temp in zip(s.positions, *columns, strict=True)
+        ],
     )
 
 

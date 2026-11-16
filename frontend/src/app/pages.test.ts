@@ -9,20 +9,21 @@ import {
 } from "./pages";
 
 describe("pages", () => {
-  it("lists the six legacy pages in the legacy quick-navigation order", () => {
+  it("lists the legacy pages in the legacy order, then Battery Data and About", () => {
     expect(PAGES.map((p) => p.label)).toEqual([
       "Overview",
       "Digital Twin",
       "What-If Simulator",
       "Anomaly Detection",
       "Charging Advisor",
+      "Battery Data",
       "About",
     ]);
   });
 
   it("keeps the legacy sidebar groups, each page exactly once", () => {
     expect(NAV_GROUPS.map((g) => [g.group, g.keys])).toEqual([
-      ["Monitor", ["overview", "digital", "anom"]],
+      ["Monitor", ["overview", "digital", "anom", "data"]],
       ["Plan", ["sim", "advisor"]],
       ["Project", ["about"]],
     ]);
@@ -37,6 +38,7 @@ describe("pages", () => {
       sim: 4,
       anom: 5,
       advisor: 5,
+      data: 6,
       about: 6,
     });
   });

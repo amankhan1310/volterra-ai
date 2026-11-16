@@ -54,7 +54,7 @@ function ChannelCard({
         columns={["Cycle", `${chart.label} (${chart.unit})`, "Flagged"]}
         rows={cycles.items.map((c) => [
           String(c.cycle),
-          c[chart.field].toFixed(chart.dp),
+          c[chart.field]?.toFixed(chart.dp) ?? "not measured",
           flaggedCycles.has(c.cycle) ? "Yes" : "",
         ])}
       />
@@ -191,7 +191,7 @@ export function AnomaliesPage() {
         actions={<RunAnalysisButton />}
       />
       <ContextBar />
-      <BatteryGate>
+      <BatteryGate need="analysis">
         {(battery) => <AnomaliesContent battery={battery} />}
       </BatteryGate>
     </>

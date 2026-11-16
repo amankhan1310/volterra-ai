@@ -24,10 +24,10 @@ def offline_sql(revision: str, *, downgrade: bool = False) -> str:
     return buffer.getvalue()
 
 
-def test_single_linear_history_with_head_0002() -> None:
+def test_single_linear_history_with_head_0004() -> None:
     script = ScriptDirectory.from_config(alembic_config(OFFLINE_URL))
-    assert script.get_heads() == ["0002"]
-    assert [r.revision for r in script.walk_revisions()] == ["0002", "0001"]
+    assert script.get_heads() == ["0004"]
+    assert [r.revision for r in script.walk_revisions()] == ["0004", "0003", "0002", "0001"]
 
 
 def test_offline_0002_is_additive_only() -> None:
@@ -63,3 +63,33 @@ def test_offline_downgrade_drops_everything() -> None:
     sql = offline_sql("0001:base", downgrade=True)
     for table in ("scenarios", "cycles", "batteries", "datasets"):
         assert f"DROP TABLE {table}" in sql
+
+
+def test_offline_0003_adds_only_cycles_source_ref() -> None:
+    sql = offline_sql("0002:0003")
+    assert "ALTER TABLE cycles ADD COLUMN source_ref JSONB" in sql
+    changes = [
+        s.strip()
+        for s in sql.splitlines()
+        if s.strip().startswith(("ALTER", "CREATE", "DROP", "UPDATE ", "DELETE"))
+    ]
+    assert [c for c in changes if not c.startswith("UPDATE alembic_version ")] == [
+        "ALTER TABLE cycles ADD COLUMN source_ref JSONB;"
+    ]
+    assert "ALTER TABLE cycles DROP COLUMN source_ref" in offline_sql("0003:0002", downgrade=True)
+
+
+def test_offline_0004_only_drops_not_null_on_temperature_and_voltage() -> None:
+    sql = offline_sql("0003:0004")
+    changes = [
+        s.strip()
+        for s in sql.splitlines()
+        if s.strip().startswith(("ALTER", "CREATE", "DROP", "UPDATE ", "DELETE"))
+    ]
+    assert [c for c in changes if not c.startswith("UPDATE alembic_version ")] == [
+        "ALTER TABLE cycles ALTER COLUMN temp_mean_c DROP NOT NULL;",
+        "ALTER TABLE cycles ALTER COLUMN voltage_mean_v DROP NOT NULL;",
+    ]
+    down = offline_sql("0004:0003", downgrade=True)
+    assert "ALTER COLUMN temp_mean_c SET NOT NULL" in down
+    assert "ALTER COLUMN voltage_mean_v SET NOT NULL" in down

@@ -269,6 +269,93 @@
         }
       }
     },
+    "/api/v1/batteries/{battery_id}/cycles/{cycle}/samples": {
+      "get": {
+        "tags": [
+          "datasets",
+          "batteries"
+        ],
+        "summary": "Measured samples of one cycle (downsampled for charts)",
+        "operationId": "get_cycle_samples_api_v1_batteries__battery_id__cycles__cycle__samples_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          },
+          {
+            "name": "cycle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cycle"
+            }
+          },
+          {
+            "name": "max_points",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20000,
+              "minimum": 2,
+              "description": "Most samples to return; longer series are evenly downsampled, always keeping the first and last sample.",
+              "default": 2000,
+              "title": "Max Points"
+            },
+            "description": "Most samples to return; longer series are evenly downsampled, always keeping the first and last sample."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleSamplesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/api/v1/batteries/{battery_id}/summary": {
       "get": {
         "tags": [
@@ -1433,6 +1520,56 @@
         ],
         "title": "AdvisorRowOut"
       },
+      "AnalysisAvailability": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "missing_measurement",
+                  "insufficient_data"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Error code the analysis endpoints return (422) when unavailable."
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "min_cycles": {
+            "type": "integer",
+            "title": "Min Cycles",
+            "description": "Cycles the analytics need."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "available",
+          "reason",
+          "message",
+          "min_cycles"
+        ],
+        "title": "AnalysisAvailability",
+        "description": "Whether the v1/v2 analytics (overview, anomalies, simulator, advisor) can run."
+      },
       "AnalysisContext": {
         "properties": {
           "battery_id": {
@@ -1478,6 +1615,18 @@
             ],
             "title": "Eol Pct",
             "description": "End-of-life SOH threshold used."
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Set for measured cells: the analytics are not validated on real cells."
           }
         },
         "additionalProperties": false,
@@ -1830,6 +1979,26 @@
         ],
         "title": "BaselineConditions"
       },
+      "BatteryFlag": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "BatteryFlag",
+        "description": "A battery-level note from the source (e.g. the paper excluded this cell)."
+      },
       "BatteryList": {
         "properties": {
           "items": {
@@ -1922,6 +2091,26 @@
           "cycle_count": {
             "type": "integer",
             "title": "Cycle Count"
+          },
+          "incomplete_cycle_count": {
+            "type": "integer",
+            "title": "Incomplete Cycle Count",
+            "description": "Cycles without a temperature or voltage measurement (null, never filled in)."
+          },
+          "flagged_cycle_count": {
+            "type": "integer",
+            "title": "Flagged Cycle Count",
+            "description": "Cycles with at least one data-quality flag."
+          },
+          "flags": {
+            "items": {
+              "$ref": "#/components/schemas/BatteryFlag"
+            },
+            "type": "array",
+            "title": "Flags"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/AnalysisAvailability"
           }
         },
         "additionalProperties": false,
@@ -1938,7 +2127,11 @@
           "eol_threshold_pct",
           "is_synthetic",
           "data_provenance",
-          "cycle_count"
+          "cycle_count",
+          "incomplete_cycle_count",
+          "flagged_cycle_count",
+          "flags",
+          "analysis"
         ],
         "title": "BatteryOut"
       },
@@ -2069,14 +2262,60 @@
             "title": "Soh Pct"
           },
           "temp_c": {
-            "type": "number",
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Temp C",
-            "description": "Mean cycle temperature."
+            "description": "Mean cycle temperature; null if not measured."
           },
           "voltage_v": {
-            "type": "number",
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Voltage V",
-            "description": "Mean cycle voltage."
+            "description": "Mean cycle voltage; null if not measured."
+          },
+          "internal_resistance_ohm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internal Resistance Ohm",
+            "description": "As reported by the source."
+          },
+          "charge_time_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charge Time S",
+            "description": "Charge duration, if the source has it."
+          },
+          "quality_flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quality Flags",
+            "description": "Data-quality flags of this cycle (if any)."
           }
         },
         "additionalProperties": false,
@@ -2086,9 +2325,81 @@
           "capacity_ah",
           "soh_pct",
           "temp_c",
-          "voltage_v"
+          "voltage_v",
+          "internal_resistance_ohm",
+          "charge_time_s",
+          "quality_flags"
         ],
         "title": "CycleOut"
+      },
+      "CycleSamplesResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated"
+            ],
+            "title": "Provenance"
+          },
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "cycle_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Cycle Types",
+            "description": "Operations in the samples (charge, discharge)."
+          },
+          "total_samples": {
+            "type": "integer",
+            "title": "Total Samples",
+            "description": "Samples in the source before downsampling."
+          },
+          "returned_samples": {
+            "type": "integer",
+            "title": "Returned Samples"
+          },
+          "downsampled": {
+            "type": "boolean",
+            "title": "Downsampled"
+          },
+          "units": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Units"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SampleOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "provenance",
+          "cycle",
+          "cycle_types",
+          "total_samples",
+          "returned_samples",
+          "downsampled",
+          "units",
+          "items"
+        ],
+        "title": "CycleSamplesResponse",
+        "description": "Measured samples of one cycle, deterministically downsampled for charts (decision E)."
       },
       "CycleWindow": {
         "properties": {
@@ -2744,6 +3055,69 @@
           "provenance"
         ],
         "title": "Quantity"
+      },
+      "SampleOut": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position",
+            "description": "Index of this sample in the full, time-ordered series."
+          },
+          "time_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time S"
+          },
+          "voltage_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voltage V"
+          },
+          "current_a": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current A"
+          },
+          "temp_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp C"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "position",
+          "time_s",
+          "voltage_v",
+          "current_a",
+          "temp_c"
+        ],
+        "title": "SampleOut"
       },
       "ScenarioCreate": {
         "properties": {

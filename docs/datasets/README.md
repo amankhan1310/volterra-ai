@@ -4,11 +4,11 @@ VOLTERRA AI's real experimental data comes from three public sources. Each has a
 that records where it comes from, what it contains, how it must be cited, what its licence
 says, and the exact files this project pins.
 
-| Dataset (slug)                              | Publisher                     | Cells              | Chemistry (as stated by the publisher) | Licence                        | Status                       |
-| ------------------------------------------- | ----------------------------- | ------------------ | -------------------------------------- | ------------------------------ | ---------------------------- |
-| [`nasa-pcoe-battery`](nasa-pcoe-battery.md) | NASA Ames PCoE                | 34                 | not stated ("Li-ion 18650")            | not specified                  | downloaded, verified, pinned |
-| [`calce-cs2-cx2`](calce-cs2-cx2.md)         | CALCE, University of Maryland | 12 (6 CS2 + 6 CX2) | LiCoO2 cathode                         | All Rights Reserved + citation | downloaded, verified, pinned |
-| [`severson-2019`](severson-2019.md)         | TRI / Stanford / MIT          | 124                | LiFePO4/graphite (A123 APR18650M1A)    | CC BY 4.0                      | downloaded, verified, pinned |
+| Dataset (slug)                              | Publisher                     | Cells              | Chemistry (as stated by the publisher) | Licence                        | Status                                |
+| ------------------------------------------- | ----------------------------- | ------------------ | -------------------------------------- | ------------------------------ | ------------------------------------- |
+| [`nasa-pcoe-battery`](nasa-pcoe-battery.md) | NASA Ames PCoE                | 34                 | not stated ("Li-ion 18650")            | not specified                  | converted (34 cells, 2,794 cycles)    |
+| [`calce-cs2-cx2`](calce-cs2-cx2.md)         | CALCE, University of Maryland | 12 (6 CS2 + 6 CX2) | LiCoO2 cathode                         | All Rights Reserved + citation | converted (12 cells, 15,971 cycles)   |
+| [`severson-2019`](severson-2019.md)         | TRI / Stanford / MIT          | 124 (+11 excluded) | LiFePO4/graphite (A123 APR18650M1A)    | CC BY 4.0                      | converted (135 cells, 114,738 cycles) |
 
 All licence and source statements were checked against the publishers' own pages on
 2026-11-15; each card quotes the evidence.

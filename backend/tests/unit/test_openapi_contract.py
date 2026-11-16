@@ -15,6 +15,7 @@ EXPECTED_PATHS = {
     "/api/v1/batteries": {"get"},
     "/api/v1/batteries/{battery_id}": {"get"},
     "/api/v1/batteries/{battery_id}/cycles": {"get"},
+    "/api/v1/batteries/{battery_id}/cycles/{cycle}/samples": {"get"},
     "/api/v1/batteries/{battery_id}/summary": {"get"},
     "/api/v1/batteries/{battery_id}/forecast": {"get"},
     "/api/v1/batteries/{battery_id}/backtest": {"get"},
@@ -62,6 +63,7 @@ def test_analytical_responses_carry_context_and_provenance() -> None:
         "SimulateResponse",
         "AdvisorResponse",
         "CyclesResponse",
+        "CycleSamplesResponse",
     ):
         assert "context" in schemas[name]["properties"], name
     for name in ("Quantity", "Interval"):

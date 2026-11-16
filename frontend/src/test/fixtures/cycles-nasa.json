@@ -1,0 +1,42 @@
+{
+  "context": {
+    "battery_id": "00000000-0000-4000-8000-000000000102",
+    "dataset": "nasa-test",
+    "is_synthetic": false,
+    "data_provenance": "measured",
+    "algorithm_version": "v1",
+    "eol_pct": null,
+    "note": "The analytics were developed on the synthetic reference pack. They run unchanged on this measured cell and are not validated on real cells."
+  },
+  "provenance": "measured",
+  "units": {
+    "capacity_ah": "Ah",
+    "soh_pct": "%",
+    "temp_c": "°C",
+    "voltage_v": "V",
+    "internal_resistance_ohm": "Ω",
+    "charge_time_s": "s"
+  },
+  "items": [
+    {
+      "cycle": 0,
+      "capacity_ah": 1.85,
+      "soh_pct": 92.5,
+      "temp_c": 30.5,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    },
+    {
+      "cycle": 2,
+      "capacity_ah": 1.8,
+      "soh_pct": 90,
+      "temp_c": 30.5,
+      "voltage_v": 3.5,
+      "internal_resistance_ohm": 0.0185,
+      "charge_time_s": null,
+      "quality_flags": []
+    }
+  ]
+}

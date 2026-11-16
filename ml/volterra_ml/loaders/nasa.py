@@ -42,9 +42,9 @@ from volterra_ml.acquisition import manifest as raw_manifest
 from volterra_ml.acquisition.sources import NASA_PCOE, DatasetSpec
 from volterra_ml.canonical import bundle as bdl
 from volterra_ml.canonical.columns import (
+    ANALYSIS_INPUTS,
     BATTERY_COLUMNS,
     CYCLE_COLUMNS,
-    DB_REQUIRED,
     IMPEDANCE_COLUMNS,
     SAMPLE_COLUMNS,
 )
@@ -52,6 +52,7 @@ from volterra_ml.canonical.validate import (
     check_capacity,
     check_capacity_jumps,
     check_samples,
+    first_positive_capacity,
 )
 
 LOADER_NAME = "nasa_pcoe"
@@ -302,10 +303,15 @@ def convert_cell(cell: _Cell) -> CellResult:
             "current_mean_a": i_mean,
             "discharge_time_s": (float(finite_t[-1] - finite_t[0]) if finite_t.size > 1 else None),
             "ambient_temp_c": ambient,
+            "internal_resistance_ohm": None,  # NASA reports no per-cycle resistance
+            "charge_time_s": None,  # the charge is a separate source cycle
+            "source_ref_json": json.dumps(
+                {"member": copy.member, "cycle_array_index": src}, sort_keys=True
+            ),
             "n_samples": int(n),
             "quality_flags_json": json.dumps(flags, sort_keys=True),
         }
-        row["db_eligible"] = all(row[k] is not None for k in DB_REQUIRED)
+        row["db_eligible"] = all(row[k] is not None for k in ANALYSIS_INPUTS)
         rows.append(row)
 
     for k, detail in check_capacity_jumps(
@@ -315,7 +321,7 @@ def convert_cell(cell: _Cell) -> CellResult:
         cycle_flags["capacity_jump_up"] = detail
         rows[k]["quality_flags_json"] = json.dumps(cycle_flags, sort_keys=True)
     with_cap = [r for r in rows if r["capacity_ah"] is not None]
-    first = with_cap[0] if with_cap else None
+    first = first_positive_capacity(rows)
     test_conditions = {
         "source": "NASA PCoE README for this cell's group (verbatim)",
         "readme_member": cell.readme_member,

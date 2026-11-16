@@ -18,6 +18,7 @@ export type Backtest = Schemas["BacktestResponse"];
 export type Insights = Schemas["InsightsResponse"];
 export type Cycles = Schemas["CyclesResponse"];
 export type Cycle = Schemas["CycleOut"];
+export type CycleSamples = Schemas["CycleSamplesResponse"];
 export type AnomalyEvent = Schemas["AnomalyEventOut"];
 export type HealthLevel = Summary["health_level"];
 export type InsightKind = Schemas["InsightOut"]["kind"];

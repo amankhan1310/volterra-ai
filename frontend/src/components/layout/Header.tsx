@@ -1,5 +1,10 @@
 import { useNavigate } from "react-router";
-import { useAnomalies, useDefaultBattery } from "../../api/hooks";
+import {
+  useAnomalies,
+  useBatterySearch,
+  useDefaultBattery,
+} from "../../api/hooks";
+import { BatterySelect } from "./BatterySelect";
 import type { Battery } from "../../api/types";
 import { describeError } from "../../api/errors";
 import { PAGES, type PageMeta } from "../../app/pages";
@@ -59,6 +64,7 @@ export function Header({
       </nav>
       <div className={styles.fx} />
       <QuickNav page={page} onNavigate={onNavigate} />
+      <BatterySelect className={cx(styles.qn, styles.bs)} />
       <DataSourceTag />
       <ThemeToggle />
       <NotificationBell />
@@ -74,6 +80,7 @@ function QuickNav({
   onNavigate: () => void;
 }) {
   const navigate = useNavigate();
+  const search = useBatterySearch();
   return (
     <select
       className={styles.qn}
@@ -81,7 +88,7 @@ function QuickNav({
       value={page?.path ?? ""}
       onChange={(e) => {
         onNavigate();
-        void navigate(e.target.value);
+        void navigate(e.target.value + search);
       }}
     >
       {page ? null : (
@@ -139,7 +146,9 @@ function ThemeToggle() {
 
 function NotificationBell() {
   const { battery } = useDefaultBattery();
-  const anomalies = useAnomalies(battery?.id);
+  const anomalies = useAnomalies(
+    battery?.analysis.available ? battery.id : undefined,
+  );
   const toast = useToast();
   // Read during render: TanStack Query only re-renders for result fields the render used.
   const total = anomalies.data?.summary.total;
@@ -148,7 +157,11 @@ function NotificationBell() {
     : null;
 
   const onClick = () => {
-    if (total !== undefined) {
+    if (battery && !battery.analysis.available) {
+      toast(
+        `Anomaly detection is not available for ${battery.external_id}: ${battery.analysis.message ?? ""}`,
+      );
+    } else if (total !== undefined) {
       toast(
         `${total} anomaly events flagged in the dataset. Open Anomaly Detection to review.`,
       );

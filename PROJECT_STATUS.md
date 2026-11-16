@@ -558,6 +558,67 @@ Branch: `feat/phase-6-m2-m3-schema-nasa-import` (M2 and M3 combined, as approved
   will get data views only (D4).
 - Dependencies: `numpy`, `scipy`, `pyarrow` in `ml/`; `pyarrow` in `backend/` (D6).
 
+### Milestone 4 — CALCE and Severson loaders, canonical schema v2 (2026-11-16)
+
+Branch: `feat/phase-6-m4-m5-m6-real-datasets` (M4, M5 and M6 combined, as approved; decisions
+A–E).
+
+- **Canonical schema v2:** cycles gain `internal_resistance_ohm`, `charge_time_s` and
+  `source_ref_json` (where each cycle comes from: archive member, worksheet rows or batch entry).
+  The NASA bundle was rebuilt as v2 (34 batteries, 2,794 cycles; values unchanged).
+- **CALCE loader** (`build calce-cs2-cx2`, about 100 s): 12 cells, 414 Arbin workbooks ordered
+  by first sample time, **15,971 discharge cycles**, 4,873,533 sample rows. Two duplicated
+  workbooks are recorded and skipped; one empty source cell is null and flagged; CX2_33's three
+  `.txt` exports are recorded but not converted (decision C). No temperature channel exists, so
+  temperature stays null (D3). A rebuild is byte-identical; every sample and capacity matches the
+  workbooks (local real-data tests).
+- **Severson loader** (`build severson-2019`, about 11 min): **135 cells** from the three batch
+  files, the five batch-2 continuations joined onto batch 1 and the paper's 11 excluded cells
+  flagged, not dropped (decision A); **114,738 cycles**, 111,868,738 sample rows (4.0 GB).
+  Internal resistance, charge time and temperatures come from the per-cycle summaries.
+- **Migration `0003` (additive):** nullable JSONB `cycles.source_ref`. The importer checks text
+  lengths before writing and persists `source_ref`, resistance and charge time.
+- **End to end (disposable database):** NASA 34 batteries / 2,769 cycles, Severson 135 / 114,692
+  cycles, CALCE 12 batteries / 0 cycles (temperature is still required by the database; relaxing
+  that is M5), `source_ref` on every imported cycle, re-imports unchanged.
+- Dependencies (ml only): `h5py` (Severson MATLAB v7.3 files) and `python-calamine` (xlsx).
+- The development database is unchanged (migration 0002, synthetic only); upgrading it and
+  importing real data need separate approval.
+
+### Milestone 5 — real-data API (2026-11-16)
+
+- **Migration `0004`:** nullable `cycles.temp_mean_c` / `voltage_mean_v`; the downgrade refuses
+  while nulls exist. The importer imports every cycle with capacity and SOH except sample-less
+  placeholders; the synthetic checksum is unchanged.
+- **API:** battery `analysis` availability with the reason and minimum cycles, flags and cycle
+  counts; nullable cycle measurements plus resistance, charge time and quality flags;
+  `missing_measurement` / `insufficient_data` 422s; a real-cell context `note`; the new samples
+  endpoint (`VOLTERRA_DATA_DIR`).
+- **Real-data check (disposable database, since dropped):** NASA 34 batteries / 2,769 cycles,
+  CALCE 12 / 15,971, Severson 135 / 114,692 (46 placeholders not imported). Analytics
+  availability: CALCE 12 `missing_measurement`, NASA 34 `insufficient_data` (max 197 < 221
+  cycles), Severson 134 available and 1 too short. v1 endpoints ≤ 0.07 s; v2 summary 5.4 s on the
+  2,237-cycle cell; samples 0.04–0.08 s.
+
+### Milestone 6 — real-data frontend (2026-11-16)
+
+- Battery choice in the URL (`?battery=`), synthetic default, a "Battery not found" state (the
+  sidebar status says so too) and a header selector grouped by dataset; no stale data from the
+  previous battery after a switch.
+- Pages that need analytics show the API's limitation message with links to Battery Data and the
+  synthetic reference; the Digital Twin needs measurements only.
+- New **Battery Data** page: battery facts and flags, per-cycle measured channels (unmeasured
+  ones listed, flagged cycles marked) and downsampled per-cycle samples.
+- Header at narrow desktop widths (≤ 1240 px): the battery selector shrinks first and the
+  provenance pill and "Workspace /" prefix give way (fixes the 980 px overflow found in review).
+- CI E2E imports generated real-style bundles only, through a guard that accepts nothing but the
+  local `volterra_ci` database in GitHub Actions, and checks re-import idempotency.
+- Verification (local): backend 633 passed + 8 xfailed (strict v1 defects), 99.24 % coverage;
+  ml 135 passed (no real data); frontend 236 passed, 98.72 % statements; ESLint, strict
+  TypeScript, Prettier, API-types check and production build clean; Playwright in Edge 98/98
+  (responsive 1440/1180/980/860/390 in both themes and the real-data journey); Edge screenshots
+  of every journey with no overflow or console errors.
+
 ## Next
 
-Phase 6 M4 (CALCE and Severson loaders), only after the M2+M3 review and with approval.
+Phase 7 (ML models) after the Phase 6 PR merges.

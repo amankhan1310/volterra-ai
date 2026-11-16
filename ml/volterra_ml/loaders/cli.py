@@ -17,13 +17,16 @@ from typing import IO, Any
 
 from volterra_ml.acquisition.cli import default_data_dir
 from volterra_ml.acquisition.safety import UnsafeDestinationError
-from volterra_ml.acquisition.sources import NASA_PCOE, DatasetSpec
+from volterra_ml.acquisition.sources import CALCE, NASA_PCOE, SEVERSON, DatasetSpec
 from volterra_ml.canonical import bundle as bdl
-from volterra_ml.loaders import nasa
+from volterra_ml.loaders import calce, nasa, severson
+from volterra_ml.loaders.common import LoaderError
 
 Builder = Callable[[Path, Path, DatasetSpec], dict[str, Any]]
 LOADERS: dict[str, tuple[DatasetSpec, Builder]] = {
     NASA_PCOE.slug: (NASA_PCOE, nasa.build_bundle),
+    CALCE.slug: (CALCE, calce.build_bundle),
+    SEVERSON.slug: (SEVERSON, severson.build_bundle),
 }
 
 
@@ -72,7 +75,7 @@ def main(
         else:
             body = bdl.verify_bundle(target)
             print(f"{spec.slug}: bundle OK", file=out)
-    except (nasa.LoaderError, bdl.BundleError, UnsafeDestinationError) as exc:
+    except (nasa.LoaderError, LoaderError, bdl.BundleError, UnsafeDestinationError) as exc:
         print(f"{spec.slug}: {exc}", file=err)
         return 1
     _summary(body, out)

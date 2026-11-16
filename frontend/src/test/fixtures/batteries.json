@@ -12,7 +12,67 @@
       "eol_threshold_pct": 80,
       "is_synthetic": true,
       "data_provenance": "simulated",
-      "cycle_count": 320
+      "cycle_count": 320,
+      "incomplete_cycle_count": 0,
+      "flagged_cycle_count": 0,
+      "flags": [],
+      "analysis": {
+        "available": true,
+        "reason": null,
+        "message": null,
+        "min_cycles": 221
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "external_id": "CS2_T",
+      "dataset": "calce-test",
+      "dataset_name": "CALCE-style (generated)",
+      "chemistry": null,
+      "form_factor": "18650",
+      "nominal_capacity_ah": 1.1,
+      "nominal_voltage_v": null,
+      "eol_threshold_pct": 80,
+      "is_synthetic": false,
+      "data_provenance": "measured",
+      "cycle_count": 230,
+      "incomplete_cycle_count": 230,
+      "flagged_cycle_count": 1,
+      "flags": [
+        {
+          "code": "earlier_history_not_converted",
+          "detail": "3 text exports"
+        }
+      ],
+      "analysis": {
+        "available": false,
+        "reason": "missing_measurement",
+        "message": "230 of 230 cycles have no temperature or voltage measurement; the analytics need both and never fill them in",
+        "min_cycles": 221
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "external_id": "B0005",
+      "dataset": "nasa-test",
+      "dataset_name": "NASA-style test bundle (generated values)",
+      "chemistry": null,
+      "form_factor": "18650",
+      "nominal_capacity_ah": 2,
+      "nominal_voltage_v": null,
+      "eol_threshold_pct": 80,
+      "is_synthetic": false,
+      "data_provenance": "measured",
+      "cycle_count": 2,
+      "incomplete_cycle_count": 0,
+      "flagged_cycle_count": 0,
+      "flags": [],
+      "analysis": {
+        "available": false,
+        "reason": "insufficient_data",
+        "message": "The analytics need at least 221 cycles; this battery has 2",
+        "min_cycles": 221
+      }
     }
   ]
 }

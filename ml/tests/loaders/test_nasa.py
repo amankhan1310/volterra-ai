@@ -43,7 +43,7 @@ def flags(row: dict) -> dict:
 def test_bundle_layout_columns_and_provenance(nasa: NasaEnv):
     nasa.install(standard_groups())
     body = build(nasa)
-    assert body["schema_version"] == 1
+    assert body["schema_version"] == 2
     assert body["dataset"]["is_synthetic"] is False
     assert body["dataset"]["data_provenance"] == "measured"
     assert body["loader"]["name"] == "nasa_pcoe" and body["loader"]["version"] == "1.0.0"
@@ -111,6 +111,12 @@ def test_cycles_keep_source_order_identifiers_and_exact_values(nasa: NasaEnv):
     assert first["ambient_temp_c"] == 24.0 and first["n_samples"] == 5
     assert first["start_time_local"] == "2008-04-02T13:09:17.921000"
     assert flags(first) == {} and first["db_eligible"] is True
+    # schema v2: provenance of the cycle; NASA reports no resistance or charge time per cycle
+    assert json.loads(first["source_ref_json"]) == {
+        "cycle_array_index": 1,
+        "member": "1. Group_A.zip/B0005.mat",
+    }
+    assert first["internal_resistance_ohm"] is None and first["charge_time_s"] is None
 
 
 def test_samples_are_bit_identical_to_the_source(nasa: NasaEnv):

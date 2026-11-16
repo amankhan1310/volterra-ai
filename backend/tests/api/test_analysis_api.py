@@ -32,6 +32,7 @@ async def test_summary_copies_the_v1_analysis_exactly() -> None:
         "data_provenance": "simulated",
         "algorithm_version": "v1",
         "eol_pct": 85.0,
+        "note": None,  # set only for measured cells
     }
     assert body["soh_now"] == {"value": a.trend.soh_now_pct, "unit": "%", "provenance": "fitted"}
     assert body["fade_rate"]["value"] == a.trend.fade_pct_per_cycle

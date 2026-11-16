@@ -4,7 +4,7 @@ import {
   useAnomalies,
   useBacktest,
   useCycles,
-  useDefaultBattery,
+  useAnalysisBatteryId,
   useForecast,
   useInsights,
   useSimulatorConfig,
@@ -35,7 +35,7 @@ export function resultSummary(summary: Summary): string {
 
 function OverviewRunAnalysis() {
   const queryClient = useQueryClient();
-  const batteryId = useDefaultBattery().battery?.id;
+  const batteryId = useAnalysisBatteryId();
   const eolPct = useScenarioDraft().params?.eol_pct;
   return (
     <RunAnalysisButton
@@ -154,7 +154,7 @@ export function OverviewPage() {
         actions={<OverviewRunAnalysis />}
       />
       <ContextBar />
-      <BatteryGate>
+      <BatteryGate need="analysis">
         {(battery) => <OverviewContent battery={battery} />}
       </BatteryGate>
     </>

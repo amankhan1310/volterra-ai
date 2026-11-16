@@ -4,11 +4,16 @@ Intelligent battery health and predictive analytics: state-of-health (SOH) estim
 degradation analysis, remaining-useful-life (RUL) prediction, anomaly detection and
 scenario simulation.
 
-> **Status:** Phase 5 complete (pending review): the known prototype defects F1–F8 have
-> corrected **v2** methods, opt-in through the API with `?algorithm=v2`; v1 (the prototype's
-> behaviour) stays the default and unchanged. See [`CHANGELOG.md`](CHANGELOG.md),
-> [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md) for the plan and
-> [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for progress.
+> **Status:** Phases 0–8 and the essential Phase 10 work are complete; Phase 9 (reports,
+> notifications, authentication) is deferred. The analytics keep the prototype's **v1** methods as
+> the default, with corrected **v2** methods opt-in (`?algorithm=v2`). Real datasets (NASA,
+> CALCE, Severson) have loaders and an importer; the Phase 7 ML models and the Phase 8 simulator
+> evidence are **experimental and not production-validated**: see
+> [`docs/models/README.md`](docs/models/README.md) and
+> [`docs/models/simulator-evidence.md`](docs/models/simulator-evidence.md). Plan:
+> [`ARCHITECTURE_PLAN.md`](ARCHITECTURE_PLAN.md); progress:
+> [`PROJECT_STATUS.md`](PROJECT_STATUS.md); changes: [`CHANGELOG.md`](CHANGELOG.md);
+> deployment (Vercel + Render): [`docs/deployment.md`](docs/deployment.md).
 
 ## Repository layout
 
@@ -69,7 +74,8 @@ node --test legacy/tools/export_golden.test.js  # exporter test suite
 ## Stack
 
 React 19 · TypeScript · Vite 8 · TanStack Query · ECharts (from Phase 4 Milestone 2) · FastAPI ·
-Pydantic v2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · planned: scikit-learn · LightGBM · pandas.
+Pydantic v2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · numpy · scikit-learn · LightGBM (offline
+modelling in `ml/`) · Vercel (frontend) and Render (API) for deployment.
 
 ## Disclaimer
 

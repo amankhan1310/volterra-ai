@@ -667,6 +667,31 @@ Branch: `feat/phase-8-simulator-evidence`. Details: [`docs/models/simulator-evid
 - `GET /simulator/evidence`; Simulator page evidence card with out-of-range warnings; Digital Twin
   shows the experimental Phase 7 RUL for real batteries.
 
+Merged as PR #17 (`932fbb1`), 12/12 CI checks green.
+
+## Phase 10 — essential hardening and deployment (2026-11-16)
+
+Branch: `feat/phase-10-hardening-deploy`. Guide: [`docs/deployment.md`](docs/deployment.md).
+
+- **Deployment:** `render.yaml` (API + PostgreSQL 16; migrations and the idempotent synthetic
+  seed at start) and `frontend/vercel.json` (SPA fallback, same-origin `/api` rewrite to Render,
+  security headers, immutable asset caching). Real datasets are not deployed.
+- **Config:** `postgres://` URLs from hosting providers are normalised for asyncpg (`sslmode` →
+  `ssl`); `.env.example` documents `VOLTERRA_DATA_DIR`.
+- **Production rehearsal (local):** a `uv sync --locked --no-dev` Python 3.12 environment started
+  with Render's command against a fresh disposable database and a `postgres://` URL: migrations
+  and seed succeeded, health `ok`, synthetic battery, evidence and models endpoints served; the
+  database URL never appeared in the logs.
+- **Security review:** secrets only in `SecretStr`/ignored `.env`; CORS allow-list; API input
+  bounds (e.g. samples ≤ 20,000 points); `npm audit --omit=dev`: one moderate ECharts 5.6 advisory
+  (GHSA-fgmj-fm8m-jvvx, tooltip HTML), mitigated because every tooltip uses the project's escaping
+  formatter; upgrading to ECharts 6.1 is a recommended follow-up (breaking change).
+- **Regression:** backend 666 passed + 8 strict xfail (98.47 %); ml 204 passed (96.53 %);
+  frontend 248 passed (98.67 %); Playwright 105/105 (legacy parity, responsive, axe); golden and
+  legacy files unchanged.
+- Phase 9 (reports, notifications, authentication) remains deferred.
+
 ## Next
 
-Essential Phase 10 quality work (Phase 9 stays deferred).
+Owner actions: connect the repository to Render (Blueprint) and Vercel (root `frontend`), set
+`VOLTERRA_CORS_ORIGINS`, and decide whether to import a model run into production.

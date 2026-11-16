@@ -49,3 +49,25 @@ test("Battery Data shows a held-out battery's RUL prediction with its interval",
   );
   expect(errors).toEqual([]);
 });
+
+test("the Digital Twin shows the experimental RUL for a real battery", async ({
+  page,
+}) => {
+  await page.goto("/digital-twin?battery=nasa-test%3AB0005");
+  await settled(page);
+  const panel = page.getByTestId("rul-panel");
+  await expect(panel.getByTestId("rul-warning")).toBeVisible();
+  await expect(panel.getByTestId("rul-split")).toContainText("in-sample");
+});
+
+test("the simulator shows the evidence behind its assumptions", async ({
+  page,
+}) => {
+  await page.goto("/simulator");
+  await settled(page);
+  const card = page.getByTestId("simulator-evidence");
+  await expect(card.getByTestId("evidence-temperature")).toContainText(
+    "not a calibration",
+  );
+  await expect(card.getByTestId("baseline-validation")).toBeVisible();
+});

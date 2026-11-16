@@ -16,6 +16,7 @@ import type {
   ScenarioParams,
   Simulation,
   SimulatorConfig,
+  SimulatorEvidence,
   Summary,
   Twin,
 } from "../api/types";
@@ -44,6 +45,7 @@ import samplesNasa0Json from "./fixtures/samples-nasa-0.json";
 import scenarioJson from "./fixtures/scenario.json";
 import simulateDefaultJson from "./fixtures/simulate-default.json";
 import simulateT35Json from "./fixtures/simulate-t35.json";
+import simulatorEvidenceJson from "./fixtures/simulator-evidence.json";
 import simulatorJson from "./fixtures/simulator.json";
 import summaryEol70Json from "./fixtures/summary-eol-70.json";
 import summaryJson from "./fixtures/summary.json";
@@ -96,6 +98,8 @@ export const fixtures = {
   models: modelsJson as Models,
   rulCalce: rulCalceJson as RulPredictions,
   rulNasa: rulNasaJson as RulPredictions,
+  /** Phase 8: evidence behind the simulator's assumptions. */
+  simulatorEvidence: simulatorEvidenceJson as SimulatorEvidence,
 };
 
 interface RecordedError {
@@ -210,6 +214,9 @@ export const handlers = [
   }),
   http.get("*/api/v1/health", () => HttpResponse.json(fixtures.health)),
   http.get("*/api/v1/models", () => HttpResponse.json(fixtures.models)),
+  http.get("*/api/v1/simulator/evidence", () =>
+    HttpResponse.json(fixtures.simulatorEvidence),
+  ),
   http.get("*/api/v1/batteries/:id/rul-predictions", ({ params }) => {
     const id = String(params["id"]);
     if (id === fixtures.calce.id) return HttpResponse.json(fixtures.rulCalce);

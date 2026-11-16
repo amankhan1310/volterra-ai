@@ -13,6 +13,7 @@ export const queryKeys = {
   health: ["health"] as const,
   batteries: ["batteries"] as const,
   models: ["models"] as const,
+  simulatorEvidence: ["simulator-evidence"] as const,
   rulPredictions: (batteryId: string) =>
     ["batteries", batteryId, "rul-predictions"] as const,
   anomalies: (batteryId: string) =>
@@ -422,5 +423,14 @@ export function useRulPredictions(batteryId: string | undefined) {
         }),
       ),
     enabled: batteryId !== undefined,
+  });
+}
+
+/** Phase 8: the committed evidence behind the simulator's assumptions (battery-independent). */
+export function useSimulatorEvidence() {
+  return useQuery({
+    queryKey: queryKeys.simulatorEvidence,
+    queryFn: () => request(() => api.GET("/api/v1/simulator/evidence")),
+    staleTime: Infinity,
   });
 }

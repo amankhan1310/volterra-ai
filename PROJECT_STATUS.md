@@ -648,6 +648,25 @@ production-validated.
 - The development database is unchanged (migration 0002, synthetic only); no model run or real
   data was imported into it.
 
+Merged as PR #16 (`e7ad630`), 12/12 CI checks green after one fix (numpy 2.5 typing on Python
+3.12; the experiment re-run gave byte-identical metrics).
+
+## Phase 8 — simulator evidence and baseline validation (2026-11-16)
+
+Branch: `feat/phase-8-simulator-evidence`. Details: [`docs/models/simulator-evidence.md`](docs/models/simulator-evidence.md).
+
+- **No stress coefficient could be calibrated**, so all stay `assumed`. Read as temperature alone the
+  NASA ratio would mean 0.061/°C (90 % CI 0.033–0.18): recorded as exploratory only, because load
+  and temperature are confounded. NASA matched groups
+  (24 vs 43 °C, but also 2 A vs 4 A mean load) faded ×3.16 (90 % CI 1.88–31), consistent with but
+  not a calibration of the assumed ×3.13; Severson fast charging (3.6–5.3 C, LFP) gives life
+  ×0.52 per extra C (R² 0.20), outside the slider's range; depth of discharge is never varied.
+- **Baseline validated on 124 real Severson cells** with the backend's unchanged analytics:
+  remaining-life MAE of the v2 baseline 589 / 384 / 250 / 18 cycles at 30 / 50 / 70 / 90 % of life
+  (v1 linear 3,905 → 100); all methods overestimate before the knee.
+- `GET /simulator/evidence`; Simulator page evidence card with out-of-range warnings; Digital Twin
+  shows the experimental Phase 7 RUL for real batteries.
+
 ## Next
 
-Phase 8 (calibrated simulator and digital twin), then essential Phase 10 quality work.
+Essential Phase 10 quality work (Phase 9 stays deferred).

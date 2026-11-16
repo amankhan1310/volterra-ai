@@ -5,6 +5,16 @@ original prototype exactly (including the known defects F1–F8 in `ARCHITECTURE
 is permanent, and stays the API default. **v2** holds the corrected methods. The golden fixtures
 in `backend/tests/golden/` describe v1 and are never modified.
 
+## [Unreleased] — Phase 8: simulator evidence and baseline validation
+
+No analytics change: v1 and v2 simulator outputs are unchanged (fixtures re-recorded, zero diff).
+
+- `python -m volterra_ml.calibration` (evidence for the assumed stress coefficients, bootstrap
+  CIs) and `python -m app.validation.simulator_baseline` (the simulator baseline against real
+  Severson life); results committed in `backend/app/evidence/` (aggregates only).
+- `GET /api/v1/simulator/evidence`; Simulator evidence card and out-of-range notes; the Digital
+  Twin shows the experimental RUL panel for real batteries.
+
 ## [Unreleased] — Phase 7: experimental ML models
 
 No v1 or v2 analytics change; existing API responses are unchanged (fixtures re-recorded with zero

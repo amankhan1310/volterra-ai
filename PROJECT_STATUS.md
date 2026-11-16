@@ -619,6 +619,35 @@ A–E).
   (responsive 1440/1180/980/860/390 in both themes and the real-data journey); Edge screenshots
   of every journey with no overflow or console errors.
 
+## Phase 6 merged
+
+PR #15 merged 2026-11-16 (merge commit `d6cc714`, head `a39a22e`), 12/12 CI checks green after
+one fix (mypy on Python 3.12: v1 records from nullable temperature/voltage).
+
+## Phase 7 — ML models (2026-11-16)
+
+Branch: `feat/phase-7-ml-models`. Methodology, full results and limitations:
+[`docs/models/README.md`](docs/models/README.md). Status: **experimental**, not
+production-validated.
+
+- **Pipeline** (`ml/volterra_ml/modeling`): RUL, SOH forecasts (50/100/200 cycles), signal-only
+  SOH estimation and a cross-dataset stress test; battery-wise 60/20/20 hash split with grouped
+  5-fold CV for model choice; causal features (truncation tests); fixed-grid prediction rows;
+  baselines, ridge and LightGBM; per-dataset split-conformal 90 % intervals.
+- **EOL labels audited:** Severson's documented cycle lives are used (joined lives for the five
+  continued batch-1 cells, e.g. b1c0 = 1,190 + 662 = 1,852); the threshold rule agrees exactly on
+  the 43 cells it can check, and the 81 it cannot all stopped at 80.0–80.3 % SOH. A first run that
+  wrongly censored them was discarded.
+- **Reference run `48194befb681`** (reproducible): Severson RUL LightGBM MAE 92 cycles on 22
+  held-out cells (R² 0.78, 90 % coverage 0.89) vs ridge 197, cohort baseline 317, linear trend
+  1,360. CALCE (1 test cell) and NASA (3 trainable cells) are too small to validate; the
+  Severson → CALCE/NASA test shows no transfer.
+- **Serving:** migration `0005` (`ml_models`, `ml_predictions`), verified idempotent importer
+  (`app.db.import_models`), `GET /models` and `GET /batteries/{id}/rul-predictions`; React
+  **Models** page and an experimental RUL panel on Battery Data.
+- The development database is unchanged (migration 0002, synthetic only); no model run or real
+  data was imported into it.
+
 ## Next
 
-Phase 7 (ML models) after the Phase 6 PR merges.
+Phase 8 (calibrated simulator and digital twin), then essential Phase 10 quality work.

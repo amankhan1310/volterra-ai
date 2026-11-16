@@ -585,6 +585,40 @@ A–E).
 - The development database is unchanged (migration 0002, synthetic only); upgrading it and
   importing real data need separate approval.
 
+### Milestone 5 — real-data API (2026-11-16)
+
+- **Migration `0004`:** nullable `cycles.temp_mean_c` / `voltage_mean_v`; the downgrade refuses
+  while nulls exist. The importer imports every cycle with capacity and SOH except sample-less
+  placeholders; the synthetic checksum is unchanged.
+- **API:** battery `analysis` availability with the reason and minimum cycles, flags and cycle
+  counts; nullable cycle measurements plus resistance, charge time and quality flags;
+  `missing_measurement` / `insufficient_data` 422s; a real-cell context `note`; the new samples
+  endpoint (`VOLTERRA_DATA_DIR`).
+- **Real-data check (disposable database, since dropped):** NASA 34 batteries / 2,769 cycles,
+  CALCE 12 / 15,971, Severson 135 / 114,692 (46 placeholders not imported). Analytics
+  availability: CALCE 12 `missing_measurement`, NASA 34 `insufficient_data` (max 197 < 221
+  cycles), Severson 134 available and 1 too short. v1 endpoints ≤ 0.07 s; v2 summary 5.4 s on the
+  2,237-cycle cell; samples 0.04–0.08 s.
+
+### Milestone 6 — real-data frontend (2026-11-16)
+
+- Battery choice in the URL (`?battery=`), synthetic default, a "Battery not found" state (the
+  sidebar status says so too) and a header selector grouped by dataset; no stale data from the
+  previous battery after a switch.
+- Pages that need analytics show the API's limitation message with links to Battery Data and the
+  synthetic reference; the Digital Twin needs measurements only.
+- New **Battery Data** page: battery facts and flags, per-cycle measured channels (unmeasured
+  ones listed, flagged cycles marked) and downsampled per-cycle samples.
+- Header at narrow desktop widths (≤ 1240 px): the battery selector shrinks first and the
+  provenance pill and "Workspace /" prefix give way (fixes the 980 px overflow found in review).
+- CI E2E imports generated real-style bundles only, through a guard that accepts nothing but the
+  local `volterra_ci` database in GitHub Actions, and checks re-import idempotency.
+- Verification (local): backend 633 passed + 8 xfailed (strict v1 defects), 99.24 % coverage;
+  ml 135 passed (no real data); frontend 236 passed, 98.72 % statements; ESLint, strict
+  TypeScript, Prettier, API-types check and production build clean; Playwright in Edge 98/98
+  (responsive 1440/1180/980/860/390 in both themes and the real-data journey); Edge screenshots
+  of every journey with no overflow or console errors.
+
 ## Next
 
-Phase 6 M5 (real-data backend integration), then M6 (real-data frontend), on the same branch.
+Phase 7 (ML models) after the Phase 6 PR merges.

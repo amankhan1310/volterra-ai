@@ -145,13 +145,15 @@ The thresholds follow the real NASA data: discharges end at 2.0–2.7 V cut-offs
 dip slightly below 2.0 V, while the 36 below 1.5 V are failed runs; capacity changes between
 consecutive cycles are typically about 0.01 Ah, and the 100 rises above 0.05 Ah stand out.
 
-## Database mapping (migrations 0002 and 0003)
+## Database mapping (migrations 0002–0004)
 
 The importer writes one transaction per bundle: `datasets` (plus `publisher`, `landing_url`,
 `doi`; licence, loader, inputs and quality report in `meta`), `batteries` (plus
 `chemistry_basis`, `soh_reference`, `soh_reference_capacity_ah`, `first_capacity_ah`,
 `first_capacity_cycle_index`; test conditions and source files in `test_conditions`), `cycles`
-(the `db_eligible` rows only, with `source_cycle_index`, `quality_flags`, the v2 columns
+(every cycle with a measured capacity and SOH, except sample-less placeholders flagged
+`empty_samples`; temperature and voltage may be null since migration 0004 and are never filled
+in, and `db_eligible` still means "every analysis input measured"; with `source_cycle_index`, `quality_flags`, the v2 columns
 `internal_resistance_ohm` and `charge_time_s`, and `source_ref_json` as JSONB `source_ref`
 (migration 0003); `start_time` stays
 null without a timezone) and `dataset_files` (every raw and bundle file: path relative to the

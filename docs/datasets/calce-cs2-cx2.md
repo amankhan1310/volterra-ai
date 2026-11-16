@@ -106,7 +106,9 @@ is reported as missing, never filled in (decision D3).
   flagged `earlier_history_not_converted`.
 
 Flags: 292 `capacity_above_rated` (fresh CS2 cells deliver ~1.14 Ah), 489 `capacity_jump_up`,
-134 `file_ends_during_discharge`, 1 `empty_source_cells`. No cycle is importable under migration
-0002 (temperature is required); relaxing that is Phase 6 M5 (decision D3). The local
+134 `file_ends_during_discharge`, 1 `empty_source_cells`. Since migration 0004 (Phase 6 M5,
+decision D3) all 15,971 cycles import with temperature and mean voltage null. The v1/v2
+analytics need both, so the API answers `missing_measurement` for every CALCE cell and the app
+shows its measured data on the Battery Data page only. The local
 `test_calce_realdata.py` compares every sample value and every cycle capacity with the
 workbooks.

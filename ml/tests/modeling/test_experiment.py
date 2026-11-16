@@ -32,7 +32,7 @@ def result(bundles: list[Path], tmp_path_factory: pytest.TempPathFactory) -> tup
 def test_loader_drops_placeholders_and_reads_labels(bundles: list[Path]) -> None:
     b = load_bundle(bundles[0])
     assert b.slug == "severson-2019" and b.dropped_cycles == len(b.cells)
-    assert all(c.cycle.max() < 5000 for c in b.cells)
+    assert all(np.max(c.cycle) < 5000 for c in b.cells)
 
 
 def test_censored_batteries_never_become_rul_targets(bundles: list[Path]) -> None:

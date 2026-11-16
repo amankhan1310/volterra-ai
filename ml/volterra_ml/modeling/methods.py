@@ -181,7 +181,7 @@ class CycleLookup:
         out = np.empty(len(x))
         for i, cycle in enumerate(x[:, self.cycle_col]):
             b = int(cycle // self.bin_width)
-            nearest = int(keys[np.abs(keys - b).argmin()])
+            nearest = int(keys[np.argmin(np.abs(keys - b))])
             out[i] = self.table[nearest]
         return out
 

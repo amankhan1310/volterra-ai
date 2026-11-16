@@ -481,7 +481,7 @@ def target_check(bundles: Sequence[Bundle], cfg: Config) -> dict[str, Any]:
     return {
         "labelled_cells": len(agree) + unlabelled_by_rule,
         "rule_finds_eol": len(agree),
-        "rule_minus_label_max_abs_cycles": float(np.abs(d).max()) if d.size else None,
+        "rule_minus_label_max_abs_cycles": float(np.max(np.abs(d))) if d.size else None,
         "rule_misses_eol": unlabelled_by_rule,
         "missed_cells_final_soh_range": [min(end_soh), max(end_soh)] if end_soh else None,
         "note": "cells the rule misses stop at 80.0-80.3 % SOH: the tester ended them at its own "

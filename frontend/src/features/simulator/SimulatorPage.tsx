@@ -28,6 +28,7 @@ import { Note } from "../../components/ui/Note";
 import { useToast } from "../../components/ui/Toast";
 import { useDebouncedValue } from "../../lib/useDebouncedValue";
 import { useScenarioDraft } from "../../state/ScenarioDraftContext";
+import { SimulatorEvidence } from "./SimulatorEvidence";
 import {
   MAX_SCENARIOS,
   NAME_MAX,
@@ -253,6 +254,7 @@ function SimulatorWorkspace({
         </Card>
       </div>
       <Note>{modelNote(config)}</Note>
+      <SimulatorEvidence params={params} />
       <RenameDialog
         scenario={renaming}
         busy={rename.isPending}

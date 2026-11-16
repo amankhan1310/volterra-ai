@@ -34,3 +34,4 @@ export type ModelTask = Schemas["ModelTaskOut"];
 export type ModelCandidate = Schemas["CandidateEvaluation"];
 export type MetricSet = Schemas["MetricSet"];
 export type RulPredictions = Schemas["RulPredictionsResponse"];
+export type SimulatorEvidence = Schemas["SimulatorEvidenceResponse"];

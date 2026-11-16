@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { useCycles, useTwin } from "../../api/hooks";
 import type { Battery, Twin } from "../../api/types";
 import { getPage } from "../../app/pages";
+import { RulPanel } from "../battery-data/RulPanel";
 import { BatteryGate } from "../../components/layout/BatteryGate";
 import { ContextBar } from "../../components/layout/ContextBar";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -157,6 +158,7 @@ function TwinContent({ battery }: { battery: Battery }) {
         {shown.modules.count} modules are drawn from the pack value; nothing
         here is a per-cell measurement. Select a module to lift it.
       </Note>
+      {battery.is_synthetic ? null : <RulPanel battery={battery} />}
     </>
   );
 }

@@ -111,6 +111,8 @@ Object.assign(fixtures, {
 // fixture_bundles imports next to the bundles.
 Object.assign(fixtures, {
   models: await get("/api/v1/models"),
+  // Phase 8: the committed simulator evidence (aggregates from offline runs).
+  "simulator-evidence": await get("/api/v1/simulator/evidence"),
   "rul-calce": await get(`/api/v1/batteries/${calce}/rul-predictions`),
   "rul-nasa": await get(`/api/v1/batteries/${nasa}/rul-predictions`),
   "error-no-predictions": await getError(

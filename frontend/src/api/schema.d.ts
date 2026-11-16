@@ -356,6 +356,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/simulator/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Evidence behind the simulator's assumptions
+         * @description What the public datasets say about the simulator's assumed stress coefficients (with bootstrap 90% intervals and confounders) and how its trend-based baseline compares with the life real cells actually had. Generated offline; aggregate numbers only.
+         */
+        get: operations["get_simulator_evidence_api_v1_simulator_evidence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -620,6 +640,40 @@ export interface components {
             /** Dod Pct */
             dod_pct: number;
         };
+        /** BaselineValidation */
+        BaselineValidation: {
+            /** Schema Version */
+            schema_version: number;
+            /** Generated At */
+            generated_at: string;
+            /** Dataset */
+            dataset: string;
+            /** Bundle Checksum */
+            bundle_checksum: string;
+            /** Eol Pct */
+            eol_pct: number;
+            /** Eol Label */
+            eol_label: string;
+            /** Cells */
+            cells: number;
+            /** Cells Skipped Short */
+            cells_skipped_short: number;
+            /** Methods */
+            methods: {
+                [key: string]: string;
+            };
+            /**
+             * Results
+             * @description method -> fraction of life at the prediction point -> metrics
+             */
+            results: {
+                [key: string]: {
+                    [key: string]: components["schemas"]["ValidationMetrics"];
+                };
+            };
+            /** Note */
+            note: string;
+        };
         /**
          * BatteryFlag
          * @description A battery-level note from the source (e.g. the paper excluded this cell).
@@ -680,6 +734,54 @@ export interface components {
             /** Flags */
             flags: components["schemas"]["BatteryFlag"][];
             analysis: components["schemas"]["AnalysisAvailability"];
+        };
+        /** Bootstrap */
+        Bootstrap: {
+            /** Replicates */
+            replicates: number;
+            /** Seed */
+            seed: number;
+            /** Unit */
+            unit: string;
+        };
+        /** CRateCoefficient */
+        CRateCoefficient: {
+            /** Assumed Linear */
+            assumed_linear: number;
+            /**
+             * Provenance
+             * @constant
+             */
+            provenance: "assumed";
+            evidence: components["schemas"]["CRateEvidence"];
+        };
+        /** CRateEvidence */
+        CRateEvidence: {
+            /** Dataset */
+            dataset: string;
+            /** Bundle Checksum */
+            bundle_checksum: string;
+            /** Cells */
+            cells: number;
+            /** Charge C Rate Range */
+            charge_c_rate_range: number[];
+            /** Model */
+            model: string;
+            /** B Per C */
+            b_per_c: number;
+            /** B Per C Ci90 */
+            b_per_c_ci90: number[];
+            /** R2 */
+            r2: number;
+            /** Life Factor Per Extra C */
+            life_factor_per_extra_c: number;
+            /** Life Factor Per Extra C Ci90 */
+            life_factor_per_extra_c_ci90: number[];
+            /** Assumed Fade Factor Per Extra C */
+            assumed_fade_factor_per_extra_c: number;
+            /** Applies To */
+            applies_to: string;
+            bootstrap: components["schemas"]["Bootstrap"];
         };
         /** CalibrationSize */
         CalibrationSize: {
@@ -946,6 +1048,19 @@ export interface components {
              */
             mode: string;
         };
+        /**
+         * DodCoefficient
+         * @description No dataset varies depth of discharge, so there is no evidence to report.
+         */
+        DodCoefficient: {
+            /**
+             * Provenance
+             * @constant
+             */
+            provenance: "assumed";
+            /** Note */
+            note: string;
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
@@ -1132,6 +1247,17 @@ export interface components {
              * @description v2 only: cycle at which slope and intercept are given.
              */
             origin_cycle?: number | null;
+        };
+        /** MatchedPair */
+        MatchedPair: {
+            /** Low Temp Cell */
+            low_temp_cell: string;
+            /** High Temp Cell */
+            high_temp_cell: string;
+            /** Fade Low */
+            fade_low: number;
+            /** Fade High */
+            fade_high: number;
         };
         /**
          * MetricSet
@@ -1490,6 +1616,13 @@ export interface components {
             /** Model */
             model: string;
         };
+        /** SimulatorEvidenceResponse */
+        SimulatorEvidenceResponse: {
+            stress: components["schemas"]["StressEvidence"];
+            baseline_validation: components["schemas"]["BaselineValidation"];
+            /** Note */
+            note: string;
+        };
         /** SliderOut */
         SliderOut: {
             /** Key */
@@ -1516,6 +1649,18 @@ export interface components {
             /** Test */
             test: number;
         };
+        /** StressEvidence */
+        StressEvidence: {
+            /** Schema Version */
+            schema_version: number;
+            /** Generated At */
+            generated_at: string;
+            /** Status */
+            status: string;
+            temperature: components["schemas"]["TemperatureCoefficient"];
+            c_rate: components["schemas"]["CRateCoefficient"];
+            dod: components["schemas"]["DodCoefficient"];
+        };
         /** SummaryResponse */
         SummaryResponse: {
             context: components["schemas"]["AnalysisContext"];
@@ -1537,6 +1682,50 @@ export interface components {
             anomalies: components["schemas"]["AnomalyCounts"];
             acceleration: components["schemas"]["AccelerationOut"];
             trend: components["schemas"]["TrendOut"];
+        };
+        /** TemperatureCoefficient */
+        TemperatureCoefficient: {
+            /** Assumed Exp Per C */
+            assumed_exp_per_c: number;
+            /**
+             * Provenance
+             * @constant
+             */
+            provenance: "assumed";
+            evidence: components["schemas"]["TemperatureEvidence"];
+        };
+        /** TemperatureEvidence */
+        TemperatureEvidence: {
+            /** Dataset */
+            dataset: string;
+            /** Bundle Checksum */
+            bundle_checksum: string;
+            /** Pairs */
+            pairs: components["schemas"]["MatchedPair"][];
+            /** Fade Unit */
+            fade_unit: string;
+            /** Temperatures C */
+            temperatures_c: number[];
+            /** Observed Ratio */
+            observed_ratio: number;
+            /** Observed Ratio Ci90 */
+            observed_ratio_ci90: number[];
+            /** Implied Exp Per C If All Temperature */
+            implied_exp_per_c_if_all_temperature: number;
+            /** Implied Exp Per C Ci90 */
+            implied_exp_per_c_ci90: number[];
+            /**
+             * Use
+             * @description How far this evidence may be used (exploratory only).
+             */
+            use: string;
+            /** Assumed Factor For This Delta */
+            assumed_factor_for_this_delta: number;
+            /** Assumed Within Ci */
+            assumed_within_ci: boolean;
+            /** Confounder */
+            confounder: string;
+            bootstrap: components["schemas"]["Bootstrap"];
         };
         /** TrajectoriesOut */
         TrajectoriesOut: {
@@ -1635,6 +1824,21 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** ValidationMetrics */
+        ValidationMetrics: {
+            /** N */
+            n: number;
+            /** No Estimate */
+            no_estimate: number;
+            /** Mae Cycles */
+            mae_cycles?: number | null;
+            /** Median Abs Error Cycles */
+            median_abs_error_cycles?: number | null;
+            /** Bias Cycles */
+            bias_cycles?: number | null;
+            /** Within 20 Pct */
+            within_20_pct?: number | null;
         };
     };
     responses: never;
@@ -2565,6 +2769,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_simulator_evidence_api_v1_simulator_evidence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulatorEvidenceResponse"];
                 };
             };
         };

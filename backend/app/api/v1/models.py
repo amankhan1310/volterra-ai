@@ -1,4 +1,4 @@
-"""Phase 7 models: the latest imported run's evaluation and stored RUL predictions."""
+"""Phase 7 models (latest run, stored RUL predictions) and Phase 8 simulator evidence."""
 
 from __future__ import annotations
 
@@ -10,8 +10,10 @@ from fastapi import APIRouter, Depends
 from app.api.deps import get_repository
 from app.core.errors import ApiError, error_responses, not_found
 from app.db.repositories import Repository
+from app.schemas.evidence import SimulatorEvidenceResponse
 from app.schemas.models import ModelsResponse, RulPredictionsResponse
 from app.services import mappers
+from app.services.evidence import load_evidence
 
 router = APIRouter(tags=["models"])
 
@@ -52,3 +54,16 @@ async def get_rul_predictions(battery_id: uuid.UUID, repo: RepoDep) -> RulPredic
             f"No model predictions for battery {battery.external_id} in the latest imported run",
         )
     return mappers.rul_predictions_response(battery, predictions)
+
+
+@router.get(
+    "/simulator/evidence",
+    response_model=SimulatorEvidenceResponse,
+    tags=["simulator"],
+    summary="Evidence behind the simulator's assumptions",
+    description="What the public datasets say about the simulator's assumed stress coefficients "
+    "(with bootstrap 90% intervals and confounders) and how its trend-based baseline compares "
+    "with the life real cells actually had. Generated offline; aggregate numbers only.",
+)
+async def get_simulator_evidence() -> SimulatorEvidenceResponse:
+    return load_evidence()

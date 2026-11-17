@@ -73,7 +73,7 @@ def create_app(settings: Settings | None = None, *, database: Database | None = 
         allow_credentials=False,
     )
     # Outermost: rejects oversized bodies and rate-limited requests before any other work.
-    app.add_middleware(RequestGuard, settings=settings)
+    app.add_middleware(RequestGuard, settings=settings, signer=app.state.session_signer)
     register_error_handlers(app)
     app.include_router(api_router, prefix=API_PREFIX)
     return app

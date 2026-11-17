@@ -73,14 +73,16 @@ async def save(client: httpx.AsyncClient, battery_id: str, name: str) -> httpx.R
 
 async def test_sessions_only_see_and_change_their_own_scenarios(app_factory: AppFactory) -> None:
     async with app_factory() as (app, battery_id), client_for(app) as alice, client_for(app) as bob:
-        assert (await alice.get(base(battery_id))).json() == {"items": []}
-        created = await save(alice, battery_id, "Alice's")
-        assert created.status_code == 201
-        sid = created.json()["id"]
-        cookie = created.headers["set-cookie"]
+        listed = await alice.get(base(battery_id))
+        assert listed.json() == {"items": []}
+        # The session cookie arrives with the browser's first API response.
+        cookie = listed.headers["set-cookie"]
         assert f"{COOKIE_NAME}=" in cookie and "HttpOnly" in cookie
         assert "SameSite=lax" in cookie and "Path=/api/v1" in cookie
         assert "Secure" not in cookie  # not production
+        created = await save(alice, battery_id, "Alice's")
+        assert created.status_code == 201 and "set-cookie" not in created.headers
+        sid = created.json()["id"]
         assert [s["id"] for s in (await alice.get(base(battery_id))).json()["items"]] == [sid]
 
         # Another browser (no cookie) sees nothing and cannot read, change or delete it.
@@ -109,13 +111,15 @@ async def test_forged_or_tampered_cookies_are_not_sessions(app_factory: AppFacto
         value = owner.cookies[COOKIE_NAME]
         session_hex, signature = value.split(".")
         other_key = SessionSigner(b"k" * 32).issue()[1]  # signed with a different key
+        flipped = "1" if session_hex[-1] == "0" else "0"  # always a different id
         forged = [
             f"{session_hex}.{'A' * len(signature)}",  # right id, wrong signature
-            f"{session_hex[:-1]}0.{signature}",  # changed id, old signature
+            f"{session_hex[:-1]}{flipped}.{signature}",  # changed id, old signature
             other_key,
             session_hex,
             "garbage",
         ]
+        assert value not in forged  # every variant really differs from the genuine cookie
         for bad in forged:
             async with client_for(app) as attacker:
                 attacker.cookies.set(COOKIE_NAME, bad)

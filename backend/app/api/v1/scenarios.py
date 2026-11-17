@@ -24,7 +24,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from app.api.deps import get_analysis_service, get_repository
 from app.core.config import Settings
 from app.core.errors import ApiError, error_responses, not_found
-from app.core.sessions import COOKIE_NAME, SessionSigner, check_csrf, set_session_cookie
+from app.core.sessions import SessionSigner, check_csrf, request_session, set_session_cookie
 from app.db.repositories import Repository, ScenarioLimitError
 from app.schemas.scenarios import ScenarioCreate, ScenarioList, ScenarioOut, ScenarioUpdate
 from app.services import mappers
@@ -51,7 +51,8 @@ def get_owner(request: Request) -> Owner:
     if mode != "session":
         return Owner(mode, None, mode == "shared")
     signer: SessionSigner = request.app.state.session_signer
-    session_id = signer.verify(request.cookies.get(COOKIE_NAME))
+    # A valid cookie, or the session the request guard issued with this response (its first).
+    session_id = request_session(request, signer)
     return Owner(mode, session_id, session_id is not None)
 
 

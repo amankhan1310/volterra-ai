@@ -32,6 +32,8 @@ COOKIE_MAX_AGE = 30 * 24 * 3600
 COOKIE_PATH = "/api/v1"
 CSRF_HEADER = "x-volterra-client"
 CSRF_VALUE = "web"
+#: ``request.state`` key: the session issued by the request guard with the current response.
+SESSION_STATE_KEY = "volterra_session_id"
 _CONTEXT = b"volterra-scenario-session-v1:"
 
 
@@ -69,6 +71,21 @@ class SessionSigner:
         if session_id.hex != id_hex:
             return None
         return session_id if hmac.compare_digest(signature, self._sign(session_id)) else None
+
+
+def cookie_header(value: str, *, secure: bool) -> str:
+    """The ``Set-Cookie`` value for a session (same attributes as :func:`set_session_cookie`)."""
+    attributes = f"; HttpOnly; Max-Age={COOKIE_MAX_AGE}; Path={COOKIE_PATH}; SameSite=lax"
+    return f"{COOKIE_NAME}={value}{attributes}{'; Secure' if secure else ''}"
+
+
+def request_session(request: Request, signer: SessionSigner) -> uuid.UUID | None:
+    """The request's session: a valid cookie, or the one the guard issued with this response."""
+    session_id = signer.verify(request.cookies.get(COOKIE_NAME))
+    if session_id is not None:
+        return session_id
+    issued = getattr(request.state, SESSION_STATE_KEY, None)
+    return issued if isinstance(issued, uuid.UUID) else None
 
 
 def set_session_cookie(response: Response, value: str, *, secure: bool) -> None:

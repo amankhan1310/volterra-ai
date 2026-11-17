@@ -10,6 +10,8 @@ from app.openapi import OPENAPI_FILE, main, openapi_document, render
 
 EXPECTED_PATHS = {
     "/api/v1/health": {"get"},
+    "/api/v1/health/live": {"get"},
+    "/api/v1/health/ready": {"get"},
     "/api/v1/datasets": {"get"},
     "/api/v1/datasets/{slug}": {"get"},
     "/api/v1/batteries": {"get"},

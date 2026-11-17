@@ -79,14 +79,24 @@ async def test_scenario_lifecycle(api: tuple[httpx.AsyncClient, str]) -> None:
     assert [s["id"] for s in (await client.get(base)).json()["items"]] == [sid]
 
 
-async def test_more_than_four_scenarios_are_allowed(api: tuple[httpx.AsyncClient, str]) -> None:
+async def test_the_api_enforces_four_scenarios_per_battery(
+    api: tuple[httpx.AsyncClient, str],
+) -> None:
     client, battery_id = api
     base = f"/api/v1/batteries/{battery_id}/scenarios"
-    for i in range(6):
+    for i in range(4):
         assert (
             await client.post(base, json={"name": f"S{i}", "params": PARAMS})
         ).status_code == 201
-    assert len((await client.get(base)).json()["items"]) == 6
+    fifth = await client.post(base, json={"name": "S4", "params": PARAMS})
+    assert fifth.status_code == 409
+    assert fifth.json()["error"]["code"] == "scenario_limit_reached"
+    assert "max 4" in fifth.json()["error"]["message"]
+    assert len((await client.get(base)).json()["items"]) == 4
+    # Deleting one frees a slot.
+    first = (await client.get(base)).json()["items"][0]["id"]
+    assert (await client.delete(f"/api/v1/scenarios/{first}")).status_code == 204
+    assert (await client.post(base, json={"name": "S5", "params": PARAMS})).status_code == 201
 
 
 @pytest.mark.parametrize(

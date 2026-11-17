@@ -18,7 +18,8 @@ services:
     runtime: python
     rootDir: backend
     plan: free
-    healthCheckPath: /api/v1/health
+    # Readiness: 200 only when PostgreSQL answers, 503 otherwise (liveness: /api/v1/health/live).
+    healthCheckPath: /api/v1/health/ready
     buildCommand: pip install uv==0.12.24 && uv sync --locked --no-dev
     # Migrations and the idempotent synthetic seed run at start-up (Render's free plan has no
     # pre-deploy step; both are no-ops when the database is already current).
@@ -37,6 +38,13 @@ services:
       # direct cross-origin calls. Set it to the Vercel production URL.
       - key: VOLTERRA_CORS_ORIGINS
         sync: false
+      # Signs the anonymous scenario-session cookies (required in production). Render generates
+      # a random value once; it is never stored in the repository.
+      - key: VOLTERRA_SESSION_SECRET
+        generateValue: true
+      # Each browser session owns its saved scenarios (the default in production; explicit here).
+      - key: VOLTERRA_SCENARIO_ACCESS
+        value: session
       - key: DATABASE_URL
         fromDatabase:
           name: volterra-db

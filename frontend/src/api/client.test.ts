@@ -11,6 +11,18 @@ describe("request", () => {
     expect(health).toEqual(fixtures.health);
   });
 
+  it("sends the CSRF header that cookie-authenticated writes require", async () => {
+    let header: string | null = null;
+    server.use(
+      http.get("*/api/v1/health", ({ request: req }) => {
+        header = req.headers.get("X-Volterra-Client");
+        return HttpResponse.json(fixtures.health);
+      }),
+    );
+    await request(() => api.GET("/api/v1/health"));
+    expect(header).toBe("web");
+  });
+
   it("normalises the API error envelope", async () => {
     server.use(
       http.get("*/api/v1/batteries", () =>

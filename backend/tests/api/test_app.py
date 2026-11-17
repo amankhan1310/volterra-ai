@@ -132,6 +132,7 @@ def test_settings_read_environment_variables(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setenv("VOLTERRA_ENV", "production")
     monkeypatch.setenv("VOLTERRA_CORS_ORIGINS", "http://a.test,,http://b.test")
     monkeypatch.setenv("VOLTERRA_ANALYSIS_CACHE_SIZE", "8")
+    monkeypatch.setenv("VOLTERRA_SESSION_SECRET", "k" * 32)  # required in production
     settings = Settings(_env_file=None)  # type: ignore[call-arg]
     assert settings.environment == "production"
     assert settings.cors_origin_list == ["http://a.test", "http://b.test"]

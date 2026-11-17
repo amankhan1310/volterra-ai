@@ -54,3 +54,7 @@ desktop.ini
 
 # --- Local-only working material, never part of the application or its repository ---
 research_paper/
+
+# Local-only report and presentation archives (contain derived real-data values); never commit
+project_report/
+presentation/

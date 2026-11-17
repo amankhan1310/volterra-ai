@@ -100,6 +100,10 @@ describe("Models page (Phase 7)", () => {
     expect(
       screen.getByText("python -m app.db.import_models <run-dir>"),
     ).toBeTruthy();
+    // A settled page (a synthetic-only deployment has no run), not a loading or error state.
+    expect(screen.getByTestId("page-content").textContent).toContain(
+      "No model run imported",
+    );
   });
 });
 

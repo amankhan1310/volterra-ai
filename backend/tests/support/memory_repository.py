@@ -19,6 +19,7 @@ from app.db.repositories import (
     MlModelInfo,
     RulPredictionSet,
     ScenarioInfo,
+    ScenarioLimitError,
 )
 from app.db.seed import cycles_checksum, synthetic_battery_values, synthetic_dataset_values
 
@@ -39,6 +40,7 @@ class InMemoryRepository:
         )
         self._records: dict[uuid.UUID, tuple[CycleRecord, ...]] = {self.battery.id: data}
         self._scenarios: dict[uuid.UUID, ScenarioInfo] = {}
+        self._owners: dict[uuid.UUID, uuid.UUID | None] = {}
         self.load_calls = 0
         self.ml_models: list[MlModelInfo] = []
         self.predictions: dict[uuid.UUID, RulPredictionSet] = {}
@@ -84,28 +86,59 @@ class InMemoryRepository:
     async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]:
         return ()  # synthetic data has cycle summaries only
 
-    async def list_scenarios(self, battery_id: uuid.UUID) -> list[ScenarioInfo]:
-        return [s for s in self._scenarios.values() if s.battery_id == battery_id]
+    def _owned(self, scenario_id: uuid.UUID, owner_id: uuid.UUID | None) -> ScenarioInfo | None:
+        scenario = self._scenarios.get(scenario_id)
+        if scenario is None or self._owners.get(scenario_id) != owner_id:
+            return None
+        return scenario
 
-    async def get_scenario(self, scenario_id: uuid.UUID) -> ScenarioInfo | None:
-        return self._scenarios.get(scenario_id)
+    async def list_scenarios(
+        self, battery_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> list[ScenarioInfo]:
+        return [
+            s
+            for s in self._scenarios.values()
+            if s.battery_id == battery_id and self._owners.get(s.id) == owner_id
+        ]
+
+    async def get_scenario(
+        self, scenario_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> ScenarioInfo | None:
+        return self._owned(scenario_id, owner_id)
 
     async def create_scenario(
-        self, battery_id: uuid.UUID, name: str, params: Mapping[str, Any]
+        self,
+        battery_id: uuid.UUID,
+        name: str,
+        params: Mapping[str, Any],
+        *,
+        owner_id: uuid.UUID | None = None,
+        limit: int | None = None,
+        total_limit: int | None = None,
     ) -> ScenarioInfo:
+        # No await between the checks and the insert: atomic within the event loop.
+        if (
+            limit is not None
+            and len(await self.list_scenarios(battery_id, owner_id=owner_id)) >= limit
+        ):
+            raise ScenarioLimitError("owner", limit)
+        if total_limit is not None and len(self._scenarios) >= total_limit:
+            raise ScenarioLimitError("total", total_limit)
         now = datetime.now(timezone.utc)
         scenario = ScenarioInfo(uuid.uuid4(), battery_id, name, dict(params), "v1", now, now)
         self._scenarios[scenario.id] = scenario
+        self._owners[scenario.id] = owner_id
         return scenario
 
     async def update_scenario(
         self,
         scenario_id: uuid.UUID,
         *,
+        owner_id: uuid.UUID | None = None,
         name: str | None = None,
         params: Mapping[str, Any] | None = None,
     ) -> ScenarioInfo | None:
-        current = self._scenarios.get(scenario_id)
+        current = self._owned(scenario_id, owner_id)
         if current is None:
             return None
         updated = ScenarioInfo(
@@ -120,5 +153,11 @@ class InMemoryRepository:
         self._scenarios[scenario_id] = updated
         return updated
 
-    async def delete_scenario(self, scenario_id: uuid.UUID) -> bool:
-        return self._scenarios.pop(scenario_id, None) is not None
+    async def delete_scenario(
+        self, scenario_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> bool:
+        if self._owned(scenario_id, owner_id) is None:
+            return False
+        del self._scenarios[scenario_id]
+        del self._owners[scenario_id]
+        return True

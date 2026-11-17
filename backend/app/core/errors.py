@@ -13,6 +13,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy.exc import InterfaceError, OperationalError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger("volterra.api")
@@ -93,8 +94,22 @@ async def _unexpected_error(_: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(_body("internal_error", "Internal server error"), status_code=500)
 
 
+async def _database_unavailable(_: Request, exc: Exception) -> JSONResponse:
+    """The database cannot be reached: 503 (retryable), never the driver's message."""
+    logger.warning("Database unavailable: %s", type(exc).__name__)
+    return JSONResponse(
+        _body("database_unavailable", "The database is temporarily unavailable"),
+        status_code=503,
+        headers={"Retry-After": "10"},
+    )
+
+
 def register_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ApiError, _api_error)
     app.add_exception_handler(RequestValidationError, _validation_error)
     app.add_exception_handler(StarletteHTTPException, _http_error)
+    # Connection failures (refused, reset, lost) from the driver or SQLAlchemy's wrappers.
+    app.add_exception_handler(ConnectionError, _database_unavailable)
+    app.add_exception_handler(OperationalError, _database_unavailable)
+    app.add_exception_handler(InterfaceError, _database_unavailable)
     app.add_exception_handler(Exception, _unexpected_error)

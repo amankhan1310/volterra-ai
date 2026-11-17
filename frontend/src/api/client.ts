@@ -8,6 +8,9 @@ import type { paths } from "./schema";
  */
 export const api = createClient<paths>({
   baseUrl: globalThis.location.origin,
+  // CSRF guard for cookie-authenticated writes: a cross-site page cannot add this header
+  // without a CORS preflight, which the API rejects (backend app/core/sessions.py).
+  headers: { "X-Volterra-Client": "web" },
   // Resolve fetch per call so test tooling (MSW) that patches globalThis.fetch is honoured.
   fetch: (input) => globalThis.fetch(input),
 });

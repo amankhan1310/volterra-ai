@@ -16,6 +16,7 @@ EXPECTED_PATHS = {
     "/api/v1/batteries/{battery_id}": {"get"},
     "/api/v1/batteries/{battery_id}/cycles": {"get"},
     "/api/v1/batteries/{battery_id}/cycles/{cycle}/samples": {"get"},
+    "/api/v1/batteries/{battery_id}/capacity": {"get"},
     "/api/v1/batteries/{battery_id}/summary": {"get"},
     "/api/v1/batteries/{battery_id}/forecast": {"get"},
     "/api/v1/batteries/{battery_id}/backtest": {"get"},

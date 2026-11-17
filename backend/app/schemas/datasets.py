@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from app.schemas.common import AnalysisContext, ApiModel, DataProvenance
+from app.schemas.common import AnalysisContext, ApiModel, DataProvenance, Quantity
 
 
 class DatasetOut(ApiModel):
@@ -111,3 +111,75 @@ class CycleSamplesResponse(ApiModel):
     downsampled: bool
     units: dict[str, str]
     items: list[SampleOut]
+
+
+class SohReferenceOut(ApiModel):
+    """The capacity SOH is measured against."""
+
+    basis: str = Field(
+        description="`rated_capacity` (stated by the source) or `nominal_capacity` (synthetic)."
+    )
+    capacity_ah: float
+    description: str
+
+
+class LevelShiftOut(ApiModel):
+    """A sustained jump in measured capacity (medians of 5 cycles before and after)."""
+
+    cycle: int
+    before: Quantity
+    after: Quantity
+
+
+class CapacityTrendOut(ApiModel):
+    """Least-squares line of capacity against cycle over the usable cycles (never extrapolated)."""
+
+    cycles: int
+    slope: Quantity
+    slope_se_ah_per_cycle: float | None
+    fade: Quantity = Field(description="SOH points lost per 100 cycles; null without a reference.")
+    r2: float | None
+    start_cycle: int
+    end_cycle: int
+    start_capacity: Quantity
+    end_capacity: Quantity
+
+
+class CapacityDegradationResponse(ApiModel):
+    """Capacity degradation and SOH from the measured discharge capacity alone.
+
+    Needs neither temperature nor the 221 cycles of the full analytics; states what it cannot
+    support in `limitations`.
+    """
+
+    context: AnalysisContext
+    provenance: DataProvenance
+    stored_cycles: int
+    usable_cycles: int
+    excluded_cycles: int = Field(description="Cycles flagged as incomplete discharges.")
+    excluded_flags: list[str]
+    first_cycle: int | None
+    last_cycle: int | None
+    initial_capacity: Quantity = Field(description="Median of the first 5 usable cycles.")
+    final_capacity: Quantity = Field(description="Median of the last 5 usable cycles.")
+    capacity_loss: Quantity
+    retention: Quantity = Field(description="Final over initial capacity.")
+    reference: SohReferenceOut | None = Field(description="Null: no stated reference, no SOH.")
+    initial_soh: Quantity
+    final_soh: Quantity
+    latest_soh: Quantity = Field(description="SOH of the last usable cycle.")
+    starts_below_eol: bool | None
+    eol_cycle_observed: int | None = Field(
+        description="First cycle at or below the EOL threshold, confirmed by the next 5 cycles."
+    )
+    trend: CapacityTrendOut | None
+    level_shifts: list[LevelShiftOut] = Field(
+        description="Sustained jumps between parts of the recording; with any, the start-to-end "
+        "figures, trend and end of life are withheld."
+    )
+    start_to_end_withheld: bool = Field(
+        description="Loss and retention (and, with a level shift, initial capacity and SOH at "
+        "start) are null because the recording is not one continuous fade."
+    )
+    full_analytics: AnalysisAvailability
+    limitations: list[str]

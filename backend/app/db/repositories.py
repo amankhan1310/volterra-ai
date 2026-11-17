@@ -59,6 +59,10 @@ class BatteryInfo:
     flagged_cycle_count: int = 0
     #: Battery-level notes from the source, ``(code, detail)`` (e.g. Severson ``paper_excluded``).
     dataset_flags: tuple[tuple[str, str], ...] = ()
+    #: SOH reference stated for the battery (``rated_capacity``) and its value; null when the
+    #: source states none (the synthetic seed uses its nominal capacity).
+    soh_reference: str | None = None
+    soh_reference_capacity_ah: float | None = None
 
 
 @dataclass(frozen=True)
@@ -390,6 +394,8 @@ class SqlRepository:
                 dataset_flags=tuple(
                     sorted((b.test_conditions or {}).get("dataset_flags", {}).items())
                 ),
+                soh_reference=b.soh_reference,
+                soh_reference_capacity_ah=b.soh_reference_capacity_ah,
             )
             for b, slug, dname, n, n_incomplete, n_flagged in rows.all()
         ]

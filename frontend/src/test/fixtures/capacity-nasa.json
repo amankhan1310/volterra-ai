@@ -1,0 +1,76 @@
+{
+  "context": {
+    "battery_id": "00000000-0000-4000-8000-000000000102",
+    "dataset": "nasa-test",
+    "is_synthetic": false,
+    "data_provenance": "measured",
+    "algorithm_version": "v1",
+    "eol_pct": 80,
+    "note": "The analytics were developed on the synthetic reference pack. They run unchanged on this measured cell and are not validated on real cells."
+  },
+  "provenance": "measured",
+  "stored_cycles": 2,
+  "usable_cycles": 2,
+  "excluded_cycles": 0,
+  "excluded_flags": [
+    "capacity_zero",
+    "file_ends_during_discharge"
+  ],
+  "first_cycle": 0,
+  "last_cycle": 2,
+  "initial_capacity": {
+    "value": 1.8250000000000002,
+    "unit": "Ah",
+    "provenance": "measured"
+  },
+  "final_capacity": {
+    "value": 1.8250000000000002,
+    "unit": "Ah",
+    "provenance": "measured"
+  },
+  "capacity_loss": {
+    "value": 0,
+    "unit": "Ah",
+    "provenance": "measured"
+  },
+  "retention": {
+    "value": 100,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "reference": {
+    "basis": "rated_capacity",
+    "capacity_ah": 2,
+    "description": "Rated capacity stated in the source documentation"
+  },
+  "initial_soh": {
+    "value": 91.25000000000001,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "final_soh": {
+    "value": 91.25000000000001,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "latest_soh": {
+    "value": 90,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "starts_below_eol": false,
+  "eol_cycle_observed": null,
+  "trend": null,
+  "level_shifts": [],
+  "start_to_end_withheld": false,
+  "full_analytics": {
+    "available": false,
+    "reason": "insufficient_data",
+    "message": "The analytics need at least 221 cycles; this battery has 2",
+    "min_cycles": 221
+  },
+  "limitations": [
+    "Only 2 usable cycles: the initial and final capacities (medians of the first and last 5) overlap, so retention and loss are indicative",
+    "A degradation trend needs at least 10 usable cycles; this battery has 2"
+  ]
+}

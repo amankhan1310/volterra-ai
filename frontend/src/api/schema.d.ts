@@ -109,6 +109,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/batteries/{battery_id}/capacity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Capacity degradation and SOH from the measured capacity
+         * @description Needs neither temperature nor the cycle count of the full analytics (CALCE, NASA).
+         */
+        get: operations["get_capacity_api_v1_batteries__battery_id__capacity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/batteries/{battery_id}/cycles/{cycle}/samples": {
         parameters: {
             query?: never;
@@ -809,6 +829,91 @@ export interface components {
             /** By Life Fraction */
             by_life_fraction?: components["schemas"]["LifeFractionMetrics"][] | null;
         };
+        /**
+         * CapacityDegradationResponse
+         * @description Capacity degradation and SOH from the measured discharge capacity alone.
+         *
+         *     Needs neither temperature nor the 221 cycles of the full analytics; states what it cannot
+         *     support in `limitations`.
+         */
+        CapacityDegradationResponse: {
+            context: components["schemas"]["AnalysisContext"];
+            /**
+             * Provenance
+             * @enum {string}
+             */
+            provenance: "measured" | "simulated";
+            /** Stored Cycles */
+            stored_cycles: number;
+            /** Usable Cycles */
+            usable_cycles: number;
+            /**
+             * Excluded Cycles
+             * @description Cycles flagged as incomplete discharges.
+             */
+            excluded_cycles: number;
+            /** Excluded Flags */
+            excluded_flags: string[];
+            /** First Cycle */
+            first_cycle: number | null;
+            /** Last Cycle */
+            last_cycle: number | null;
+            /** @description Median of the first 5 usable cycles. */
+            initial_capacity: components["schemas"]["Quantity"];
+            /** @description Median of the last 5 usable cycles. */
+            final_capacity: components["schemas"]["Quantity"];
+            capacity_loss: components["schemas"]["Quantity"];
+            /** @description Final over initial capacity. */
+            retention: components["schemas"]["Quantity"];
+            /** @description Null: no stated reference, no SOH. */
+            reference: components["schemas"]["SohReferenceOut"] | null;
+            initial_soh: components["schemas"]["Quantity"];
+            final_soh: components["schemas"]["Quantity"];
+            /** @description SOH of the last usable cycle. */
+            latest_soh: components["schemas"]["Quantity"];
+            /** Starts Below Eol */
+            starts_below_eol: boolean | null;
+            /**
+             * Eol Cycle Observed
+             * @description First cycle at or below the EOL threshold, confirmed by the next 5 cycles.
+             */
+            eol_cycle_observed: number | null;
+            trend: components["schemas"]["CapacityTrendOut"] | null;
+            /**
+             * Level Shifts
+             * @description Sustained jumps between parts of the recording; with any, the start-to-end figures, trend and end of life are withheld.
+             */
+            level_shifts: components["schemas"]["LevelShiftOut"][];
+            /**
+             * Start To End Withheld
+             * @description Loss and retention (and, with a level shift, initial capacity and SOH at start) are null because the recording is not one continuous fade.
+             */
+            start_to_end_withheld: boolean;
+            full_analytics: components["schemas"]["AnalysisAvailability"];
+            /** Limitations */
+            limitations: string[];
+        };
+        /**
+         * CapacityTrendOut
+         * @description Least-squares line of capacity against cycle over the usable cycles (never extrapolated).
+         */
+        CapacityTrendOut: {
+            /** Cycles */
+            cycles: number;
+            slope: components["schemas"]["Quantity"];
+            /** Slope Se Ah Per Cycle */
+            slope_se_ah_per_cycle: number | null;
+            /** @description SOH points lost per 100 cycles; null without a reference. */
+            fade: components["schemas"]["Quantity"];
+            /** R2 */
+            r2: number | null;
+            /** Start Cycle */
+            start_cycle: number;
+            /** End Cycle */
+            end_cycle: number;
+            start_capacity: components["schemas"]["Quantity"];
+            end_capacity: components["schemas"]["Quantity"];
+        };
         /** ChannelStatsOut */
         ChannelStatsOut: {
             /**
@@ -1217,6 +1322,16 @@ export interface components {
             capacity: components["schemas"]["Quantity"];
             temperature: components["schemas"]["Quantity"];
             voltage: components["schemas"]["Quantity"];
+        };
+        /**
+         * LevelShiftOut
+         * @description A sustained jump in measured capacity (medians of 5 cycles before and after).
+         */
+        LevelShiftOut: {
+            /** Cycle */
+            cycle: number;
+            before: components["schemas"]["Quantity"];
+            after: components["schemas"]["Quantity"];
         };
         /** LifeFractionMetrics */
         LifeFractionMetrics: {
@@ -1640,6 +1755,21 @@ export interface components {
             /** Unit */
             unit: string;
         };
+        /**
+         * SohReferenceOut
+         * @description The capacity SOH is measured against.
+         */
+        SohReferenceOut: {
+            /**
+             * Basis
+             * @description `rated_capacity` (stated by the source) or `nominal_capacity` (synthetic).
+             */
+            basis: string;
+            /** Capacity Ah */
+            capacity_ah: number;
+            /** Description */
+            description: string;
+        };
         /** SplitCounts */
         SplitCounts: {
             /** Train */
@@ -2030,6 +2160,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_capacity_api_v1_batteries__battery_id__capacity_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                battery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CapacityDegradationResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -269,6 +269,61 @@
         }
       }
     },
+    "/api/v1/batteries/{battery_id}/capacity": {
+      "get": {
+        "tags": [
+          "datasets",
+          "batteries"
+        ],
+        "summary": "Capacity degradation and SOH from the measured capacity",
+        "description": "Needs neither temperature nor the cycle count of the full analytics (CALCE, NASA).",
+        "operationId": "get_capacity_api_v1_batteries__battery_id__capacity_get",
+        "parameters": [
+          {
+            "name": "battery_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Battery Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacityDegradationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/batteries/{battery_id}/cycles/{cycle}/samples": {
       "get": {
         "tags": [
@@ -2548,6 +2603,250 @@
         ],
         "title": "CandidateEvaluation"
       },
+      "CapacityDegradationResponse": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/AnalysisContext"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "simulated"
+            ],
+            "title": "Provenance"
+          },
+          "stored_cycles": {
+            "type": "integer",
+            "title": "Stored Cycles"
+          },
+          "usable_cycles": {
+            "type": "integer",
+            "title": "Usable Cycles"
+          },
+          "excluded_cycles": {
+            "type": "integer",
+            "title": "Excluded Cycles",
+            "description": "Cycles flagged as incomplete discharges."
+          },
+          "excluded_flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded Flags"
+          },
+          "first_cycle": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Cycle"
+          },
+          "last_cycle": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Cycle"
+          },
+          "initial_capacity": {
+            "$ref": "#/components/schemas/Quantity",
+            "description": "Median of the first 5 usable cycles."
+          },
+          "final_capacity": {
+            "$ref": "#/components/schemas/Quantity",
+            "description": "Median of the last 5 usable cycles."
+          },
+          "capacity_loss": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "retention": {
+            "$ref": "#/components/schemas/Quantity",
+            "description": "Final over initial capacity."
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SohReferenceOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null: no stated reference, no SOH."
+          },
+          "initial_soh": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "final_soh": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "latest_soh": {
+            "$ref": "#/components/schemas/Quantity",
+            "description": "SOH of the last usable cycle."
+          },
+          "starts_below_eol": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts Below Eol"
+          },
+          "eol_cycle_observed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eol Cycle Observed",
+            "description": "First cycle at or below the EOL threshold, confirmed by the next 5 cycles."
+          },
+          "trend": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CapacityTrendOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "level_shifts": {
+            "items": {
+              "$ref": "#/components/schemas/LevelShiftOut"
+            },
+            "type": "array",
+            "title": "Level Shifts",
+            "description": "Sustained jumps between parts of the recording; with any, the start-to-end figures, trend and end of life are withheld."
+          },
+          "start_to_end_withheld": {
+            "type": "boolean",
+            "title": "Start To End Withheld",
+            "description": "Loss and retention (and, with a level shift, initial capacity and SOH at start) are null because the recording is not one continuous fade."
+          },
+          "full_analytics": {
+            "$ref": "#/components/schemas/AnalysisAvailability"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "context",
+          "provenance",
+          "stored_cycles",
+          "usable_cycles",
+          "excluded_cycles",
+          "excluded_flags",
+          "first_cycle",
+          "last_cycle",
+          "initial_capacity",
+          "final_capacity",
+          "capacity_loss",
+          "retention",
+          "reference",
+          "initial_soh",
+          "final_soh",
+          "latest_soh",
+          "starts_below_eol",
+          "eol_cycle_observed",
+          "trend",
+          "level_shifts",
+          "start_to_end_withheld",
+          "full_analytics",
+          "limitations"
+        ],
+        "title": "CapacityDegradationResponse",
+        "description": "Capacity degradation and SOH from the measured discharge capacity alone.\n\nNeeds neither temperature nor the 221 cycles of the full analytics; states what it cannot\nsupport in `limitations`."
+      },
+      "CapacityTrendOut": {
+        "properties": {
+          "cycles": {
+            "type": "integer",
+            "title": "Cycles"
+          },
+          "slope": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "slope_se_ah_per_cycle": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Se Ah Per Cycle"
+          },
+          "fade": {
+            "$ref": "#/components/schemas/Quantity",
+            "description": "SOH points lost per 100 cycles; null without a reference."
+          },
+          "r2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "R2"
+          },
+          "start_cycle": {
+            "type": "integer",
+            "title": "Start Cycle"
+          },
+          "end_cycle": {
+            "type": "integer",
+            "title": "End Cycle"
+          },
+          "start_capacity": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "end_capacity": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycles",
+          "slope",
+          "slope_se_ah_per_cycle",
+          "fade",
+          "r2",
+          "start_cycle",
+          "end_cycle",
+          "start_capacity",
+          "end_capacity"
+        ],
+        "title": "CapacityTrendOut",
+        "description": "Least-squares line of capacity against cycle over the usable cycles (never extrapolated)."
+      },
       "ChannelStatsOut": {
         "properties": {
           "channel": {
@@ -3572,6 +3871,29 @@
           "voltage"
         ],
         "title": "LatestCycle"
+      },
+      "LevelShiftOut": {
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "before": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "after": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycle",
+          "before",
+          "after"
+        ],
+        "title": "LevelShiftOut",
+        "description": "A sustained jump in measured capacity (medians of 5 cycles before and after)."
       },
       "LifeFractionMetrics": {
         "properties": {
@@ -4729,6 +5051,32 @@
           "unit"
         ],
         "title": "SliderOut"
+      },
+      "SohReferenceOut": {
+        "properties": {
+          "basis": {
+            "type": "string",
+            "title": "Basis",
+            "description": "`rated_capacity` (stated by the source) or `nominal_capacity` (synthetic)."
+          },
+          "capacity_ah": {
+            "type": "number",
+            "title": "Capacity Ah"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "basis",
+          "capacity_ah",
+          "description"
+        ],
+        "title": "SohReferenceOut",
+        "description": "The capacity SOH is measured against."
       },
       "SplitCounts": {
         "properties": {

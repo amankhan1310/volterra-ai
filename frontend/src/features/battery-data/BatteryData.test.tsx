@@ -1,3 +1,4 @@
+import { http, HttpResponse } from "msw";
 import { screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fixtures, server } from "../../test/msw";
@@ -153,5 +154,129 @@ describe("Battery Data page (measured data)", () => {
     expect(text(await screen.findByTestId("samples-note"))).toBe(
       "Cycle 0: 4 of 4 measured samples. 1 samples have no voltage value.",
     );
+  });
+});
+
+describe("capacity degradation and SOH (measured capacity only)", () => {
+  it("analyses a cell without temperature against its rated capacity", async () => {
+    renderApp(`/battery-data?battery=${CALCE}`);
+    const panel = await screen.findByTestId("capacity-panel");
+    const reference = await within(panel).findByTestId("capacity-reference");
+    const calce = fixtures.capacityCalce;
+    expect(calce.reference?.capacity_ah).toBe(1.1);
+    expect(text(reference)).toContain("SOH reference: 1.10 Ah");
+    expect(text(reference)).toContain("not the first measurement");
+    expect(text(within(panel).getByTestId("capacity-trend"))).toContain(
+      `over ${String(calce.trend?.cycles)} cycles`,
+    );
+    expect(text(panel)).toContain("needs no temperature");
+    // The full analytics stay refused, with the API's reason.
+    expect(text(panel)).toContain(calce.full_analytics.message ?? "");
+  });
+
+  it("states that a short NASA recording supports no trend", async () => {
+    renderApp(`/battery-data?battery=${NASA}`);
+    const panel = await screen.findByTestId("capacity-panel");
+    await within(panel).findByTestId("capacity-reference");
+    expect(within(panel).queryByTestId("capacity-trend")).toBeNull();
+    const limits = within(panel).getByRole("list", { name: "Limitations" });
+    expect(text(limits)).toContain("at least 10 usable cycles");
+  });
+
+  it("follows the selected battery without stale values", async () => {
+    const { user } = renderApp(`/battery-data?battery=${CALCE}`);
+    const panel = await screen.findByTestId("capacity-panel");
+    await within(panel).findByTestId("capacity-trend");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Battery" }),
+      "synthetic-v1:SYN-001",
+    );
+    await waitFor(() => {
+      expect(text(screen.getByTestId("capacity-reference"))).toContain(
+        "SOH reference: 2.00 Ah",
+      );
+    });
+    expect(text(screen.getByTestId("capacity-reference"))).toContain(
+      "Nominal capacity the synthetic generator",
+    );
+  });
+});
+
+describe("capacity data quality (withheld figures, fitted line vs measurement)", () => {
+  it("shows withheld start-to-end figures and keeps the measured end state", async () => {
+    // B0041-shaped response: an abrupt upward level shift (values from the real API run).
+    const shifted = {
+      ...fixtures.capacityCalce,
+      initial_capacity: {
+        ...fixtures.capacityCalce.initial_capacity,
+        value: null,
+      },
+      final_capacity: {
+        ...fixtures.capacityCalce.final_capacity,
+        value: 0.849,
+      },
+      capacity_loss: { ...fixtures.capacityCalce.capacity_loss, value: null },
+      retention: { ...fixtures.capacityCalce.retention, value: null },
+      initial_soh: { ...fixtures.capacityCalce.initial_soh, value: null },
+      final_soh: { ...fixtures.capacityCalce.final_soh, value: 42.4 },
+      trend: null,
+      eol_cycle_observed: null,
+      starts_below_eol: null,
+      start_to_end_withheld: true,
+      level_shifts: [
+        {
+          cycle: 42,
+          before: { value: 0.048, unit: "Ah", provenance: "measured" as const },
+          after: { value: 1.12, unit: "Ah", provenance: "measured" as const },
+        },
+      ],
+      limitations: [
+        "Measured capacity shifts abruptly (cycle 42: 0.048 → 1.120 Ah). An upward jump is not evidence of battery recovery.",
+      ],
+    };
+    server.use(
+      http.get("*/api/v1/batteries/:id/capacity", () =>
+        HttpResponse.json(shifted),
+      ),
+    );
+    renderApp(`/battery-data?battery=${CALCE}`);
+    const panel = await screen.findByTestId("capacity-panel");
+    const measured = await within(panel).findByTestId("capacity-measured");
+    const stat = (label: string) =>
+      text(within(measured).getByText(label).parentElement ?? measured);
+    for (const label of [
+      "Initial capacity",
+      "Capacity loss",
+      "Capacity retention",
+      "SOH at start",
+    ])
+      expect(stat(label)).toBe(`${label}withheld`);
+    expect(stat("Final capacity")).toBe("Final capacity0.849 Ah");
+    expect(stat("SOH now (last 5 cycles)")).toBe(
+      "SOH now (last 5 cycles)42.4 %",
+    );
+    expect(text(within(panel).getByTestId("capacity-withheld"))).toContain(
+      "No measurement has been changed or removed",
+    );
+    expect(within(panel).queryByTestId("capacity-trend")).toBeNull();
+    expect(text(panel)).not.toMatch(/1519|recovered/);
+    expect(text(panel)).toContain("not evidence of battery recovery");
+  });
+
+  it("labels the fitted line as a model, separate from the measured final capacity", async () => {
+    renderApp(`/battery-data?battery=${CALCE}`);
+    const trend = await screen.findByTestId("capacity-trend");
+    const calce = fixtures.capacityCalce;
+    expect(text(trend)).toContain("a model, not a measurement");
+    expect(text(trend)).toContain(
+      "values of the line, not measured capacities",
+    );
+    expect(text(within(trend).getByTestId("trend-line-end"))).toBe(
+      `${(calce.trend?.end_capacity.value ?? NaN).toFixed(3)} Ah`,
+    );
+    expect(text(within(trend).getByTestId("trend-measured-final"))).toBe(
+      `${(calce.final_capacity.value ?? NaN).toFixed(3)} Ah`,
+    );
+    expect(text(trend)).toContain("never extrapolated");
   });
 });

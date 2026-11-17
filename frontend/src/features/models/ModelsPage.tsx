@@ -249,14 +249,17 @@ export function taskOrder(task: string): number {
 
 export function ModelsContent({ models }: { models: Models }) {
   if (!models.run) {
+    // A valid, settled page (e.g. a synthetic-only deployment), not a loading or error state.
     return (
-      <EmptyState title="No model run imported">
-        <p>
-          Train and evaluate offline with{" "}
-          <code>python -m volterra_ml.modeling run</code>, then import the run
-          with <code>python -m app.db.import_models &lt;run-dir&gt;</code>.
-        </p>
-      </EmptyState>
+      <div data-testid="page-content">
+        <EmptyState title="No model run imported">
+          <p>
+            Train and evaluate offline with{" "}
+            <code>python -m volterra_ml.modeling run</code>, then import the run
+            with <code>python -m app.db.import_models &lt;run-dir&gt;</code>.
+          </p>
+        </EmptyState>
+      </div>
     );
   }
   return (

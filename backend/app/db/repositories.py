@@ -13,13 +13,25 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import ColumnElement, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.analytics.synthetic import CycleRecord
 from app.db.models import Battery, Cycle, Dataset, DatasetFile, MlModel, MlPrediction, Scenario
 
 V1_CYCLE_TYPE = "discharge"
+#: Key of the PostgreSQL transaction-level advisory lock that serialises scenario creation, so
+#: concurrent requests cannot exceed the scenario limits (count and insert run under the lock).
+SCENARIO_CREATE_LOCK = 0x564F4C54  # "VOLT"
+
+
+class ScenarioLimitError(Exception):
+    """Creating a scenario would exceed a limit: ``scope`` is ``owner`` or ``total``."""
+
+    def __init__(self, scope: str, limit: int) -> None:
+        super().__init__(f"scenario limit reached ({scope}: {limit})")
+        self.scope = scope
+        self.limit = limit
 
 
 @dataclass(frozen=True)
@@ -144,19 +156,44 @@ class Repository(Protocol):
     async def sample_files(self, battery_id: uuid.UUID) -> tuple[str, ...]: ...
     async def latest_ml_models(self) -> list[MlModelInfo]: ...
     async def rul_predictions(self, battery_id: uuid.UUID) -> RulPredictionSet | None: ...
-    async def list_scenarios(self, battery_id: uuid.UUID) -> list[ScenarioInfo]: ...
-    async def get_scenario(self, scenario_id: uuid.UUID) -> ScenarioInfo | None: ...
+    # Scenario methods act only on rows of ``owner_id``: a session id, or ``None`` for the shared
+    # (ownerless) list. A scenario of another owner behaves exactly like a missing one.
+    async def list_scenarios(
+        self, battery_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> list[ScenarioInfo]: ...
+    async def get_scenario(
+        self, scenario_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> ScenarioInfo | None: ...
     async def create_scenario(
-        self, battery_id: uuid.UUID, name: str, params: Mapping[str, Any]
-    ) -> ScenarioInfo: ...
+        self,
+        battery_id: uuid.UUID,
+        name: str,
+        params: Mapping[str, Any],
+        *,
+        owner_id: uuid.UUID | None = None,
+        limit: int | None = None,
+        total_limit: int | None = None,
+    ) -> ScenarioInfo:
+        """Raises :class:`ScenarioLimitError` when ``limit`` (per battery and owner) or
+        ``total_limit`` (all scenarios) is already reached; the check is atomic."""
+        ...
+
     async def update_scenario(
         self,
         scenario_id: uuid.UUID,
         *,
+        owner_id: uuid.UUID | None = None,
         name: str | None = None,
         params: Mapping[str, Any] | None = None,
     ) -> ScenarioInfo | None: ...
-    async def delete_scenario(self, scenario_id: uuid.UUID) -> bool: ...
+    async def delete_scenario(
+        self, scenario_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> bool: ...
+
+
+def _owned_by(owner_id: uuid.UUID | None) -> ColumnElement[bool]:
+    """Rows of one owner; ``None`` selects the shared (ownerless) rows only."""
+    return Scenario.user_id.is_(None) if owner_id is None else Scenario.user_id == owner_id
 
 
 def _scenario_info(s: Scenario) -> ScenarioInfo:
@@ -298,22 +335,58 @@ class SqlRepository:
         )
         return tuple(rows.all())
 
-    async def list_scenarios(self, battery_id: uuid.UUID) -> list[ScenarioInfo]:
+    async def list_scenarios(
+        self, battery_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> list[ScenarioInfo]:
         rows = await self.session.scalars(
             select(Scenario)
-            .where(Scenario.battery_id == battery_id)
+            .where(Scenario.battery_id == battery_id, _owned_by(owner_id))
             .order_by(Scenario.created_at, Scenario.id)
         )
         return [_scenario_info(s) for s in rows.all()]
 
-    async def get_scenario(self, scenario_id: uuid.UUID) -> ScenarioInfo | None:
-        scenario = await self.session.get(Scenario, scenario_id)
+    async def _owned(self, scenario_id: uuid.UUID, owner_id: uuid.UUID | None) -> Scenario | None:
+        rows = await self.session.scalars(
+            select(Scenario).where(Scenario.id == scenario_id, _owned_by(owner_id))
+        )
+        return rows.first()
+
+    async def get_scenario(
+        self, scenario_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> ScenarioInfo | None:
+        scenario = await self._owned(scenario_id, owner_id)
         return _scenario_info(scenario) if scenario else None
 
     async def create_scenario(
-        self, battery_id: uuid.UUID, name: str, params: Mapping[str, Any]
+        self,
+        battery_id: uuid.UUID,
+        name: str,
+        params: Mapping[str, Any],
+        *,
+        owner_id: uuid.UUID | None = None,
+        limit: int | None = None,
+        total_limit: int | None = None,
     ) -> ScenarioInfo:
-        scenario = Scenario(battery_id=battery_id, name=name, params=dict(params))
+        if limit is not None or total_limit is not None:
+            # Held until commit/rollback: concurrent creators wait here, then count again.
+            await self.session.execute(
+                text("SELECT pg_advisory_xact_lock(:key)"), {"key": SCENARIO_CREATE_LOCK}
+            )
+            if limit is not None:
+                owned = await self.session.scalar(
+                    select(func.count(Scenario.id)).where(
+                        Scenario.battery_id == battery_id, _owned_by(owner_id)
+                    )
+                )
+                if (owned or 0) >= limit:
+                    await self.session.rollback()
+                    raise ScenarioLimitError("owner", limit)
+            if total_limit is not None:
+                total = await self.session.scalar(select(func.count(Scenario.id)))
+                if (total or 0) >= total_limit:
+                    await self.session.rollback()
+                    raise ScenarioLimitError("total", total_limit)
+        scenario = Scenario(battery_id=battery_id, name=name, params=dict(params), user_id=owner_id)
         self.session.add(scenario)
         await self.session.commit()
         await self.session.refresh(scenario)
@@ -323,10 +396,11 @@ class SqlRepository:
         self,
         scenario_id: uuid.UUID,
         *,
+        owner_id: uuid.UUID | None = None,
         name: str | None = None,
         params: Mapping[str, Any] | None = None,
     ) -> ScenarioInfo | None:
-        scenario = await self.session.get(Scenario, scenario_id)
+        scenario = await self._owned(scenario_id, owner_id)
         if scenario is None:
             return None
         if name is not None:
@@ -337,8 +411,10 @@ class SqlRepository:
         await self.session.refresh(scenario)
         return _scenario_info(scenario)
 
-    async def delete_scenario(self, scenario_id: uuid.UUID) -> bool:
-        scenario = await self.session.get(Scenario, scenario_id)
+    async def delete_scenario(
+        self, scenario_id: uuid.UUID, *, owner_id: uuid.UUID | None = None
+    ) -> bool:
+        scenario = await self._owned(scenario_id, owner_id)
         if scenario is None:
             return False
         await self.session.delete(scenario)

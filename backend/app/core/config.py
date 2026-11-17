@@ -63,12 +63,22 @@ class Settings(BaseSettings):
     rate_limit_reads_per_minute: int = Field(
         default=1200, ge=1, validation_alias="VOLTERRA_RATE_LIMIT_READS"
     )
+    #: Stored writes (scenario create/rename/delete) per client.
     rate_limit_writes_per_minute: int = Field(
         default=30, ge=1, validation_alias="VOLTERRA_RATE_LIMIT_WRITES"
     )
-    #: All clients together (writes only): a ceiling that client-key spoofing cannot bypass.
+    #: Stored writes by all clients together: a ceiling that changing identity cannot bypass.
     rate_limit_global_writes_per_minute: int = Field(
         default=120, ge=1, validation_alias="VOLTERRA_RATE_LIMIT_GLOBAL_WRITES"
+    )
+    #: Calculations (POST /simulate, nothing stored) per client; never uses the write budgets.
+    #: 600/min = 10/s, above the simulator's ceiling of ~6.7 requests/s (150 ms debounce).
+    rate_limit_calc_per_minute: int = Field(
+        default=600, ge=1, validation_alias="VOLTERRA_RATE_LIMIT_CALC"
+    )
+    #: Calculations by all clients together (bounds CPU use).
+    rate_limit_global_calc_per_minute: int = Field(
+        default=3000, ge=1, validation_alias="VOLTERRA_RATE_LIMIT_GLOBAL_CALC"
     )
     #: Trusted proxies that append to X-Forwarded-For in front of the app. 0 uses the right-most
     #: entry (the address the hosting provider's proxy saw), which a client cannot forge.

@@ -12,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.core.config import Settings
-from app.core.guard import FixedWindowCounter, client_key
+from app.core.guard import FixedWindowCounter, client_key, request_class
 from app.core.sessions import SessionSigner
 from tests.support.api import client_for, make_settings, memory_app
 
@@ -74,70 +74,177 @@ class Clock:
         return self.now
 
 
+SECRET = "g" * 40
+CSRF = {"X-Volterra-Client": "web"}
+SIM_PARAMS = {
+    "temp_c": 25,
+    "c_rate": 1,
+    "dod_pct": 80,
+    "horizon_cycles": 100,
+    "start_soh_pct": 90,
+    "eol_pct": 80,
+}
+SCENARIO = {"name": "S", "params": {**SIM_PARAMS, "horizon_cycles": 600}}
+
+
 @pytest.fixture
-async def guarded(
-    monkeypatch: pytest.MonkeyPatch,
-) -> AsyncIterator[tuple[httpx.AsyncClient, Clock, Any]]:
-    """An app with rate limiting on and tiny limits, driven by a fake clock."""
+async def guarded_app(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[Any, Clock, Any]]:
+    """Session scenarios, rate limiting on, tiny limits, a fake clock."""
     clock = Clock()
     monkeypatch.setattr("app.core.guard.time.monotonic", clock)
     app, repo = memory_app(
+        scenario_access="session",
+        session_secret=SECRET,
         rate_limit_enabled=True,
         rate_limit_reads_per_minute=3,
         rate_limit_writes_per_minute=2,
         rate_limit_global_writes_per_minute=3,
+        rate_limit_calc_per_minute=4,
+        rate_limit_global_calc_per_minute=6,
     )
+    yield app, clock, repo
+
+
+@pytest.fixture
+async def guarded(
+    guarded_app: tuple[Any, Clock, Any],
+) -> AsyncIterator[tuple[httpx.AsyncClient, Clock, Any]]:
+    app, clock, repo = guarded_app
     async with client_for(app) as client:
         yield client, clock, repo
 
 
-async def test_reads_are_rate_limited_per_client(
-    guarded: tuple[httpx.AsyncClient, Clock, Any],
-) -> None:
-    client, clock, _ = guarded
-    a = {"X-Forwarded-For": "203.0.113.1"}
-    for _ in range(3):
-        assert (await client.get("/api/v1/datasets", headers=a)).status_code == 200
-    limited = await client.get("/api/v1/datasets", headers=a)
-    assert limited.status_code == 429
-    assert limited.json() == {
-        "error": {"code": "rate_limited", "message": "Too many requests; please retry later"}
-    }
-    assert 1 <= int(limited.headers["retry-after"]) <= 60
-    # Another client is unaffected; health is exempt; the next window resets.
-    assert (
-        await client.get("/api/v1/datasets", headers={"X-Forwarded-For": "203.0.113.2"})
-    ).status_code == 200
-    assert (await client.get("/api/v1/health/live", headers=a)).status_code == 200
-    clock.now += 60
-    assert (await client.get("/api/v1/datasets", headers=a)).status_code == 200
+async def visitor(app: Any, address: str) -> AsyncIterator[httpx.AsyncClient]:
+    """A browser (keeps cookies) behind ``address``; its first request obtains a session."""
+    async with client_for(app) as client:
+        client.headers["X-Forwarded-For"] = address
+        first = await client.get("/api/v1/datasets")
+        assert first.status_code == 200 and "volterra_session" in client.cookies
+        yield client
 
 
-async def test_writes_have_per_client_and_global_limits(
-    guarded: tuple[httpx.AsyncClient, Clock, Any],
+def test_request_classes() -> None:
+    sim = "/api/v1/batteries/0f0e/simulate"
+    assert request_class("POST", sim) == "calc"
+    assert request_class("GET", sim) == "read"
+    assert request_class("POST", "/api/v1/batteries/0f0e/scenarios") == "write"
+    assert request_class("PATCH", "/api/v1/scenarios/1") == "write"
+    assert request_class("DELETE", "/api/v1/scenarios/1") == "write"
+    assert request_class("POST", "/api/v1/batteries/0f0e/simulate/x") == "write"
+    assert request_class("OPTIONS", "/api/v1/batteries/0f0e/scenarios") == "read"
+
+
+async def test_the_first_api_response_issues_a_session_cookie(
+    guarded_app: tuple[Any, Clock, Any],
 ) -> None:
-    client, _, repo = guarded
-    url = f"/api/v1/batteries/{repo.battery.id}/simulate"
-    params = {
-        "temp_c": 25,
-        "c_rate": 1,
-        "dod_pct": 80,
-        "horizon_cycles": 100,
-        "start_soh_pct": 90,
-        "eol_pct": 80,
-    }
-    body = {"params": params, "include_trajectories": False}
-    codes = [
-        (await client.post(url, json=body, headers={"X-Forwarded-For": "198.51.100.1"})).status_code
-        for _ in range(3)
-    ]
-    assert codes == [200, 200, 429]  # 2 per client
-    # Global ceiling (3 writes/min) holds even when each request claims a new address.
-    spoofed = [
-        (await client.post(url, json=body, headers={"X-Forwarded-For": f"10.0.0.{i}"})).status_code
-        for i in range(3)
-    ]
-    assert spoofed == [200, 429, 429]  # 3 per minute in total
+    app, _, repo = guarded_app
+    async with client_for(app) as client:
+        health = await client.get("/api/v1/health/live")
+        assert "set-cookie" not in health.headers  # health checks never get sessions
+        first = await client.get("/api/v1/datasets")
+        cookie = first.headers["set-cookie"]
+        assert cookie.startswith("volterra_session=") and "HttpOnly" in cookie
+        assert "SameSite=lax" in cookie and "Path=/api/v1" in cookie
+        assert first.headers["cache-control"] == "no-store"
+        again = await client.get("/api/v1/datasets")
+        assert "set-cookie" not in again.headers  # a valid cookie is kept, not replaced
+    # A save as the very first request belongs to the session issued with that response.
+    async with client_for(app) as fresh:
+        saved = await fresh.post(
+            f"/api/v1/batteries/{repo.battery.id}/scenarios", json=SCENARIO, headers=CSRF
+        )
+        assert saved.status_code == 201
+        assert len(saved.headers.get_list("set-cookie")) == 1
+        listed = (await fresh.get(f"/api/v1/batteries/{repo.battery.id}/scenarios")).json()
+        assert [s["id"] for s in listed["items"]] == [saved.json()["id"]]
+
+
+async def test_sessions_behind_one_shared_address_have_independent_allowances(
+    guarded_app: tuple[Any, Clock, Any],
+) -> None:
+    """Many visitors behind one proxy address (e.g. a Vercel edge): one cannot exhaust another."""
+    app, clock, _ = guarded_app
+    shared = "203.0.113.50"
+    async for alice in visitor(app, shared):
+        async for bob in visitor(app, shared):
+            for _ in range(3):
+                assert (await alice.get("/api/v1/datasets")).status_code == 200
+            limited = await alice.get("/api/v1/datasets")
+            assert limited.status_code == 429
+            assert limited.json() == {
+                "error": {
+                    "code": "rate_limited",
+                    "message": "Too many requests; please retry later",
+                }
+            }
+            assert 1 <= int(limited.headers["retry-after"]) <= 60
+            # Bob shares Alice's address but not her allowance.
+            for _ in range(3):
+                assert (await bob.get("/api/v1/datasets")).status_code == 200
+            assert (await alice.get("/api/v1/health/ready")).status_code in (200, 503)  # exempt
+            clock.now += 60
+            assert (await alice.get("/api/v1/datasets")).status_code == 200
+
+
+async def test_spoofed_forwarded_headers_and_forged_cookies_do_not_bypass_limits(
+    guarded_app: tuple[Any, Clock, Any],
+) -> None:
+    """Without a valid session, the key is the right-most X-Forwarded-For entry (appended by
+    the hosting proxy): rotating the client-supplied entries or sending forged cookies gives
+    no new allowance."""
+    app, _, _ = guarded_app
+    codes = []
+    async with client_for(app) as client:
+        for i in range(4):
+            client.cookies.clear()  # a script that discards cookies
+            forged = {"Cookie": f"volterra_session={'0' * 32}.forged"} if i % 2 else {}
+            r = await client.get(
+                "/api/v1/datasets",
+                headers={"X-Forwarded-For": f"6.6.6.{i}, 198.51.100.7", **forged},
+            )
+            codes.append(r.status_code)
+    assert codes == [200, 200, 200, 429]  # 3 reads per network address
+
+
+async def test_simulations_use_the_calculation_budget_not_the_write_budget(
+    guarded_app: tuple[Any, Clock, Any],
+) -> None:
+    app, _, repo = guarded_app
+    sim = f"/api/v1/batteries/{repo.battery.id}/simulate"
+    body = {"params": SIM_PARAMS, "include_trajectories": False}
+    scenarios = f"/api/v1/batteries/{repo.battery.id}/scenarios"
+    async for alice in visitor(app, "198.51.100.1"):
+        sims = [(await alice.post(sim, json=body, headers=CSRF)).status_code for _ in range(5)]
+        assert sims == [200, 200, 200, 200, 429]  # 4 calculations per client
+        # The write allowance is untouched by those calculations ...
+        saves = [
+            (await alice.post(scenarios, json=SCENARIO, headers=CSRF)).status_code for _ in range(3)
+        ]
+        assert saves == [201, 201, 429]  # ... and still limited (2 writes per client)
+        async for bob in visitor(app, "198.51.100.2"):
+            # All clients together: 6 calculations (Alice used 4) and 3 writes (Alice used 2).
+            more = [(await bob.post(sim, json=body, headers=CSRF)).status_code for _ in range(3)]
+            assert more == [200, 200, 429]
+            writes = [
+                (await bob.post(scenarios, json=SCENARIO, headers=CSRF)).status_code
+                for _ in range(2)
+            ]
+            assert writes == [201, 429]
+
+
+async def test_scenario_mutations_share_the_per_client_write_limit(
+    guarded_app: tuple[Any, Clock, Any],
+) -> None:
+    app, _, repo = guarded_app
+    scenarios = f"/api/v1/batteries/{repo.battery.id}/scenarios"
+    async for alice in visitor(app, "198.51.100.3"):
+        created = await alice.post(scenarios, json=SCENARIO, headers=CSRF)
+        assert created.status_code == 201
+        sid = created.json()["id"]
+        renamed = await alice.patch(f"/api/v1/scenarios/{sid}", json={"name": "R"}, headers=CSRF)
+        assert renamed.status_code == 200
+        deleted = await alice.delete(f"/api/v1/scenarios/{sid}", headers=CSRF)
+        assert deleted.status_code == 429  # create + rename used the 2 writes
 
 
 async def test_oversized_bodies_are_rejected(guarded: tuple[httpx.AsyncClient, Clock, Any]) -> None:
@@ -313,3 +420,15 @@ async def test_database_outage_is_a_retryable_503_without_details() -> None:
         }
     }
     assert "hunter2" not in r.text
+
+
+def test_calculation_budget_covers_continuous_simulator_use() -> None:
+    """The simulator re-runs 150 ms after the last change (frontend SIMULATE_DEBOUNCE_MS), so a
+    user dragging a slider sends at most ~400 calculations a minute; the default budget must
+    exceed that, and the write budgets must stay stricter."""
+    s = make_settings()
+    max_per_minute = 60_000 / 150
+    assert s.rate_limit_calc_per_minute > max_per_minute
+    assert s.rate_limit_global_calc_per_minute >= s.rate_limit_calc_per_minute
+    assert s.rate_limit_writes_per_minute < s.rate_limit_calc_per_minute
+    assert s.rate_limit_global_writes_per_minute < s.rate_limit_global_calc_per_minute

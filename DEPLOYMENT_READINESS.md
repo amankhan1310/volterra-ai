@@ -9,17 +9,19 @@ items say how) · **Blocked**.
 
 ## 1. Summary
 
-| Area                          | Status                                                                                       |
-| ----------------------------- | -------------------------------------------------------------------------------------------- |
-| Scenario write security       | Was **Requires code correction**, now fixed (signed anonymous sessions, CSRF, ownership)     |
-| Scenario limits               | Was **Requires code correction**, now fixed (atomic, database-enforced)                      |
-| Health checks                 | Was **Requires code correction**, now fixed (`/health/live`, `/health/ready` → 503)          |
-| Request protection            | Was **Requires code correction**, now fixed (rate limits, 413, headers, 503 on DB outage)    |
-| Models page on empty database | Was **Requires code correction** (13 E2E regressions), now fixed                             |
-| Secrets in error messages     | Was **Requires code correction** (found during testing), now fixed                           |
-| Hosting accounts              | **Blocked on the owner**: Render and Vercel accounts are needed (no CLI or credentials here) |
-| CORS origin, Vercel rewrite   | **Requires configuration** after the services exist (URLs not known yet)                     |
-| Model run in production       | **Owner decision** (see §6)                                                                  |
+| Area                           | Status                                                                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Scenario write security        | Was **Requires code correction**, now fixed (signed anonymous sessions, CSRF, ownership)                                               |
+| Scenario limits                | Was **Requires code correction**, now fixed (atomic, database-enforced)                                                                |
+| Health checks                  | Was **Requires code correction**, now fixed (`/health/live`, `/health/ready` → 503)                                                    |
+| Request protection             | Was **Requires code correction**, now fixed (rate limits, 413, headers, 503 on DB outage)                                              |
+| Models page on empty database  | Was **Requires code correction** (13 E2E regressions), now fixed                                                                       |
+| Secrets in error messages      | Was **Requires code correction** (found during testing), now fixed                                                                     |
+| Simulator vs write budget (R1) | Was **Requires code correction** (pre-merge review), now fixed: separate calculation budget                                            |
+| Per-client identity (R2)       | Was **Requires code correction** (pre-merge review), now fixed: signed session, then right-most address; deployment-time checks in §4a |
+| Hosting accounts               | **Blocked on the owner**: Render and Vercel accounts are needed (no CLI or credentials here)                                           |
+| CORS origin, Vercel rewrite    | **Requires configuration** after the services exist (URLs not known yet)                                                               |
+| Model run in production        | **Owner decision** (see §6)                                                                                                            |
 
 Final evidence is in §5. Remaining risks are in §7.
 
@@ -109,18 +111,81 @@ type, as before). `render.yaml` uses **`/api/v1/health/ready`**.
 
 ### Request protection (A8, A20)
 
-- **Rate limits, process-local and in memory** (`app/core/guard.py`): per client 1,200 reads/min
-  and 30 writes/min, plus 120 writes/min for all clients together; 429 `rate_limited` with
-  `Retry-After`; health endpoints exempt; on by default in production only. They reset on restart
-  and **are not shared between instances**. They protect a single small instance against bursts,
-  not against a distributed attack. The client key is the right-most `X-Forwarded-For` entry
-  (appended by Render's proxy, not forgeable by the client). Behind the Vercel rewrite this is a
-  Vercel edge address, so visitors routed through the same edge share a bucket.
-- **Body size:** 16 KB maximum on writes, enforced while streaming (also for chunked bodies), 413.
+- **Rate limits, process-local and in memory** (`backend/app/core/guard.py`), on by default in
+  production only; 429 `rate_limited` with `Retry-After`; health endpoints exempt. Three request
+  classes (corrected after the pre-merge review, see §4a):
+
+  | Class                                          | Per client | All clients together |
+  | ---------------------------------------------- | ---------- | -------------------- |
+  | read (GET, HEAD, OPTIONS)                      | 1,200/min  | –                    |
+  | calculation (`POST /batteries/{id}/simulate`)  | 600/min    | 3,000/min            |
+  | stored write (scenario create, rename, delete) | 30/min     | 120/min              |
+
+  They reset on restart and **are not shared between instances or workers** (N instances allow N
+  times the requests). They protect one small instance against bursts and loops, not against a
+  distributed attack. The durable protection for stored data is the database-enforced scenario
+  limits.
+
+- **Body size:** 16 KB maximum on writes and calculations, enforced while streaming (also for
+  chunked bodies), 413.
 - **Headers:** `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`;
   `Cache-Control: no-store` on scenario responses.
 - **Database outage:** connection errors answer **503** `database_unavailable` with
   `Retry-After: 10`, never the driver's message.
+
+### 4a. Pre-merge review corrections (R1, R2)
+
+**R1: the simulator consumed the write budget.** The What-If Simulator re-runs `POST /simulate`
+150 ms after the last input change (`frontend/src/features/simulator/SimulatorPage.tsx`,
+`SIMULATE_DEBOUNCE_MS`). The guard counted every POST as a write (30/min per client, 120/min for
+everyone), so about 10 s of slider use would block a visitor's simulator, and saving, for the rest
+of the minute. Fix: `POST /batteries/{id}/simulate` (stores nothing) is its own **calculation**
+class with its own per-client (600/min, above the ~400/min a continuously dragged slider can send)
+and all-clients (3,000/min, bounds CPU) limits. It never touches the write budgets, which keep
+their stricter values for scenario create, rename and delete. A test pins the defaults against
+the debounce interval.
+
+**R2: per-client identity behind Vercel and Render.** Verified chain (documentation and community
+evidence, 2026-11-17; to be confirmed after deployment, see below):
+
+1. Vercel's rewrite to an external origin sends the visitor's IP in `X-Forwarded-For` (Vercel
+   documentation, request headers on rewrites).
+2. Render's proxy **appends** to an incoming `X-Forwarded-For` and does not clear client-supplied
+   values (Render community reports; a 2021 staff reply says the first entry is the client). There
+   is no official Render documentation of the exact format.
+
+So the right-most entry is the address Render's proxy saw (for proxied traffic a **shared Vercel
+edge address**), and every entry to its left may be client-supplied when a client calls Render
+directly. Trusting a left entry (`VOLTERRA_TRUSTED_PROXY_HOPS=1`) would let direct callers choose
+their own key; Vercel does not publish fixed egress addresses that could prove a request came
+through Vercel. Therefore:
+
+- **Browsers are identified by their signed session**, not by address. The guard issues the
+  anonymous session cookie with a browser's first API response (HttpOnly, SameSite=Lax, Secure
+  in production; HMAC-signed, so it cannot be forged), and the scenario routes use the same
+  session for ownership. Each browser has its own allowance, even behind one shared edge.
+- **Requests without a valid session** (scripts, forged or expired cookies, a browser's very
+  first request) are keyed by the **right-most** `X-Forwarded-For` entry (`TRUSTED_PROXY_HOPS=0`,
+  unchanged), which a client cannot forge. Discarding cookies does not create allowance: minting a
+  new session needs a cookie-less request, which counts against the network address.
+- **All-clients limits ignore identity** (calculations and stored writes), so neither new
+  sessions nor addresses bypass them.
+
+Production configuration: `VOLTERRA_TRUSTED_PROXY_HOPS` **unset (0)**; `VOLTERRA_ENV=production`
+(turns rate limits and session issuance on); `VOLTERRA_SESSION_SECRET` generated by Render.
+
+**Deployment-time checks (not verifiable before the services exist):**
+
+1. Spoofing, direct to Render: send 1,201 cookie-less `GET /api/v1/datasets` to the Render URL
+   within a minute, each with a different `X-Forwarded-For: 10.0.0.<n>`; the requests beyond 1,200
+   must answer 429 (proves the right-most entry is Render's and not client-controlled).
+2. Independence through Vercel: two browsers (separate profiles) on the Vercel URL each get their
+   own `volterra_session` cookie; exhausting one's calculation budget does not affect the other.
+3. The cookie arrives through the Vercel rewrite with `Secure; HttpOnly; SameSite=Lax;
+Path=/api/v1`.
+4. If Render's format turns out to differ (e.g. the client is the left-most entry and Render does
+   not append), keep `TRUSTED_PROXY_HOPS=0`: browsers are still separated by session; only
+   cookie-less traffic would share or mis-key its network bucket.
 
 ### Secrets in errors (A19)
 
@@ -141,24 +206,24 @@ not contain the database password or host.
 Development database fingerprint (read-only transaction), before and after all tests: see the
 table at the end of this section.
 
-| Check                                                                                  | Result                                                                                                                                                                                                                                                                                  |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend full suite, final (incl. PostgreSQL tests on disposable `volterra_test_*` DBs) | **721 passed, 0 failed, 0 skipped, 8 xfailed** (strict F1–F8); coverage 98.11 %                                                                                                                                                                                                         |
-| ruff, ruff format, mypy (strict, 154 files)                                            | clean                                                                                                                                                                                                                                                                                   |
-| Frontend Vitest with coverage                                                          | **26 files, 254 passed** (incl. Models empty state and CSRF header); 98.61 % statements                                                                                                                                                                                                 |
-| Frontend ESLint, `tsc -b`, API-types check, Prettier                                   | clean (exit 0)                                                                                                                                                                                                                                                                          |
-| OpenAPI and frontend types up to date (`check-api-types`)                              | match                                                                                                                                                                                                                                                                                   |
-| Production rehearsal: migrations 0001→0005 + seed + second seed                        | exit 0; "Already seeded" on the second run                                                                                                                                                                                                                                              |
-| Second production start on the same database (migrate + seed)                          | **identical** before/after: 1 dataset (`synthetic-v1`), 1 battery, 320 cycles, 0 duplicate (battery, cycle) rows, 0 dataset files, 0 model runs/predictions, revision 0005                                                                                                              |
-| Synthetic checksum, rehearsal vs development                                           | identical (`8b21acca…5c136214`)                                                                                                                                                                                                                                                         |
-| Readiness with PostgreSQL unreachable (live, port 1)                                   | `/health/live` 200; `/health/ready` **503** `not_ready`; `/health` 200 + `unavailable`; fake password absent from logs                                                                                                                                                                  |
-| HTTP smoke test (production mode, through the frontend proxy)                          | no CSRF header → 403; foreign `Origin` → 403; saves 1–4 → 201, 5th → **409**; cookie `HttpOnly; SameSite=lax; Secure; Path=/api/v1`; browser A sees 4, browser B 1, anonymous 0; B deleting A's scenario → **404**; A deleting it → 204; 20 kB body → **413**; security headers present |
-| Concurrency (PostgreSQL test)                                                          | 12 simultaneous saves by one session with 1 existing → exactly 3 × 201, 9 × 409; 15 simultaneous new sessions with total limit 10 → exactly 6 × 201, 9 × 409; 10 rows                                                                                                                   |
-| Session tests (memory + PostgreSQL)                                                    | ownership isolation; 5 forged/tampered cookie forms rejected; CSRF header/origin; production `Secure`; read-only mode; total limit                                                                                                                                                      |
-| Rate-limit tests                                                                       | per-client reads/writes, global writes despite rotating `X-Forwarded-For`, health exempt, window reset, bounded memory                                                                                                                                                                  |
-
-| Live write concurrency (production mode, through the proxy) | 1 save + 12 simultaneous saves on one session → session holds **exactly 4**; 8 × 409 (1 × 429 from the per-client write budget) |
-| Live rate limit (fresh window) | 40 writes from one client → **30 × 200, then 429 from request 31** with `Retry-After`; reads and `/health/ready` unaffected |
+| Check                                                                                              | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend full suite, final after R1/R2 (incl. PostgreSQL tests on disposable `volterra_test_*` DBs) | **726 passed, 0 failed, 0 skipped, 8 xfailed** (strict F1–F8); coverage 97.99 % (before R1/R2: 721 passed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ruff, ruff format, mypy (strict, 154 files)                                                        | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Frontend Vitest with coverage                                                                      | **26 files, 254 passed** (incl. Models empty state and CSRF header); 98.61 % statements                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Frontend ESLint, `tsc -b`, API-types check, Prettier                                               | clean (exit 0)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| OpenAPI and frontend types up to date (`check-api-types`)                                          | match                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Production rehearsal: migrations 0001→0005 + seed + second seed                                    | exit 0; "Already seeded" on the second run                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Second production start on the same database (migrate + seed)                                      | **identical** before/after: 1 dataset (`synthetic-v1`), 1 battery, 320 cycles, 0 duplicate (battery, cycle) rows, 0 dataset files, 0 model runs/predictions, revision 0005                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Synthetic checksum, rehearsal vs development                                                       | identical (`8b21acca…5c136214`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Readiness with PostgreSQL unreachable (live, port 1)                                               | `/health/live` 200; `/health/ready` **503** `not_ready`; `/health` 200 + `unavailable`; fake password absent from logs                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| HTTP smoke test (production mode, through the frontend proxy)                                      | no CSRF header → 403; foreign `Origin` → 403; saves 1–4 → 201, 5th → **409**; cookie `HttpOnly; SameSite=lax; Secure; Path=/api/v1`; browser A sees 4, browser B 1, anonymous 0; B deleting A's scenario → **404**; A deleting it → 204; 20 kB body → **413**; security headers present                                                                                                                                                                                                                                                                                                            |
+| Concurrency (PostgreSQL test)                                                                      | 12 simultaneous saves by one session with 1 existing → exactly 3 × 201, 9 × 409; 15 simultaneous new sessions with total limit 10 → exactly 6 × 201, 9 × 409; 10 rows                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Session tests (memory + PostgreSQL)                                                                | ownership isolation; 5 forged/tampered cookie forms rejected; CSRF header/origin; production `Secure`; read-only mode; total limit                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Rate-limit tests (`backend/tests/api/test_hardening.py`)                                           | request classes; session cookie issued on the first API response (not on health) and used for ownership; two sessions behind one shared address have independent allowances; cookie-less requests with rotating client-supplied `X-Forwarded-For` entries or forged cookies share one network allowance; simulations use only the calculation budget (per client and all clients) while scenario writes keep their limits; create/rename/delete share the write limit; all-clients write limit across sessions; defaults exceed the simulator's 150 ms debounce rate; window reset; bounded memory |
+| Live write concurrency (production mode, through the proxy)                                        | 1 save + 12 simultaneous saves on one session → session holds **exactly 4**; 8 × 409 (1 × 429 from the per-client write budget)                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Live R1 (after the fix)                                                                            | one browser session: **150 rapid simulations → 150 × 200**, then a scenario save → 201 (write budget untouched)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Live R2 (after the fix)                                                                            | browser A: 1 save + 29 renames allowed, then 429; browser B **on the same address**: save 201, simulation 200; A still 429. Session cookie `Secure; HttpOnly; SameSite=lax; Path=/api/v1` on the first API response                                                                                                                                                                                                                                                                                                                                                                                |
 
 ### 5a. Playwright against the hardened production-mode rehearsal
 
@@ -214,8 +279,19 @@ in §6. Configuration items A11 and A12 are completed once the service URLs exis
 
 ## 7. Remaining risks and limitations
 
-- Rate limits are **in memory and per process** (see §4); with more instances or after restarts
-  they do not aggregate. Durable protection of stored data comes from the database limits.
+- Rate limits are **in memory and per process** (see §4); with more instances or workers, or
+  after a restart, they do not aggregate. Durable protection of stored data comes from the
+  database limits. The free plan runs one instance with one uvicorn worker.
+- **Cookie-less traffic shares network allowances.** Requests without a session (scripts, a
+  browser's very first requests) are keyed by the right-most `X-Forwarded-For` entry; through the
+  Vercel rewrite that is a shared Vercel edge address, so heavy cookie-less traffic through one
+  edge could delay other visitors' first page load on that edge (read limit 1,200/min per
+  address). Browsers with a session are unaffected.
+- **Forwarded-header chain is documented by community reports, not official Render
+  documentation.** `VOLTERRA_TRUSTED_PROXY_HOPS` stays 0, the safe value for the reported
+  behaviour; the deployment-time checks in §4a confirm it.
+- A visitor can still use up the all-clients limits (calculations 3,000/min, stored writes
+  120/min) for everyone during that minute; that is their purpose (bounding CPU and storage).
 - Anyone can create anonymous sessions; the per-session limit (4) and the total limit (1,000)
   bound storage, and the write rate limits bound speed, but a determined client can fill the total
   limit over time (then saving answers 409 until rows are deleted).

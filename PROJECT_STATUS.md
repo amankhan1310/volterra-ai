@@ -691,6 +691,18 @@ Branch: `feat/phase-10-hardening-deploy`. Guide: [`docs/deployment.md`](docs/dep
   legacy files unchanged.
 - Phase 9 (reports, notifications, authentication) remains deferred.
 
+## Capacity degradation and SOH for NASA and CALCE (2026-11-17)
+
+- The local development database was upgraded 0002 → 0005 (verified backup first) and holds the
+  NASA, CALCE and Severson bundles and model run `48194befb681`; synthetic rows unchanged.
+- New `GET /api/v1/batteries/{id}/capacity` (`app/analytics/capacity.py`): capacity curve
+  summary, retention, loss, SOH against the stated rated capacity, a fitted trend (≥ 10 usable
+  cycles, never extrapolated) and the observed end of life, with stated limitations. Needs neither
+  temperature nor 221 cycles; the full analytics keep their gate. Rules and references:
+  `docs/datasets/capacity-soh.md`.
+- Battery Data page: a "Capacity degradation and SOH" card and the fitted trend on the capacity
+  chart. Existing API responses unchanged (re-recorded fixtures: no diff).
+
 ## Next
 
 Owner actions: connect the repository to Render (Blueprint) and Vercel (root `frontend`), set

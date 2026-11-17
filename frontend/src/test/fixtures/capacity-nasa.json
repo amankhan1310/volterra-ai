@@ -61,6 +61,8 @@
   "starts_below_eol": false,
   "eol_cycle_observed": null,
   "trend": null,
+  "level_shifts": [],
+  "start_to_end_withheld": false,
   "full_analytics": {
     "available": false,
     "reason": "insufficient_data",

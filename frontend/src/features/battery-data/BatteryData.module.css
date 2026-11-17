@@ -68,3 +68,12 @@
 .warn {
   color: var(--rd);
 }
+
+.trendHead {
+  margin: 0;
+  font-weight: 600;
+}
+
+.trendText {
+  margin: 6px 0 0;
+}

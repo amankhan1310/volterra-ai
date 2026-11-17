@@ -100,7 +100,7 @@ export function cycleChartOption(
       ...(trend.length === 2
         ? [
             {
-              name: "Fitted trend (recorded cycles)",
+              name: "Fitted straight line (model, not measured)",
               type: "line",
               data: trend,
               showSymbol: false,

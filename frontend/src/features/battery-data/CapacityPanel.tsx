@@ -9,9 +9,33 @@ import { fixed } from "../../lib/format";
 import styles from "./BatteryData.module.css";
 import type { UseQueryResult } from "@tanstack/react-query";
 
+/** A stat whose value may be withheld by the API (null): shown as "withheld", without a unit. */
+function MaybeStat({
+  label,
+  value,
+  dp,
+  unit,
+  missing = "withheld",
+}: {
+  label: string;
+  value: number | null;
+  dp: number;
+  unit: string;
+  missing?: string;
+}) {
+  return (
+    <Stat
+      label={label}
+      value={fixed(value, dp, missing)}
+      unit={value === null ? "" : unit}
+    />
+  );
+}
+
 function CapacityFigures({ data }: { data: Capacity }) {
   const ref = data.reference;
   const trend = data.trend;
+  const noSoh = ref ? "withheld" : "unavailable";
   return (
     <>
       <p className={styles.analysis}>
@@ -24,38 +48,53 @@ function CapacityFigures({ data }: { data: Capacity }) {
         ; needs no temperature. Initial and final capacity are medians of the
         first and last 5 cycles.
       </p>
-      <div className={styles.stats}>
-        <Stat
+      <div className={styles.stats} data-testid="capacity-measured">
+        <MaybeStat
           label="Initial capacity"
-          value={fixed(data.initial_capacity.value, 3)}
+          value={data.initial_capacity.value}
+          dp={3}
           unit="Ah"
         />
-        <Stat
+        <MaybeStat
           label="Final capacity"
-          value={fixed(data.final_capacity.value, 3)}
+          value={data.final_capacity.value}
+          dp={3}
           unit="Ah"
         />
-        <Stat
+        <MaybeStat
           label="Capacity loss"
-          value={fixed(data.capacity_loss.value, 3)}
+          value={data.capacity_loss.value}
+          dp={3}
           unit="Ah"
         />
-        <Stat
+        <MaybeStat
           label="Capacity retention"
-          value={fixed(data.retention.value, 1)}
+          value={data.retention.value}
+          dp={1}
           unit="%"
         />
-        <Stat
+        <MaybeStat
           label="SOH at start"
-          value={fixed(data.initial_soh.value, 1, "unavailable")}
-          unit={ref ? "%" : ""}
+          value={data.initial_soh.value}
+          dp={1}
+          unit="%"
+          missing={noSoh}
         />
-        <Stat
+        <MaybeStat
           label="SOH now (last 5 cycles)"
-          value={fixed(data.final_soh.value, 1, "unavailable")}
-          unit={ref ? "%" : ""}
+          value={data.final_soh.value}
+          dp={1}
+          unit="%"
+          missing={ref ? "n/a" : "unavailable"}
         />
       </div>
+      {data.start_to_end_withheld ? (
+        <p className={styles.analysis} data-testid="capacity-withheld">
+          Some start-to-end figures are withheld because this recording is not
+          one continuous fade; the reason is listed below. No measurement has
+          been changed or removed.
+        </p>
+      ) : null}
       <p className={styles.analysis} data-testid="capacity-reference">
         {ref ? (
           <>
@@ -67,26 +106,43 @@ function CapacityFigures({ data }: { data: Capacity }) {
         )}
         {data.eol_cycle_observed !== null
           ? `Reached ${fixed(data.context.eol_pct, 0)} % SOH at cycle ${String(data.eol_cycle_observed)} (observed).`
-          : data.starts_below_eol
-            ? ""
-            : ref
-              ? `Has not reached ${fixed(data.context.eol_pct, 0)} % SOH in the recorded cycles.`
-              : ""}
+          : data.starts_below_eol === false
+            ? `Has not reached ${fixed(data.context.eol_pct, 0)} % SOH in the recorded cycles.`
+            : ""}
       </p>
       {trend ? (
-        <p className={styles.analysis} data-testid="capacity-trend">
-          <ProvenanceTag provenance="fitted" /> Degradation trend over{" "}
-          {trend.cycles} cycles:{" "}
-          <b>
-            {trend.fade.value === null
-              ? `${fixed(trend.slope.value, 5)} Ah/cycle`
-              : `${fixed(trend.fade.value, 2)} SOH points per 100 cycles`}
-          </b>{" "}
-          ({fixed(trend.slope.value, 5)} Ah/cycle, R² {fixed(trend.r2, 2)}),
-          fitted from {fixed(trend.start_capacity.value, 3)} to{" "}
-          {fixed(trend.end_capacity.value, 3)} Ah. It describes the recorded
-          cycles only and is not extrapolated.
-        </p>
+        <div className={styles.analysis} data-testid="capacity-trend">
+          <p className={styles.trendHead}>
+            <ProvenanceTag provenance="fitted" /> Fitted straight line: a model,
+            not a measurement
+          </p>
+          <p className={styles.trendText}>
+            Average fade over {trend.cycles} cycles:{" "}
+            <b>
+              {trend.fade.value === null
+                ? `${fixed(trend.slope.value, 5)} Ah/cycle`
+                : `${fixed(trend.fade.value, 2)} SOH points per 100 cycles`}
+            </b>{" "}
+            ({fixed(trend.slope.value, 5)} Ah/cycle; R² {fixed(trend.r2, 2)},
+            where 1 means the points lie exactly on the line). The line runs
+            from{" "}
+            <span data-testid="trend-line-start">
+              {fixed(trend.start_capacity.value, 3)} Ah
+            </span>{" "}
+            at cycle {trend.start_cycle} to{" "}
+            <span data-testid="trend-line-end">
+              {fixed(trend.end_capacity.value, 3)} Ah
+            </span>{" "}
+            at cycle {trend.end_cycle}: these are values of the line, not
+            measured capacities (measured final capacity:{" "}
+            <b data-testid="trend-measured-final">
+              {fixed(data.final_capacity.value, 3)} Ah
+            </b>
+            ). A straight line averages the whole recording, so it cannot follow
+            a fade that speeds up or slows down, and it is never extrapolated
+            beyond the recorded cycles.
+          </p>
+        </div>
       ) : null}
       {data.limitations.length > 0 || !data.full_analytics.available ? (
         <ul className={styles.flags} aria-label="Limitations">

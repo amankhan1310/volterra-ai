@@ -87,6 +87,8 @@
       "provenance": "fitted"
     }
   },
+  "level_shifts": [],
+  "start_to_end_withheld": false,
   "full_analytics": {
     "available": false,
     "reason": "missing_measurement",

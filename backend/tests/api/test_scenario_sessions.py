@@ -6,6 +6,8 @@ Runs against the in-memory repository and (marked ``db``) a disposable PostgreSQ
 from __future__ import annotations
 
 import asyncio
+import secrets
+import uuid
 from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import Any
@@ -105,20 +107,26 @@ async def test_sessions_only_see_and_change_their_own_scenarios(app_factory: App
         assert (await alice.delete(f"/api/v1/scenarios/{sid}", headers=CSRF)).status_code == 204
 
 
+def tampered_variants(value: str) -> list[str]:
+    """Deterministic edits of a genuine cookie value; each one differs from it by construction."""
+    session_hex, signature = value.split(".")
+    other_sig = "B" if signature[0] == "A" else "A"  # first signature character changed
+    other_id = "1" if session_hex[-1] == "0" else "0"  # last id digit changed
+    foreign = SessionSigner(b"k" * 32)._sign(uuid.UUID(hex=session_hex))  # same id, other key
+    return [
+        f"{session_hex}.{other_sig}{signature[1:]}",
+        f"{session_hex[:-1]}{other_id}.{signature}",
+        f"{session_hex}.{foreign}",
+        session_hex,  # no signature
+        "garbage",
+    ]
+
+
 async def test_forged_or_tampered_cookies_are_not_sessions(app_factory: AppFactory) -> None:
     async with app_factory() as (app, battery_id), client_for(app) as owner:
         sid = (await save(owner, battery_id, "Mine")).json()["id"]
         value = owner.cookies[COOKIE_NAME]
-        session_hex, signature = value.split(".")
-        other_key = SessionSigner(b"k" * 32).issue()[1]  # signed with a different key
-        flipped = "1" if session_hex[-1] == "0" else "0"  # always a different id
-        forged = [
-            f"{session_hex}.{'A' * len(signature)}",  # right id, wrong signature
-            f"{session_hex[:-1]}{flipped}.{signature}",  # changed id, old signature
-            other_key,
-            session_hex,
-            "garbage",
-        ]
+        forged = tampered_variants(value)
         assert value not in forged  # every variant really differs from the genuine cookie
         for bad in forged:
             async with client_for(app) as attacker:
@@ -128,6 +136,35 @@ async def test_forged_or_tampered_cookies_are_not_sessions(app_factory: AppFacto
                 assert (
                     await attacker.delete(f"/api/v1/scenarios/{sid}", headers=CSRF)
                 ).status_code == 404
+        assert (await owner.get(f"/api/v1/scenarios/{sid}")).status_code == 200
+
+
+@pytest.mark.parametrize("last_byte", [0x00, 0x01, 0xAF])
+async def test_tampered_cookies_with_pinned_session_ids(
+    app_factory: AppFactory, monkeypatch: pytest.MonkeyPatch, last_byte: int
+) -> None:
+    """The owner's session id is pinned, so the case that used to be left to chance (an id whose
+    last digit is 0) and its opposites are exercised on every run."""
+    pinned = bytes(range(1, 16)) + bytes([last_byte])
+    real = secrets.token_bytes
+    calls = {"n": 0}
+
+    def token_bytes(n: int | None = None) -> bytes:
+        calls["n"] += 1
+        return pinned if calls["n"] == 1 and n == 16 else real(n)  # only the owner's session
+
+    async with app_factory() as (app, battery_id), client_for(app) as owner:
+        monkeypatch.setattr("app.core.sessions.secrets.token_bytes", token_bytes)
+        sid = (await save(owner, battery_id, "Mine")).json()["id"]
+        value = owner.cookies[COOKIE_NAME]
+        assert value.split(".")[0] == uuid.UUID(bytes=pinned, version=4).hex
+        forged = tampered_variants(value)
+        assert value not in forged
+        for bad in forged:
+            async with client_for(app) as attacker:
+                attacker.cookies.set(COOKIE_NAME, bad)
+                assert (await attacker.get(base(battery_id))).json() == {"items": []}
+                assert (await attacker.get(f"/api/v1/scenarios/{sid}")).status_code == 404
         assert (await owner.get(f"/api/v1/scenarios/{sid}")).status_code == 200
 
 

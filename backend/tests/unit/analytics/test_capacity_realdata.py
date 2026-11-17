@@ -25,6 +25,7 @@ from app.analytics.capacity import (
     EDGE_WINDOW,
     EXCLUDED_FLAGS,
     MIN_TREND_CYCLES,
+    CapacityDegradation,
     CapacityPoint,
     capacity_degradation,
 )
@@ -75,6 +76,7 @@ def oracle(caps: list[float], xs: list[int]) -> tuple[float, float, float, float
 def test_every_cell_matches_an_independent_computation(slug: str) -> None:
     checked = cycles = 0
     rising: list[str] = []
+    shifted: list[str] = []
     for battery, rows in cells(slug):
         ext = battery["external_id"]
         rated = next(v for prefix, v in RATED.items() if ext.startswith(prefix))
@@ -100,13 +102,24 @@ def test_every_cell_matches_an_independent_computation(slug: str) -> None:
         assert all(c is not None for c in caps)  # nothing missing is filled in
         xs = [r["cycle_index"] for r in usable]
         initial, final, slope, intercept = oracle(caps, xs)
-        assert view.initial_capacity_ah == pytest.approx(initial, rel=1e-12)
         assert view.final_capacity_ah == pytest.approx(final, rel=1e-12)
-        assert view.retention_pct == pytest.approx(final / initial * 100, rel=1e-12)
+        if view.level_shifts:
+            assert view.initial_capacity_ah is None and view.initial_soh_pct is None
+            assert view.trend is None
+            shifted.append(ext)
+        else:
+            assert view.initial_capacity_ah == pytest.approx(initial, rel=1e-12)
+        if view.start_to_end_withheld:
+            assert view.retention_pct is None and view.capacity_loss_ah is None
+            assert view.level_shifts or final > initial
+        else:
+            assert view.retention_pct == pytest.approx(final / initial * 100, rel=1e-12)
         assert view.final_soh_pct == pytest.approx(final / rated * 100, rel=1e-12)
         # Same reference as the importer's stored per-cycle SOH.
         assert view.latest_soh_pct == pytest.approx(usable[-1]["soh_pct"], rel=1e-12)
-        if len(usable) >= MIN_TREND_CYCLES and slope > 0:
+        if view.level_shifts:
+            pass
+        elif len(usable) >= MIN_TREND_CYCLES and slope > 0:
             assert view.trend is None  # rising capacity: no degradation trend is reported
             rising.append(ext)
         elif len(usable) >= MIN_TREND_CYCLES:
@@ -119,7 +132,14 @@ def test_every_cell_matches_an_independent_computation(slug: str) -> None:
         cycles += len(rows)
     assert checked == {"calce-cs2-cx2": 12, "nasa-pcoe-battery": 34}[slug]
     assert cycles == {"calce-cs2-cx2": 15971, "nasa-pcoe-battery": 2769}[slug]  # as in the DB
-    print(slug, "cells whose capacity rises (trend withheld):", rising)
+    print(slug, "rising (trend withheld):", rising, "level shifts:", shifted)
+    expected_shifts = {
+        "calce-cs2-cx2": [],
+        "nasa-pcoe-battery": [
+            "B0033", "B0038", "B0039", "B0040", "B0041", "B0042", "B0043", "B0044", "B0050",
+        ],
+    }  # fmt: skip
+    assert shifted == expected_shifts[slug]
 
 
 def test_calce_cells_have_no_temperature_and_are_still_analysed() -> None:
@@ -137,3 +157,63 @@ def test_calce_cells_have_no_temperature_and_are_still_analysed() -> None:
     )
     assert view.trend is not None and view.trend.slope_ah_per_cycle < 0
     assert view.eol_cycle_observed is not None
+
+
+def view_of(slug: str, ext: str) -> CapacityDegradation:
+    battery, rows = next((b, r) for b, r in cells(slug) if b["external_id"] == ext)
+    points = [
+        CapacityPoint(
+            r["cycle_index"], r["capacity_ah"], tuple(json.loads(r["quality_flags_json"]))
+        )
+        for r in rows
+    ]
+    return capacity_degradation(
+        points,
+        reference="rated_capacity",
+        reference_capacity_ah=battery["soh_reference_capacity_ah"],
+        eol_pct=80.0,
+    )
+
+
+def test_b0041_abnormal_start_is_withheld_not_called_recovery() -> None:
+    view = view_of("nasa-pcoe-battery", "B0041")
+    # Before this rule: initial 0.056 Ah, retention 1519.9 %, SOH at start 2.8 %.
+    assert view.initial_capacity_ah is None and view.initial_soh_pct is None
+    assert view.retention_pct is None and view.capacity_loss_ah is None
+    assert view.trend is None and view.eol_cycle_observed is None
+    assert [s.cycle for s in view.level_shifts] == [42]  # first 1.22 Ah discharge
+    assert view.level_shifts[0].before_ah == pytest.approx(0.048, abs=5e-4)
+    assert view.level_shifts[0].after_ah == pytest.approx(1.12, abs=0.01)
+    # The measured end state is kept unchanged.
+    assert view.final_capacity_ah == pytest.approx(0.849, abs=5e-4)
+    assert view.final_soh_pct == pytest.approx(42.4, abs=0.05)
+    assert any("not evidence of battery recovery" in m for m in view.limitations)
+
+
+def test_cs2_33_line_end_is_separated_from_the_measured_final_capacity() -> None:
+    view = view_of("calce-cs2-cx2", "CS2_33")
+    assert view.final_capacity_ah == pytest.approx(0.071, abs=5e-4)  # measured
+    assert view.trend is not None
+    assert view.trend.end_capacity_ah == pytest.approx(0.378, abs=5e-4)  # fitted line
+    assert view.trend.r2 == pytest.approx(0.78, abs=0.005)
+    assert view.retention_pct == pytest.approx(6.2, abs=0.05)  # unchanged
+    assert view.eol_cycle_observed == 550
+    assert any(
+        "fitted straight line ends at 0.378 Ah" in m and "measured final capacity is 0.071 Ah" in m
+        for m in view.limitations
+    )
+
+
+def test_b0005_is_unchanged() -> None:
+    view = view_of("nasa-pcoe-battery", "B0005")
+    assert view.level_shifts == () and view.start_to_end_withheld is False
+    assert view.initial_capacity_ah == pytest.approx(1.835, abs=5e-4)
+    assert view.final_capacity_ah == pytest.approx(1.293, abs=5e-4)
+    assert view.retention_pct == pytest.approx(70.475, abs=5e-3)
+    assert view.initial_soh_pct == pytest.approx(91.767, abs=5e-3)
+    assert view.final_soh_pct == pytest.approx(64.673, abs=5e-3)
+    assert view.trend is not None
+    assert view.trend.fade_pct_per_100_cycles == pytest.approx(19.333, abs=5e-3)
+    assert view.trend.r2 == pytest.approx(0.98, abs=0.005)
+    assert view.eol_cycle_observed == 74
+    assert view.limitations == ()

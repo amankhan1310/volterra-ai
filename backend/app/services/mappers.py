@@ -83,6 +83,7 @@ from app.schemas.datasets import (
     CycleSamplesResponse,
     CyclesResponse,
     DatasetOut,
+    LevelShiftOut,
     SampleOut,
     SohReferenceOut,
 )
@@ -282,6 +283,15 @@ def capacity_response(
             start_capacity=Quantity(value=trend.start_capacity_ah, unit="Ah", provenance="fitted"),
             end_capacity=Quantity(value=trend.end_capacity_ah, unit="Ah", provenance="fitted"),
         ),
+        level_shifts=[
+            LevelShiftOut(
+                cycle=s.cycle,
+                before=Quantity(value=s.before_ah, unit="Ah", provenance=measured),
+                after=Quantity(value=s.after_ah, unit="Ah", provenance=measured),
+            )
+            for s in view.level_shifts
+        ],
+        start_to_end_withheld=view.start_to_end_withheld,
         full_analytics=availability_out(availability),
         limitations=list(view.limitations),
     )

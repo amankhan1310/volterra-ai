@@ -39,19 +39,52 @@ A measured battery without a stated reference gets no SOH (the response says so 
   forward 5-cycle median is also at or below it (the Phase 7 rule). None when the recording
   already starts below the threshold.
 
-## Stated limitations
+## Data quality: when figures are withheld
 
-Fewer than 10 usable cycles (no trend), fewer than 10 (initial and final windows overlap), a
-recording that starts below the threshold, a rising fitted capacity (the trend is withheld: NASA
-B0041 starts with 0.056 Ah discharges), an R² below 0.5, excluded cycles, and — when the full
-analytics are refused — that remaining-life forecasts, anomalies, simulator and advisor are not
-supported for the battery.
+The measurements themselves are never changed, removed or smoothed; only the summary figures are
+withheld when they would misdescribe the recording.
+
+- **Level shift** (sustained jump): the medians of the 5 usable cycles before and after a cycle
+  differ by more than 25 % of the rated capacity (NASA 0.5 Ah, CALCE 0.275 / 0.3375 Ah). Single
+  abnormal cycles and recovery after rest (about 0.07 Ah in NASA B0005) stay far below it. The
+  jump is placed at the largest single-cycle step. The recording is then not one continuous fade
+  (different test conditions or abnormal discharges), so **initial capacity, SOH at start, loss,
+  retention, the trend and the end of life are withheld**; final capacity and current SOH (the
+  measured last cycles) stay. Found in 9 NASA cells, none in CALCE:
+
+  | Cell                  | Jump (cycle: before → after, Ah)                          |
+  | --------------------- | --------------------------------------------------------- |
+  | B0033                 | 139: 1.37 → 0.24; 147: 0.40 → 1.38                        |
+  | B0038 / B0039         | 12: 1.03 → 1.78 / 0.44 → 1.77                             |
+  | B0040                 | 12: 0.74 → 1.73                                           |
+  | B0041                 | 42: 0.05 → 1.12 (42 discharges at ~0.05 Ah, 4 °C ambient) |
+  | B0042 / B0043 / B0044 | 41: ~1.5 → ~0.07; 87: ~0.06 → ~1.5                        |
+  | B0050                 | 13: 1.36 → 0.30                                           |
+
+  An upward jump is stated not to be evidence of battery recovery; a drop is stated not to be, on
+  its own, evidence of degradation.
+
+- **Final above initial** without a level shift: loss and retention are withheld (not presented
+  as recovery). A **rising fitted line** withholds the trend (NASA B0026).
+- **Fitted line vs measurement**: when the line's end differs from the measured final capacity by
+  more than 5 % of the rated capacity, the fade is not linear and the response says so, with both
+  values (10 of 12 CALCE cells, e.g. CS2_33: line 0.378 Ah, measured 0.071 Ah; NASA B0047,
+  B0049). The UI labels the line "a model, not a measurement" and shows its end next to the
+  measured final capacity.
+
+## Other stated limitations
+
+Fewer than 10 usable cycles (no trend; initial and final windows overlap), a recording that starts
+below the threshold, an R² below 0.5, excluded cycles, and — when the full analytics are refused —
+that remaining-life forecasts, anomalies, simulator and advisor are not supported for the battery.
 
 ## Verification
 
-- `backend/tests/unit/analytics/test_capacity.py`: reference, exclusions, limitations, EOL rule.
+- `backend/tests/unit/analytics/test_capacity.py`: reference, exclusions, limitations, EOL rule,
+  level shifts (B0041- and B0050-shaped), curved fade (CS2_33-shaped), linear fade (B0005-shaped).
 - `backend/tests/db/test_real_data_api.py`: the endpoint on generated CALCE-style (no temperature)
   and NASA-style (2 cycles) batteries; SOH equals the stored per-cycle SOH.
 - `backend/tests/unit/analytics/test_capacity_realdata.py` (local, `realdata`): all 12 CALCE and
   34 NASA cells recomputed independently from the bundles, whose capacities equal the original
-  workbooks and `.mat` files (`ml/tests/loaders/test_calce_realdata.py`, `test_nasa_realdata.py`).
+  workbooks and `.mat` files (`ml/tests/loaders/test_calce_realdata.py`, `test_nasa_realdata.py`);
+  exact regression values for B0041, CS2_33 and B0005, and the list of cells with level shifts.

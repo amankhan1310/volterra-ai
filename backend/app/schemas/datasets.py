@@ -123,6 +123,14 @@ class SohReferenceOut(ApiModel):
     description: str
 
 
+class LevelShiftOut(ApiModel):
+    """A sustained jump in measured capacity (medians of 5 cycles before and after)."""
+
+    cycle: int
+    before: Quantity
+    after: Quantity
+
+
 class CapacityTrendOut(ApiModel):
     """Least-squares line of capacity against cycle over the usable cycles (never extrapolated)."""
 
@@ -165,5 +173,13 @@ class CapacityDegradationResponse(ApiModel):
         description="First cycle at or below the EOL threshold, confirmed by the next 5 cycles."
     )
     trend: CapacityTrendOut | None
+    level_shifts: list[LevelShiftOut] = Field(
+        description="Sustained jumps between parts of the recording; with any, the start-to-end "
+        "figures, trend and end of life are withheld."
+    )
+    start_to_end_withheld: bool = Field(
+        description="Loss and retention (and, with a level shift, initial capacity and SOH at "
+        "start) are null because the recording is not one continuous fade."
+    )
     full_analytics: AnalysisAvailability
     limitations: list[str]

@@ -2727,6 +2727,19 @@
               }
             ]
           },
+          "level_shifts": {
+            "items": {
+              "$ref": "#/components/schemas/LevelShiftOut"
+            },
+            "type": "array",
+            "title": "Level Shifts",
+            "description": "Sustained jumps between parts of the recording; with any, the start-to-end figures, trend and end of life are withheld."
+          },
+          "start_to_end_withheld": {
+            "type": "boolean",
+            "title": "Start To End Withheld",
+            "description": "Loss and retention (and, with a level shift, initial capacity and SOH at start) are null because the recording is not one continuous fade."
+          },
           "full_analytics": {
             "$ref": "#/components/schemas/AnalysisAvailability"
           },
@@ -2760,6 +2773,8 @@
           "starts_below_eol",
           "eol_cycle_observed",
           "trend",
+          "level_shifts",
+          "start_to_end_withheld",
           "full_analytics",
           "limitations"
         ],
@@ -3856,6 +3871,29 @@
           "voltage"
         ],
         "title": "LatestCycle"
+      },
+      "LevelShiftOut": {
+        "properties": {
+          "cycle": {
+            "type": "integer",
+            "title": "Cycle"
+          },
+          "before": {
+            "$ref": "#/components/schemas/Quantity"
+          },
+          "after": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cycle",
+          "before",
+          "after"
+        ],
+        "title": "LevelShiftOut",
+        "description": "A sustained jump in measured capacity (medians of 5 cycles before and after)."
       },
       "LifeFractionMetrics": {
         "properties": {

@@ -879,6 +879,16 @@ export interface components {
              */
             eol_cycle_observed: number | null;
             trend: components["schemas"]["CapacityTrendOut"] | null;
+            /**
+             * Level Shifts
+             * @description Sustained jumps between parts of the recording; with any, the start-to-end figures, trend and end of life are withheld.
+             */
+            level_shifts: components["schemas"]["LevelShiftOut"][];
+            /**
+             * Start To End Withheld
+             * @description Loss and retention (and, with a level shift, initial capacity and SOH at start) are null because the recording is not one continuous fade.
+             */
+            start_to_end_withheld: boolean;
             full_analytics: components["schemas"]["AnalysisAvailability"];
             /** Limitations */
             limitations: string[];
@@ -1312,6 +1322,16 @@ export interface components {
             capacity: components["schemas"]["Quantity"];
             temperature: components["schemas"]["Quantity"];
             voltage: components["schemas"]["Quantity"];
+        };
+        /**
+         * LevelShiftOut
+         * @description A sustained jump in measured capacity (medians of 5 cycles before and after).
+         */
+        LevelShiftOut: {
+            /** Cycle */
+            cycle: number;
+            before: components["schemas"]["Quantity"];
+            after: components["schemas"]["Quantity"];
         };
         /** LifeFractionMetrics */
         LifeFractionMetrics: {

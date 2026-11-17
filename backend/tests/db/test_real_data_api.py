@@ -371,3 +371,45 @@ async def test_sample_errors(client, database_url: str) -> None:
         assert response.status_code == 503
         assert response.json()["error"]["code"] == "samples_unavailable"
         assert "missing-data-dir" not in response.text  # no server paths in errors
+
+
+async def test_capacity_view_runs_without_temperature_or_221_cycles(client) -> None:
+    ids = await batteries(client)
+    # CALCE-style: no temperature at all, the full analytics refuse; the capacity view runs.
+    calce_id = ids["CS2_T"]["id"]
+    assert (await client.get(f"/api/v1/batteries/{calce_id}/summary")).status_code == 422
+    response = await client.get(f"/api/v1/batteries/{calce_id}/capacity")
+    assert response.status_code == 200
+    calce = response.json()
+    assert calce["provenance"] == "measured"
+    assert (calce["stored_cycles"], calce["usable_cycles"]) == (CALCE_CYCLES, CALCE_CYCLES)
+    assert calce["reference"] == {
+        "basis": "rated_capacity",
+        "capacity_ah": 1.1,
+        "description": "Rated capacity stated in the source documentation",
+    }
+    assert calce["initial_capacity"] == {"value": 1.05, "unit": "Ah", "provenance": "measured"}
+    assert calce["latest_soh"]["value"] == pytest.approx(1.05 / 1.1 * 100)
+    assert calce["retention"]["value"] == pytest.approx(100.0)
+    assert calce["trend"]["cycles"] == CALCE_CYCLES
+    assert calce["trend"]["slope"]["provenance"] == "fitted"
+    assert calce["full_analytics"]["reason"] == "missing_measurement"
+    # The SOH it reports is the stored per-cycle SOH (same reference as the import).
+    cycles = (await client.get(f"/api/v1/batteries/{calce_id}/cycles")).json()["items"]
+    assert calce["latest_soh"]["value"] == pytest.approx(cycles[-1]["soh_pct"])
+
+    # NASA-style: 2 cycles. Capacity and SOH are reported; the trend is refused with a reason.
+    nasa = (await client.get(f"/api/v1/batteries/{ids['B0005']['id']}/capacity")).json()
+    assert nasa["usable_cycles"] == 2 and nasa["trend"] is None
+    assert nasa["initial_capacity"]["value"] == pytest.approx(1.825)
+    assert nasa["final_capacity"]["value"] == pytest.approx(1.825)
+    assert any("at least 10 usable cycles" in m for m in nasa["limitations"])
+    assert nasa["full_analytics"]["reason"] == "insufficient_data"
+
+    # Synthetic: SOH against its nominal capacity, equal to the stored SOH.
+    syn = (await client.get(f"/api/v1/batteries/{ids['SYN-001']['id']}/capacity")).json()
+    assert syn["provenance"] == "simulated"
+    assert syn["reference"]["basis"] == "nominal_capacity"
+    syn_cycles = (await client.get(f"/api/v1/batteries/{ids['SYN-001']['id']}/cycles")).json()
+    assert syn["latest_soh"]["value"] == pytest.approx(syn_cycles["items"][-1]["soh_pct"])
+    assert syn["full_analytics"]["available"] is True

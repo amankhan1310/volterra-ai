@@ -14,6 +14,7 @@ from app.db.repositories import Repository
 from app.schemas.datasets import (
     BatteryList,
     BatteryOut,
+    CapacityDegradationResponse,
     CycleSamplesResponse,
     CyclesResponse,
     DatasetList,
@@ -21,6 +22,7 @@ from app.schemas.datasets import (
 )
 from app.services import mappers
 from app.services.analysis import AnalysisService, analysis_availability
+from app.services.capacity import capacity_view
 from app.services.samples import (
     DEFAULT_MAX_POINTS,
     MAX_POINTS_LIMIT,
@@ -97,6 +99,22 @@ async def get_cycles(
         and (to_cycle is None or c.cycle <= to_cycle)
     ]
     return mappers.cycles_response(battery, cycles)
+
+
+@router.get(
+    "/batteries/{battery_id}/capacity",
+    response_model=CapacityDegradationResponse,
+    responses=error_responses(404),
+    summary="Capacity degradation and SOH from the measured capacity",
+    tags=["batteries"],
+)
+async def get_capacity(
+    battery_id: uuid.UUID, repo: RepoDep, service: ServiceDep
+) -> CapacityDegradationResponse:
+    """Needs neither temperature nor the cycle count of the full analytics (CALCE, NASA)."""
+    battery = await service.battery(repo, battery_id)
+    view = capacity_view(battery, await repo.load_cycle_data(battery_id))
+    return mappers.capacity_response(battery, view, analysis_availability(battery))
 
 
 @router.get(

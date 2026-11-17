@@ -28,6 +28,7 @@ from app.analytics.anomalies_v2 import (
     STEP_WINDOW,
     DetectionMode,
 )
+from app.analytics.capacity import EXCLUDED_FLAGS, CapacityDegradation
 from app.analytics.display import health_level
 from app.analytics.forecast_v2 import FORECAST_MODEL_V2, QuadraticFit
 from app.analytics.legacy_v1 import LegacyV1Analysis
@@ -76,11 +77,14 @@ from app.schemas.datasets import (
     AnalysisAvailability,
     BatteryFlag,
     BatteryOut,
+    CapacityDegradationResponse,
+    CapacityTrendOut,
     CycleOut,
     CycleSamplesResponse,
     CyclesResponse,
     DatasetOut,
     SampleOut,
+    SohReferenceOut,
 )
 from app.schemas.models import (
     CalibrationSize,
@@ -181,12 +185,16 @@ def battery_out(b: BatteryInfo, availability: Availability) -> BatteryOut:
         incomplete_cycle_count=b.incomplete_cycle_count,
         flagged_cycle_count=b.flagged_cycle_count,
         flags=[BatteryFlag(code=code, detail=detail) for code, detail in b.dataset_flags],
-        analysis=AnalysisAvailability(
-            available=availability.available,
-            reason=availability.reason,
-            message=availability.message,
-            min_cycles=MIN_CYCLES_V1,
-        ),
+        analysis=availability_out(availability),
+    )
+
+
+def availability_out(availability: Availability) -> AnalysisAvailability:
+    return AnalysisAvailability(
+        available=availability.available,
+        reason=availability.reason,
+        message=availability.message,
+        min_cycles=MIN_CYCLES_V1,
     )
 
 
@@ -219,6 +227,63 @@ def cycles_response(battery: BatteryInfo, cycles: Sequence[CycleData]) -> Cycles
         provenance=data_provenance(battery.is_synthetic),
         units=CYCLE_UNITS,
         items=[cycle_out(c) for c in cycles],
+    )
+
+
+#: What each SOH reference basis means (docs/datasets/capacity-soh.md).
+SOH_REFERENCE_DESCRIPTIONS = {
+    "rated_capacity": "Rated capacity stated in the source documentation",
+    "nominal_capacity": "Nominal capacity the synthetic generator defines SOH against",
+}
+
+
+def capacity_response(
+    battery: BatteryInfo, view: CapacityDegradation, availability: Availability
+) -> CapacityDegradationResponse:
+    measured = data_provenance(battery.is_synthetic)
+    trend = view.trend
+    return CapacityDegradationResponse(
+        context=context(battery, eol_pct=view.eol_pct),
+        provenance=measured,
+        stored_cycles=view.stored_cycles,
+        usable_cycles=view.usable_cycles,
+        excluded_cycles=view.excluded_cycles,
+        excluded_flags=list(EXCLUDED_FLAGS),
+        first_cycle=view.first_cycle,
+        last_cycle=view.last_cycle,
+        initial_capacity=Quantity(value=view.initial_capacity_ah, unit="Ah", provenance=measured),
+        final_capacity=Quantity(value=view.final_capacity_ah, unit="Ah", provenance=measured),
+        capacity_loss=Quantity(value=view.capacity_loss_ah, unit="Ah", provenance=measured),
+        retention=Quantity(value=view.retention_pct, unit="%", provenance=measured),
+        reference=None
+        if view.reference is None or view.reference_capacity_ah is None
+        else SohReferenceOut(
+            basis=view.reference,
+            capacity_ah=view.reference_capacity_ah,
+            description=SOH_REFERENCE_DESCRIPTIONS.get(view.reference, view.reference),
+        ),
+        initial_soh=Quantity(value=view.initial_soh_pct, unit="%", provenance=measured),
+        final_soh=Quantity(value=view.final_soh_pct, unit="%", provenance=measured),
+        latest_soh=Quantity(value=view.latest_soh_pct, unit="%", provenance=measured),
+        starts_below_eol=view.starts_below_eol,
+        eol_cycle_observed=view.eol_cycle_observed,
+        trend=None
+        if trend is None
+        else CapacityTrendOut(
+            cycles=trend.cycles,
+            slope=Quantity(value=trend.slope_ah_per_cycle, unit="Ah/cycle", provenance="fitted"),
+            slope_se_ah_per_cycle=trend.slope_se_ah_per_cycle,
+            fade=Quantity(
+                value=trend.fade_pct_per_100_cycles, unit="%/100 cycles", provenance="fitted"
+            ),
+            r2=trend.r2,
+            start_cycle=trend.start_cycle,
+            end_cycle=trend.end_cycle,
+            start_capacity=Quantity(value=trend.start_capacity_ah, unit="Ah", provenance="fitted"),
+            end_capacity=Quantity(value=trend.end_capacity_ah, unit="Ah", provenance="fitted"),
+        ),
+        full_analytics=availability_out(availability),
+        limitations=list(view.limitations),
     )
 
 

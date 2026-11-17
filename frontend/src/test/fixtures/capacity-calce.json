@@ -1,0 +1,99 @@
+{
+  "context": {
+    "battery_id": "00000000-0000-4000-8000-000000000101",
+    "dataset": "calce-test",
+    "is_synthetic": false,
+    "data_provenance": "measured",
+    "algorithm_version": "v1",
+    "eol_pct": 80,
+    "note": "The analytics were developed on the synthetic reference pack. They run unchanged on this measured cell and are not validated on real cells."
+  },
+  "provenance": "measured",
+  "stored_cycles": 230,
+  "usable_cycles": 230,
+  "excluded_cycles": 0,
+  "excluded_flags": [
+    "capacity_zero",
+    "file_ends_during_discharge"
+  ],
+  "first_cycle": 0,
+  "last_cycle": 229,
+  "initial_capacity": {
+    "value": 1.05,
+    "unit": "Ah",
+    "provenance": "measured"
+  },
+  "final_capacity": {
+    "value": 1.05,
+    "unit": "Ah",
+    "provenance": "measured"
+  },
+  "capacity_loss": {
+    "value": 0,
+    "unit": "Ah",
+    "provenance": "measured"
+  },
+  "retention": {
+    "value": 100,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "reference": {
+    "basis": "rated_capacity",
+    "capacity_ah": 1.1,
+    "description": "Rated capacity stated in the source documentation"
+  },
+  "initial_soh": {
+    "value": 95.45454545454545,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "final_soh": {
+    "value": 95.45454545454545,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "latest_soh": {
+    "value": 95.45454545454545,
+    "unit": "%",
+    "provenance": "measured"
+  },
+  "starts_below_eol": false,
+  "eol_cycle_observed": null,
+  "trend": {
+    "cycles": 230,
+    "slope": {
+      "value": 0,
+      "unit": "Ah/cycle",
+      "provenance": "fitted"
+    },
+    "slope_se_ah_per_cycle": 4.208170182895256e-18,
+    "fade": {
+      "value": 0,
+      "unit": "%/100 cycles",
+      "provenance": "fitted"
+    },
+    "r2": 0,
+    "start_cycle": 0,
+    "end_cycle": 229,
+    "start_capacity": {
+      "value": 1.0500000000000043,
+      "unit": "Ah",
+      "provenance": "fitted"
+    },
+    "end_capacity": {
+      "value": 1.0500000000000043,
+      "unit": "Ah",
+      "provenance": "fitted"
+    }
+  },
+  "full_analytics": {
+    "available": false,
+    "reason": "missing_measurement",
+    "message": "230 of 230 cycles have no temperature or voltage measurement; the analytics need both and never fill them in",
+    "min_cycles": 221
+  },
+  "limitations": [
+    "The straight line explains only 0.00 of the capacity variation (R²): treat the fade rate as indicative"
+  ]
+}

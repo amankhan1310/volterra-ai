@@ -61,6 +61,8 @@ export function cycleChartOption(
   points: [number, number][],
   channel: CycleChannel,
   flagged: [number, number][],
+  /** Ends of the API's fitted capacity line (capacity channel only); drawn, never computed. */
+  trend: [number, number][] = [],
 ) {
   const meta = CYCLE_CHANNELS[channel];
   const last = points.at(-1)?.[0] ?? 0;
@@ -95,6 +97,18 @@ export function cycleChartOption(
         symbolSize: 6,
         itemStyle: { color: theme.am },
       },
+      ...(trend.length === 2
+        ? [
+            {
+              name: "Fitted trend (recorded cycles)",
+              type: "line",
+              data: trend,
+              showSymbol: false,
+              lineStyle: { width: 2, type: "dashed", color: theme.violet },
+              itemStyle: { color: theme.violet },
+            },
+          ]
+        : []),
     ],
   };
 }

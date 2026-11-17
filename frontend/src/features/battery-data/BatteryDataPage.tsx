@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { describeError } from "../../api/errors";
-import { useCycleSamples, useCycles } from "../../api/hooks";
-import type { Battery, Cycle } from "../../api/types";
+import { useCapacity, useCycleSamples, useCycles } from "../../api/hooks";
+import type { Battery, Capacity, Cycle } from "../../api/types";
 import { getPage } from "../../app/pages";
 import { ChartDataTable } from "../../components/charts/ChartDataTable";
 import { EChart, useChartTheme } from "../../components/charts/EChart";
@@ -17,6 +17,7 @@ import { Stat } from "../../components/ui/Stat";
 import { ErrorState } from "../../components/ui/States";
 import { fixed } from "../../lib/format";
 import styles from "./BatteryData.module.css";
+import { CapacityPanel } from "./CapacityPanel";
 import { RulPanel } from "./RulPanel";
 import {
   CYCLE_CHANNELS,
@@ -87,7 +88,24 @@ function BatteryFacts({ battery }: { battery: Battery }) {
   );
 }
 
-function CycleChart({ cycles }: { cycles: readonly Cycle[] }) {
+/** The API's fitted capacity line as two chart points (copied, not computed). */
+function trendLine(capacity: Capacity | undefined): [number, number][] {
+  const t = capacity?.trend;
+  if (!t || t.start_capacity.value === null || t.end_capacity.value === null)
+    return [];
+  return [
+    [t.start_cycle, t.start_capacity.value],
+    [t.end_cycle, t.end_capacity.value],
+  ];
+}
+
+function CycleChart({
+  cycles,
+  trend,
+}: {
+  cycles: readonly Cycle[];
+  trend: [number, number][];
+}) {
   const theme = useChartTheme();
   const { measured, missing } = useMemo(
     () => measuredCycleChannels(cycles),
@@ -106,8 +124,15 @@ function CycleChart({ cycles }: { cycles: readonly Cycle[] }) {
     [cycles, channel],
   );
   const option = useMemo(
-    () => cycleChartOption(theme, points, channel, flagged),
-    [theme, points, channel, flagged],
+    () =>
+      cycleChartOption(
+        theme,
+        points,
+        channel,
+        flagged,
+        channel === "capacity_ah" ? trend : [],
+      ),
+    [theme, points, channel, flagged, trend],
   );
   return (
     <Card>
@@ -264,12 +289,15 @@ function SampleChart({
 
 function BatteryDataContent({ battery }: { battery: Battery }) {
   const cycles = useCycles(battery.id);
+  const capacity = useCapacity(battery.id);
+  const trend = useMemo(() => trendLine(capacity.data), [capacity.data]);
   return (
     <div className={styles.stack}>
       <BatteryFacts battery={battery} />
+      <CapacityPanel capacity={capacity} />
       {cycles.data ? (
         <>
-          <CycleChart cycles={cycles.data.items} />
+          <CycleChart cycles={cycles.data.items} trend={trend} />
           {/* Keyed by battery: a battery switch starts from that battery's last cycle. */}
           <SampleChart
             key={battery.id}

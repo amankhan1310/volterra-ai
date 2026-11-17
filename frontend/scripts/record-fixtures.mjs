@@ -90,6 +90,10 @@ const nasa = realId("nasa-test", "00000000-0000-4000-8000-000000000102");
 Object.assign(fixtures, {
   "cycles-calce": await get(`/api/v1/batteries/${calce}/cycles`),
   "cycles-nasa": await get(`/api/v1/batteries/${nasa}/cycles`),
+  // Capacity degradation and SOH from the measured capacity (works without temperature).
+  "capacity-calce": await get(`/api/v1/batteries/${calce}/capacity`),
+  "capacity-nasa": await get(`/api/v1/batteries/${nasa}/capacity`),
+  "capacity-synthetic": await get(`/api/v1/batteries/${id}/capacity`),
   "samples-nasa-0": await get(
     `/api/v1/batteries/${nasa}/cycles/0/samples?max_points=1500`,
   ),

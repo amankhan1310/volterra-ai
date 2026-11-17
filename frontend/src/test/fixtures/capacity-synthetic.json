@@ -1,0 +1,97 @@
+{
+  "context": {
+    "battery_id": "5b0f37f1-3383-4495-a70d-bd0ff24be316",
+    "dataset": "synthetic-v1",
+    "is_synthetic": true,
+    "data_provenance": "simulated",
+    "algorithm_version": "v1",
+    "eol_pct": 80,
+    "note": null
+  },
+  "provenance": "simulated",
+  "stored_cycles": 320,
+  "usable_cycles": 320,
+  "excluded_cycles": 0,
+  "excluded_flags": [
+    "capacity_zero",
+    "file_ends_during_discharge"
+  ],
+  "first_cycle": 0,
+  "last_cycle": 319,
+  "initial_capacity": {
+    "value": 1.997932624960132,
+    "unit": "Ah",
+    "provenance": "simulated"
+  },
+  "final_capacity": {
+    "value": 1.721641417867927,
+    "unit": "Ah",
+    "provenance": "simulated"
+  },
+  "capacity_loss": {
+    "value": 0.276291207092205,
+    "unit": "Ah",
+    "provenance": "simulated"
+  },
+  "retention": {
+    "value": 86.17114493048942,
+    "unit": "%",
+    "provenance": "simulated"
+  },
+  "reference": {
+    "basis": "nominal_capacity",
+    "capacity_ah": 2,
+    "description": "Nominal capacity the synthetic generator defines SOH against"
+  },
+  "initial_soh": {
+    "value": 99.8966312480066,
+    "unit": "%",
+    "provenance": "simulated"
+  },
+  "final_soh": {
+    "value": 86.08207089339635,
+    "unit": "%",
+    "provenance": "simulated"
+  },
+  "latest_soh": {
+    "value": 85.86592724723863,
+    "unit": "%",
+    "provenance": "simulated"
+  },
+  "starts_below_eol": false,
+  "eol_cycle_observed": null,
+  "trend": {
+    "cycles": 320,
+    "slope": {
+      "value": -0.0008810513877560811,
+      "unit": "Ah/cycle",
+      "provenance": "fitted"
+    },
+    "slope_se_ah_per_cycle": 0.000004723411123940831,
+    "fade": {
+      "value": 4.405256938780406,
+      "unit": "%/100 cycles",
+      "provenance": "fitted"
+    },
+    "r2": 0.9909429908383223,
+    "start_cycle": 0,
+    "end_cycle": 319,
+    "start_capacity": {
+      "value": 2.0172438325568542,
+      "unit": "Ah",
+      "provenance": "fitted"
+    },
+    "end_capacity": {
+      "value": 1.7361884398626644,
+      "unit": "Ah",
+      "provenance": "fitted"
+    }
+  },
+  "full_analytics": {
+    "available": true,
+    "reason": null,
+    "message": null,
+    "min_cycles": 221
+  },
+  "limitations": []
+}

@@ -17,6 +17,7 @@ export type Forecast = Schemas["ForecastResponse"];
 export type Backtest = Schemas["BacktestResponse"];
 export type Insights = Schemas["InsightsResponse"];
 export type Cycles = Schemas["CyclesResponse"];
+export type Capacity = Schemas["CapacityDegradationResponse"];
 export type Cycle = Schemas["CycleOut"];
 export type CycleSamples = Schemas["CycleSamplesResponse"];
 export type AnomalyEvent = Schemas["AnomalyEventOut"];

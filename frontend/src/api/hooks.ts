@@ -21,6 +21,8 @@ export const queryKeys = {
   simulatorConfig: (batteryId: string) =>
     ["batteries", batteryId, "simulator"] as const,
   cycles: (batteryId: string) => ["batteries", batteryId, "cycles"] as const,
+  capacity: (batteryId: string) =>
+    ["batteries", batteryId, "capacity"] as const,
   samples: (batteryId: string, cycle: number | undefined) =>
     ["batteries", batteryId, "samples", { cycle }] as const,
   summary: (batteryId: string, eolPct: number | undefined) =>
@@ -68,6 +70,20 @@ export function useCycles(batteryId: string | undefined) {
     queryFn: () =>
       request(() =>
         api.GET("/api/v1/batteries/{battery_id}/cycles", {
+          params: batteryPath(batteryId),
+        }),
+      ),
+    enabled: batteryId !== undefined,
+  });
+}
+
+/** Capacity degradation and SOH from the measured capacity (no temperature, any cycle count). */
+export function useCapacity(batteryId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.capacity(batteryId ?? ""),
+    queryFn: () =>
+      request(() =>
+        api.GET("/api/v1/batteries/{battery_id}/capacity", {
           params: batteryPath(batteryId),
         }),
       ),

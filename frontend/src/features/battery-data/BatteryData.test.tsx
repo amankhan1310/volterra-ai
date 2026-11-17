@@ -155,3 +155,48 @@ describe("Battery Data page (measured data)", () => {
     );
   });
 });
+
+describe("capacity degradation and SOH (measured capacity only)", () => {
+  it("analyses a cell without temperature against its rated capacity", async () => {
+    renderApp(`/battery-data?battery=${CALCE}`);
+    const panel = await screen.findByTestId("capacity-panel");
+    const reference = await within(panel).findByTestId("capacity-reference");
+    const calce = fixtures.capacityCalce;
+    expect(calce.reference?.capacity_ah).toBe(1.1);
+    expect(text(reference)).toContain("SOH reference: 1.10 Ah");
+    expect(text(reference)).toContain("not the first measurement");
+    expect(text(within(panel).getByTestId("capacity-trend"))).toContain(
+      `over ${String(calce.trend?.cycles)} cycles`,
+    );
+    expect(text(panel)).toContain("needs no temperature");
+    // The full analytics stay refused, with the API's reason.
+    expect(text(panel)).toContain(calce.full_analytics.message ?? "");
+  });
+
+  it("states that a short NASA recording supports no trend", async () => {
+    renderApp(`/battery-data?battery=${NASA}`);
+    const panel = await screen.findByTestId("capacity-panel");
+    await within(panel).findByTestId("capacity-reference");
+    expect(within(panel).queryByTestId("capacity-trend")).toBeNull();
+    const limits = within(panel).getByRole("list", { name: "Limitations" });
+    expect(text(limits)).toContain("at least 10 usable cycles");
+  });
+
+  it("follows the selected battery without stale values", async () => {
+    const { user } = renderApp(`/battery-data?battery=${CALCE}`);
+    const panel = await screen.findByTestId("capacity-panel");
+    await within(panel).findByTestId("capacity-trend");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Battery" }),
+      "synthetic-v1:SYN-001",
+    );
+    await waitFor(() => {
+      expect(text(screen.getByTestId("capacity-reference"))).toContain(
+        "SOH reference: 2.00 Ah",
+      );
+    });
+    expect(text(screen.getByTestId("capacity-reference"))).toContain(
+      "Nominal capacity the synthetic generator",
+    );
+  });
+});

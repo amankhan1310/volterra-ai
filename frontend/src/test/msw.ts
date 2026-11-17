@@ -5,6 +5,7 @@ import type {
   Anomalies,
   Backtest,
   Battery,
+  Capacity,
   Cycles,
   CycleSamples,
   Forecast,
@@ -27,6 +28,9 @@ import anomaliesJson from "./fixtures/anomalies.json";
 import backtestJson from "./fixtures/backtest.json";
 import batteriesJson from "./fixtures/batteries.json";
 import cyclesCalceJson from "./fixtures/cycles-calce.json";
+import capacityCalceJson from "./fixtures/capacity-calce.json";
+import capacityNasaJson from "./fixtures/capacity-nasa.json";
+import capacitySyntheticJson from "./fixtures/capacity-synthetic.json";
 import cyclesNasaJson from "./fixtures/cycles-nasa.json";
 import cyclesJson from "./fixtures/cycles.json";
 import errorInsufficientJson from "./fixtures/error-insufficient-data.json";
@@ -92,6 +96,10 @@ export const fixtures = {
   nasa: batteriesJson.items.find((b) => b.dataset === "nasa-test") as Battery,
   cyclesCalce: cyclesCalceJson as unknown as Cycles,
   cyclesNasa: cyclesNasaJson as Cycles,
+  /** Capacity degradation and SOH from the measured capacity. */
+  capacityCalce: capacityCalceJson as Capacity,
+  capacityNasa: capacityNasaJson as Capacity,
+  capacitySynthetic: capacitySyntheticJson as Capacity,
   samplesNasa0: samplesNasa0Json as CycleSamples,
   samplesCalce7: samplesCalce7Json as unknown as CycleSamples,
   /** Phase 7: the generated model run (made-up values) and its stored RUL predictions. */
@@ -204,7 +212,7 @@ export const handlers = [
   // its cycles are served below and its twin was not recorded.
   http.get("*/api/v1/batteries/:id/:endpoint", ({ params }) => {
     const error = REAL_ANALYTICS_ERROR[String(params["id"])];
-    const own = ["cycles", "rul-predictions"].includes(
+    const own = ["cycles", "rul-predictions", "capacity"].includes(
       String(params["endpoint"]),
     );
     if (!error || own) return undefined;
@@ -222,6 +230,14 @@ export const handlers = [
     if (id === fixtures.calce.id) return HttpResponse.json(fixtures.rulCalce);
     if (id === fixtures.nasa.id) return HttpResponse.json(fixtures.rulNasa);
     return recorded(errorNoPredictionsJson);
+  }),
+  http.get("*/api/v1/batteries/:id/capacity", ({ params }) => {
+    const id = String(params["id"]);
+    if (id === fixtures.calce.id)
+      return HttpResponse.json(fixtures.capacityCalce);
+    if (id === fixtures.nasa.id)
+      return HttpResponse.json(fixtures.capacityNasa);
+    return HttpResponse.json(fixtures.capacitySynthetic);
   }),
   http.get("*/api/v1/batteries", () => HttpResponse.json(fixtures.batteries)),
   http.get("*/api/v1/batteries/:id/anomalies", () =>
